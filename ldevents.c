@@ -23,9 +23,17 @@ LDi_usertojson(LDUser *lduser)
 
     json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "key", lduser->key);
-    cJSON_AddBoolToObject(json, "anonymous", lduser->anonymous);
-    cJSON_AddStringToObject(json, "name", lduser->name);
-
+    if (lduser->anonymous)
+        cJSON_AddBoolToObject(json, "anonymous", lduser->anonymous);
+#define addstring(field) if (lduser->field) cJSON_AddStringToObject(json, #field, lduser->field)
+    addstring(secondary);
+    addstring(ip);
+    addstring(firstName);
+    addstring(lastName);
+    addstring(email);
+    addstring(name);
+    addstring(avatar);
+#undef addstring
     return json;
 }
 

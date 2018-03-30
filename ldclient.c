@@ -65,6 +65,8 @@ LDUserNew(const char *key)
     user->ip = NULL;
     user->firstName = NULL;
     user->lastName = NULL;
+    user->email = NULL;
+    user->name = NULL;
     user->avatar = NULL;
     user->custom = NULL;
     user->privateAttributeNames = NULL;
