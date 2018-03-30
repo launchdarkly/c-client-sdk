@@ -1,0 +1,16 @@
+CURL=curl-7.59.0/builds/libcurl-vc-x86-release-static-ipv6-sspi-winssl
+CFLAGS=/I $(CURL)/include /DCURL_STATICLIB
+CC=cl $(CFLAGS)
+
+all: test.exe
+
+clean:
+	del test.exe
+
+test.exe: test.c ldapi.h ldnet.c $(CURL)/lib/libcurl_a.lib
+	$(CC) /MD /Fe: test.exe test.c ldnet.c $(CURL)/lib/libcurl_a.lib
+
+$(CURL)/lib/libcurl_a.lib:
+	cd curl-7.59.0/winbuild
+	nmake /f Makefile.vc mode=static
+	cd ../..
