@@ -2,6 +2,14 @@
 #include "cJSON.h"
 #include <pthread.h>
 
+struct LDClient_i {
+    LDConfig *config;
+    LDUser *user;
+    LDStringMap *allFlags;
+    bool offline;
+    bool dead;
+};
+
 struct IdentifyEvent {
     char *kind;
     char *key;

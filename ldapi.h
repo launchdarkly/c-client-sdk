@@ -7,7 +7,7 @@ typedef struct {
     char **strings;
 } LDStringSet;
 
-struct LDStringMap_s;
+struct LDStringMap_i;
 
 typedef enum {
     LDNodeNone = 0,
@@ -17,7 +17,7 @@ typedef enum {
     LDNodeMap,
 } LDNodeType;
 
-typedef struct {
+typedef struct LDMapNode_i {
     char *key;
     LDNodeType type;
     union {
@@ -31,7 +31,7 @@ typedef struct {
 
 typedef LDMapNode LDStringMap;
 
-typedef struct {
+typedef struct LDConfig_i {
     bool allAttributesPrivate;
     int backgroundPollingIntervalMillis;
     char *appURI;
@@ -49,7 +49,7 @@ typedef struct {
     bool useReport;
 } LDConfig;
 
-typedef struct {
+typedef struct LDUser_i {
     char *key;
     bool anonymous;
     char *secondary;
@@ -63,13 +63,9 @@ typedef struct {
     LDStringSet *privateAttributeNames;
 } LDUser;
 
-typedef struct {
-    LDConfig *config;
-    LDUser *user;
-    LDStringMap *allFlags;
-    bool offline;
-    bool dead;
-} LDClient;
+struct LDClient_i;
+
+typedef struct LDClient_i LDClient;
 
 void LDSetString(char **, const char *);
 
