@@ -25,12 +25,14 @@ struct FeatureRequestEvent {
 
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
-    void
-LDi_freehash(LDMapNode *hash);
+void LDi_freehash(LDMapNode *hash);
+void LDi_freenode(LDMapNode *node);
 LDMapNode *LDi_jsontohash(cJSON *json);
 void LDi_initevents(int capacity);
+char * LDi_usertourl(LDUser *user);
 
 LDMapNode *LDi_fetchfeaturemap(LDClient *client, int *response);
+void LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *));
 
 void LDi_recordidentify(LDUser *lduser);
 void LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,

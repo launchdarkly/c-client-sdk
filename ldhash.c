@@ -16,6 +16,7 @@ LDi_jsontohash(cJSON *json)
         LDMapNode *node = malloc(sizeof(*node));
         memset(node, 0, sizeof(*node));
         node->key = strdup(item->string);
+        printf("the json node with name %s has type %d\n", node->key, item->type);
         switch (item->type) {
         case cJSON_False:
             node->type = LDNodeBool;
@@ -45,7 +46,20 @@ LDi_jsontohash(cJSON *json)
         HASH_ADD_KEYPTR(hh, hash, node->key, strlen(node->key), node);
         item = item->next;
     }
+    LDMapNode *node, *tmp;
+    HASH_ITER(hh, hash, node, tmp) {
+        printf("node in the hash %s\n", node->key);
+    }
     return hash;
+}
+
+void
+LDi_freenode(LDMapNode *node)
+{
+    free(node->key);
+    if (node->type == LDNodeString)
+        free(node->s);
+    free(node);
 }
 
 void
@@ -54,10 +68,7 @@ LDi_freehash(LDMapNode *hash)
     LDMapNode *node, *tmp;
     HASH_ITER(hh, hash, node, tmp) {
         HASH_DEL(hash, node);
-        free(node->key);
-        if (node->type == LDNodeString)
-            free(node->s);
-        free(node);
+        LDi_freenode(node);
     }
 
 }
