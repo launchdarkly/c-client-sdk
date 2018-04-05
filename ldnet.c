@@ -167,6 +167,10 @@ post_data(const char *url, const char *authkey, const char *postbody, int *respo
     return data.memory;
 }
 
+/*
+ * this function reads data and passes it to the stream callback.
+ * it doesn't return except after a disconnect. (or some other failure.)
+ */
 void
 LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *))
 {
@@ -235,7 +239,7 @@ LDi_fetchfeaturemap(LDClient *client, int *response)
 
     LDMapNode *hash = NULL;
     if (payload->type == cJSON_Object) {
-        hash = LDi_jsontohash(payload);
+        hash = LDi_jsontohash(payload, 0);
     }
     cJSON_Delete(payload);
 

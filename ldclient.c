@@ -100,7 +100,6 @@ bgeventsender(void *v)
     LDClient *client = v;
 
     while (true) {
-        break;
         LDi_rdlock(&clientlock);
         int ms = client->config->eventsFlushIntervalMillis;
         LDi_unlock(&clientlock);
@@ -157,6 +156,9 @@ bgeventsender(void *v)
     }
 }
 
+/*
+ * this thread always run, even when using streaming, but then it just sleeps
+ */
 static void *
 bgfeaturepoller(void *v)
 {
@@ -164,13 +166,16 @@ bgfeaturepoller(void *v)
     char *prevdata = NULL;
 
     while (true) {
-        break;
         LDi_rdlock(&clientlock);
         int ms = client->config->pollingIntervalMillis;
+        bool skippolling = client->config->streaming;
         LDi_unlock(&clientlock);
 
         printf("bg poller sleeping\n");
         milliSleep(ms);
+        if (skippolling) {
+            continue;
+        }
         printf("bg poller running\n");
 
         LDi_rdlock(&clientlock);
@@ -199,7 +204,6 @@ bgfeaturepoller(void *v)
 static void
 onstreameventput(const char *data)
 {
-    printf("parsing json %s\n", data);
     cJSON *payload = cJSON_Parse(data);
 
     if (!payload) {
@@ -208,7 +212,7 @@ onstreameventput(const char *data)
     }
     LDMapNode *hash = NULL;
     if (payload->type == cJSON_Object) {
-        hash = LDi_jsontohash(payload);
+        hash = LDi_jsontohash(payload, 1);
     }
     cJSON_Delete(payload);
 
@@ -231,7 +235,7 @@ onstreameventpatch(const char *data)
     }
     LDMapNode *patch = NULL;
     if (payload->type == cJSON_Object) {
-        patch = LDi_jsontohash(payload);
+        patch = LDi_jsontohash(payload, 2);
     }
     cJSON_Delete(payload);
 
@@ -256,6 +260,13 @@ onstreameventpatch(const char *data)
 
 }
 
+/*
+ * as far as event stream parsers go, this is pretty basic.
+ * assumes that there's only one line of data following an event identifier line.
+ * : -> comment gets eaten
+ * event:type -> type is remembered for the next line
+ * data:line -> line is processed according to last seen event type
+ */
 static int
 streamcallback(const char *line)
 {
@@ -289,8 +300,10 @@ streamcallback(const char *line)
             printf("PATCH\n");
             onstreameventpatch(line);
         }
+#if 0
         printf("here is data for the event %s\n", eventtypebuf);
         printf("the data: %s\n", line);
+#endif
     }
     return 0;
 }
@@ -356,7 +369,6 @@ LDClientInit(LDConfig *config, LDUser *user)
 
     int response;
     LDMapNode *hash = NULL;
-    // hash = LDi_fetchfeaturemap(theClient, &response);
     theClient->allFlags = hash;
 
     LDi_unlock(&clientlock);
@@ -378,16 +390,9 @@ lookupnode(LDMapNode *hash, const char *key)
 {
     LDMapNode *res = NULL;
 
-    printf("LOOKUP\n");
     LDMapNode *node, *tmp;
-    HASH_ITER(hh, hash, node, tmp) {
-        printf("node in the hash %s\n", node->key);
-    }
-    HASH_FIND_STR(hash, key, res);
-    if (res) {
-        printf("found something for %s %d\n", key, res->type);
-    }
-    
+
+    HASH_FIND_STR(hash, key, res);   
     return res;
 }
 
@@ -400,8 +405,7 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
     LDi_rdlock(&clientlock);
     res = lookupnode(client->allFlags, key);
     if (res && res->type == LDNodeBool) {
-        printf("found result\n");
-    
+        printf("found result\n");    
         b = res->b;
     } else {
         printf("no result for %s\n", key);

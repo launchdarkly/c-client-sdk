@@ -27,7 +27,8 @@ unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
 void LDi_freehash(LDMapNode *hash);
 void LDi_freenode(LDMapNode *node);
-LDMapNode *LDi_jsontohash(cJSON *json);
+
+LDMapNode *LDi_jsontohash(cJSON *json, int flavor);
 void LDi_initevents(int capacity);
 char * LDi_usertourl(LDUser *user);
 
