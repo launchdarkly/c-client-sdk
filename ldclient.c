@@ -157,7 +157,7 @@ bgeventsender(void *v)
 }
 
 /*
- * this thread always run, even when using streaming, but then it just sleeps
+ * this thread always runs, even when using streaming, but then it just sleeps
  */
 static void *
 bgfeaturepoller(void *v)
@@ -260,6 +260,27 @@ onstreameventpatch(const char *data)
 
 }
 
+static void
+onstreameventping(void)
+{
+    LDClient *client = theClient;
+
+    int response = 0;
+    LDMapNode *hash = LDi_fetchfeaturemap(client, &response);
+    if (response == 401 || response == 403) {
+        client->dead = true;
+    }
+    if (!hash)
+        return;
+    LDMapNode *oldhash;
+
+    LDi_wrlock(&clientlock);
+    oldhash = client->allFlags;
+    client->allFlags = hash;
+    LDi_unlock(&clientlock);
+    LDi_freehash(oldhash);
+}
+
 /*
  * as far as event stream parsers go, this is pretty basic.
  * assumes that there's only one line of data following an event identifier line.
@@ -299,6 +320,9 @@ streamcallback(const char *line)
         } else if (strcmp(eventtypebuf, "patch") == 0) {
             printf("PATCH\n");
             onstreameventpatch(line);
+        } else if (strcmp(eventtypebuf, "ping") == 0) {
+            printf("PING\n");
+            onstreameventping();
         }
 #if 0
         printf("here is data for the event %s\n", eventtypebuf);
@@ -326,8 +350,11 @@ bgfeaturestreamer(void *v)
         LDi_unlock(&clientlock);
 
         int response;
+        /* this won't return until it disconnects */
         LDi_readstream(url, authkey, &response, streamcallback);
-        break;
+
+        /* need some better backoff logic here */
+        milliSleep(30000);
     }
 }
 
