@@ -8,3 +8,4 @@ clean:
 
 test: test.c ldapi.h ldinternal.h $(SRCS)
 	$(CC) -o test test.c $(SRCS) -lcurl -lpthread -lm
+

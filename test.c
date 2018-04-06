@@ -15,7 +15,8 @@ main(int argc, char **argv)
 {
     printf("back to basics\n");
 
-    LDConfig *config = LDConfigNew("mobie-disco");
+
+    LDConfig *config = LDConfigNew("authkey");
 
     LDUser *user = LDUserNew("user200");
 
@@ -40,3 +41,4 @@ main(int argc, char **argv)
 
     return 0;
 }
+
