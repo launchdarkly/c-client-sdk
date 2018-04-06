@@ -223,15 +223,9 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
 
 
 LDMapNode *
-LDi_fetchfeaturemap(LDClient *client, int *response)
+LDi_fetchfeaturemap(const char *url, const char *authkey, int *response)
 {
-    char *userurl = LDi_usertourl(client->user);
-
-    char url[4096];
-    snprintf(url, sizeof(url), "%s/msdk/eval/users/%s", client->config->appURI, userurl);
-    free(userurl);
-
-    char *data = fetch_url(url, client->config->mobileKey, response);
+    char *data = fetch_url(url, authkey, response);
     if (!data)
         return NULL;
     cJSON *payload = cJSON_Parse(data);

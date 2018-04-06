@@ -183,12 +183,21 @@ bgfeaturepoller(void *v)
             LDi_unlock(&clientlock);
             continue;
         }
+        
+        char *userurl = LDi_usertourl(client->user);
+        char url[4096];
+        snprintf(url, sizeof(url), "%s/msdk/eval/users/%s", client->config->appURI, userurl);
+        free(userurl);
+        char authkey[256];
+        snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
+
+        LDi_unlock(&clientlock);
+        
         int response = 0;
-        LDMapNode *hash = LDi_fetchfeaturemap(client, &response);
+        LDMapNode *hash = LDi_fetchfeaturemap(url, authkey, &response);
         if (response == 401 || response == 403) {
             client->dead = true;
         }
-        LDi_unlock(&clientlock);
         if (!hash)
             continue;
         LDMapNode *oldhash;
@@ -265,8 +274,18 @@ onstreameventping(void)
 {
     LDClient *client = theClient;
 
+    LDi_rdlock(&clientlock);
+    char *userurl = LDi_usertourl(client->user);
+    char url[4096];
+    snprintf(url, sizeof(url), "%s/msdk/eval/users/%s", client->config->appURI, userurl);
+    free(userurl);
+    char authkey[256];
+    snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
+
+    LDi_unlock(&clientlock);
+
     int response = 0;
-    LDMapNode *hash = LDi_fetchfeaturemap(client, &response);
+    LDMapNode *hash = LDi_fetchfeaturemap(url, authkey, &response);
     if (response == 401 || response == 403) {
         client->dead = true;
     }

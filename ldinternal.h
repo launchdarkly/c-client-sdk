@@ -32,7 +32,7 @@ LDMapNode *LDi_jsontohash(cJSON *json, int flavor);
 void LDi_initevents(int capacity);
 char * LDi_usertourl(LDUser *user);
 
-LDMapNode *LDi_fetchfeaturemap(LDClient *client, int *response);
+LDMapNode *LDi_fetchfeaturemap(const char *url, const char *authkey, int *response);
 void LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *));
 
 void LDi_recordidentify(LDUser *lduser);
