@@ -25,7 +25,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
     mem->memory = realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL) {
         /* out of memory! */ 
-        printf("not enough memory (realloc returned NULL)\n");
+        LDi_log(2, "not enough memory (realloc returned NULL)\n");
         return 0;
     }
  
@@ -46,7 +46,7 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
     mem->memory = realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL) {
         /* out of memory! */ 
-        printf("not enough memory (realloc returned NULL)\n");
+        LDi_log(2, "not enough memory (realloc returned NULL)\n");
         return 0;
     }
 
@@ -202,12 +202,12 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, StreamWriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&streamdata);
 
-    printf("connecting to stream %s\n", url);
+    LDi_log(10, "connecting to stream %s\n", url);
     res = curl_easy_perform(curl);
-    printf("curl res %d\n", res);
+    LDi_log(10, "curl res %d\n", res);
     if (res == 0) {
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-        printf("curl response code %d\n", (int)response_code);
+        LDi_log(10, "curl response code %d\n", (int)response_code);
         *response = response_code;
     } else {
         *response = -1;

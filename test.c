@@ -7,14 +7,18 @@
 
 #include "ldapi.h"
 
-#include "ldinternal.h"
-
+void
+logger(const char *s)
+{
+    printf("LD says %s\n", s);
+}
 
 int
 main(int argc, char **argv)
 {
     printf("back to basics\n");
 
+    LD_SetLogFunction(2, logger);
 
     LDConfig *config = LDConfigNew("authkey");
 

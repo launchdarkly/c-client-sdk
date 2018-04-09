@@ -104,13 +104,13 @@ bgeventsender(void *v)
         int ms = client->config->eventsFlushIntervalMillis;
         LDi_unlock(&clientlock);
 
-        printf("bg sender sleeping\n");
+        LDi_log(20, "bg sender sleeping\n");
         milliSleep(ms);
-        printf("bgsender running\n");
+        LDi_log(20, "bgsender running\n");
 
         char *eventdata = LDi_geteventdata();
         if (!eventdata) {
-            printf("no event data to send\n");
+            LDi_log(20, "no event data to send\n");
             continue;
         }
 
@@ -171,12 +171,12 @@ bgfeaturepoller(void *v)
         bool skippolling = client->config->streaming;
         LDi_unlock(&clientlock);
 
-        printf("bg poller sleeping\n");
+        LDi_log(20, "bg poller sleeping\n");
         milliSleep(ms);
         if (skippolling) {
             continue;
         }
-        printf("bg poller running\n");
+        LDi_log(20, "bg poller running\n");
 
         LDi_rdlock(&clientlock);
         if (client->dead) {
@@ -216,7 +216,7 @@ onstreameventput(const char *data)
     cJSON *payload = cJSON_Parse(data);
 
     if (!payload) {
-        printf("parsing failed\n");
+        LDi_log(5, "parsing failed\n");
         return;
     }
     LDMapNode *hash = NULL;
@@ -239,7 +239,7 @@ onstreameventpatch(const char *data)
     cJSON *payload = cJSON_Parse(data);
 
     if (!payload) {
-        printf("parsing patch failed\n");
+        LDi_log(5, "parsing patch failed\n");
         return;
     }
     LDMapNode *patch = NULL;
@@ -314,33 +314,33 @@ streamcallback(const char *line)
     static char eventtypebuf[256];
 
     if (*line == ':') {
-        printf("i reject your comment\n");
+        LDi_log(10, "i reject your comment\n");
     } else if (wantnewevent) {
-        printf("this better be a new event...\n");
+        LDi_log(15, "this better be a new event...\n");
         char *eventtype = strchr(line, ':');
         if (!eventtype || eventtype[1] == 0) {
-            printf("unsure\n");
+            LDi_log(5, "unsure\n");
             return 1;
         }
         snprintf(eventtypebuf, sizeof(eventtypebuf), "%s", eventtype + 1);
         wantnewevent = 0;
     } else if (*line == 0) {
-        printf("end of event\n");
+        LDi_log(15, "end of event\n");
         wantnewevent = 1;
     } else {
         if (strncmp(line, "data:", 5) != 0) {
-            printf("not data\n");
+            LDi_log(5, "not data\n");
             return 1;
         }
         line += 5;
         if (strcmp(eventtypebuf, "put") == 0) {
-            printf("PUT\n");
+            LDi_log(15, "PUT\n");
             onstreameventput(line);
         } else if (strcmp(eventtypebuf, "patch") == 0) {
-            printf("PATCH\n");
+            LDi_log(15, "PATCH\n");
             onstreameventpatch(line);
         } else if (strcmp(eventtypebuf, "ping") == 0) {
-            printf("PING\n");
+            LDi_log(15, "PING\n");
             onstreameventping();
         }
 #if 0
@@ -421,7 +421,7 @@ LDClientInit(LDConfig *config, LDUser *user)
 
     LDi_recordidentify(user);
 
-    printf("init done\n");
+    LDi_log(10, "init done\n");
     return theClient;
 }
 
@@ -451,10 +451,10 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
     LDi_rdlock(&clientlock);
     res = lookupnode(client->allFlags, key);
     if (res && res->type == LDNodeBool) {
-        printf("found result\n");    
+        LDi_log(15, "found result\n");    
         b = res->b;
     } else {
-        printf("no result for %s\n", key);
+        LDi_log(15, "no result for %s\n", key);
         b = fallback;
     }
     LDi_unlock(&clientlock);

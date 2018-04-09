@@ -43,6 +43,8 @@ void LDi_sendevents(const char *url, const char *authkey, const char *eventdata,
 
 cJSON *LDi_usertojson(LDUser *lduser);
 
+void LDi_log(int level, const char *fmt, ...);
+
 #if 0
 #define LDi_rdlock(lk) do { *(lk) = 1; } while (0)
 #define LDi_wrlock(lk) do { *(lk) = 1; } while (0)

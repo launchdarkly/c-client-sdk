@@ -89,6 +89,8 @@ char *LDStringVariation(LDClient *, const char *, const char *, char *, size_t);
 
 void LDFree(void *);
 
+void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *));
+
 /* listener registration is unimplemented */
 
 
