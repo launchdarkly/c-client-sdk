@@ -14,6 +14,7 @@ static pthread_once_t clientonce = PTHREAD_ONCE_INIT;
 static pthread_t eventthread;
 static pthread_t pollingthread;
 static pthread_t streamingthread;
+static pthread_cond_t bgeventcond = PTHREAD_COND_INITIALIZER;
 
 static LDClient *theClient;
 static pthread_rwlock_t clientlock = PTHREAD_RWLOCK_INITIALIZER;
@@ -99,6 +100,7 @@ static void *
 bgeventsender(void *v)
 {
     LDClient *client = v;
+    pthread_mutex_t dummymtx = PTHREAD_MUTEX_INITIALIZER;
 
     while (true) {
         LDi_rdlock(&clientlock);
@@ -106,7 +108,9 @@ bgeventsender(void *v)
         LDi_unlock(&clientlock);
 
         LDi_log(20, "bg sender sleeping\n");
-        milliSleep(ms);
+        LDi_mtxenter(&dummymtx);
+        LDi_condwait(&bgeventcond, &dummymtx, ms);
+        LDi_mtxleave(&dummymtx);
         LDi_log(20, "bgsender running\n");
 
         char *eventdata = LDi_geteventdata();
@@ -610,5 +614,28 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
 void
 LDClientFlush(LDClient *client)
 {
-    
+    pthread_cond_signal(&bgeventcond);
+}
+
+void
+LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
+{
+    struct timespec ts;
+
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_sec += ms / 1000;
+    ts.tv_nsec += (ms % 1000) * 1000 * 1000;
+    if (ts.tv_nsec > 1000 * 1000 * 1000) {
+        ts.tv_sec += 1;
+        ts.tv_nsec -= 1000 * 1000 * 1000;
+    }
+
+    int rv = pthread_cond_timedwait(cond, mtx, &ts);
+
+}
+
+void
+LDi_condsignal(pthread_cond_t *cond)
+{
+    pthread_cond_signal(cond);
 }

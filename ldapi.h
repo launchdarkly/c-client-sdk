@@ -75,11 +75,13 @@ LDUser *LDUserNew(const char *);
 LDClient *LDClientInit(LDConfig *, LDUser *);
 LDClient *LDClientGet(void);
 
+void LDClientFlush(LDClient *client);
 bool LDClientIsInitialized(LDClient *);
 bool LDClientIsOffline(LDClient *);
 void LDClientSetOffline(LDClient *);
 void LDClientSetOnline(LDClient *);
 void LDClientClose(LDClient *);
+
 
 bool LDBoolVariation(LDClient *, const char *, bool);
 int LDIntVariation(LDClient *, const char *, int);
