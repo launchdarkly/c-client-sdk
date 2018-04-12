@@ -489,6 +489,7 @@ LDClientGet()
 void
 LDClientClose(LDClient *client)
 {
+    client->dead = true;
     /* stop the threads */
 }
 

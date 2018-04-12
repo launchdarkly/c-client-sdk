@@ -184,6 +184,9 @@ progressinspector(void *v, double dltotal, double dlnow, double ultotal, double 
         LDi_log(5, "giving up stream, too slow\n");
         return 1;
     }
+    LDClient *client = LDClientGet();
+    if (client->dead)
+        return 1;
 
     return 0;
 }
