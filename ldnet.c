@@ -7,6 +7,7 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
+#define LD_STREAMTIMEOUT 300
 
 struct MemoryStruct {
     char *memory;
@@ -15,6 +16,8 @@ struct MemoryStruct {
 struct streamdata {
     int (*callback)(const char *);
     struct MemoryStruct mem;
+    time_t lastdatatime;
+    double lastdataamt;
 };
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -167,6 +170,24 @@ post_data(const char *url, const char *authkey, const char *postbody, int *respo
     return data.memory;
 }
 
+static int
+progressinspector(void *v, double dltotal, double dlnow, double ultotal, double ulnow)
+{
+    struct streamdata *streamdata = v;
+    time_t now = time(NULL);
+
+    if (streamdata->lastdataamt != dlnow) {
+        streamdata->lastdataamt = dlnow;
+        streamdata->lastdatatime = now;
+    }
+    if (now - streamdata->lastdatatime > LD_STREAMTIMEOUT) {
+        LDi_log(5, "giving up stream, too slow\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 /*
  * this function reads data and passes it to the stream callback.
  * it doesn't return except after a disconnect. (or some other failure.)
@@ -185,6 +206,8 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
     memset(&headers, 0, sizeof(headers));
     memset(&streamdata, 0, sizeof(streamdata));
     streamdata.callback = callback;
+    streamdata.lastdatatime = time(NULL);
+    
 
     curl = curl_easy_init();
 
@@ -201,6 +224,10 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
 
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, StreamWriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&streamdata);
+
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+    curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progressinspector);
+    curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, (void *)&streamdata);
 
     LDi_log(10, "connecting to stream %s\n", url);
     res = curl_easy_perform(curl);

@@ -8,6 +8,7 @@ struct LDClient_i {
     LDStringMap *allFlags;
     bool offline;
     bool dead;
+    bool isinit;
 };
 
 struct IdentifyEvent {
@@ -45,6 +46,8 @@ cJSON *LDi_usertojson(LDUser *lduser);
 
 void LDi_log(int level, const char *fmt, ...);
 
+
+
 #if 0
 #define LDi_rdlock(lk) do { *(lk) = 1; } while (0)
 #define LDi_wrlock(lk) do { *(lk) = 1; } while (0)
@@ -53,6 +56,8 @@ void LDi_log(int level, const char *fmt, ...);
 #define LDi_rdlock(lk) pthread_rwlock_rdlock(lk)
 #define LDi_wrlock(lk) pthread_rwlock_wrlock(lk)
 #define LDi_unlock(lk) pthread_rwlock_unlock(lk)
+void LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms);
+void LDi_condsignal(pthread_cond_t *cond);
 #endif
 
 #define LDi_mtxenter(mtx)

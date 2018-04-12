@@ -78,6 +78,7 @@ LDUserNew(const char *key)
 static void
 milliSleep(int ms)
 {
+    ms += 500;
     sleep(ms / 1000);
 }
 
@@ -205,6 +206,7 @@ bgfeaturepoller(void *v)
         LDi_wrlock(&clientlock);
         oldhash = client->allFlags;
         client->allFlags = hash;
+        client->isinit = true;
         LDi_unlock(&clientlock);
         LDi_freehash(oldhash);
     }
@@ -228,20 +230,15 @@ onstreameventput(const char *data)
     LDi_wrlock(&clientlock);
     LDMapNode *oldhash = theClient->allFlags;
     theClient->allFlags = hash;
+    theClient->isinit = true;
     LDi_unlock(&clientlock);
 
     LDi_freehash(oldhash);
 }
 
 static void
-onstreameventpatch(const char *data)
+applypatch(cJSON *payload, bool isdelete)
 {
-    cJSON *payload = cJSON_Parse(data);
-
-    if (!payload) {
-        LDi_log(5, "parsing patch failed\n");
-        return;
-    }
     LDMapNode *patch = NULL;
     if (payload->type == cJSON_Object) {
         patch = LDi_jsontohash(payload, 2);
@@ -258,16 +255,44 @@ onstreameventpatch(const char *data)
             HASH_DEL(hash, res);
             LDi_freenode(res);
         }
-        HASH_DEL(patch, node);
-        HASH_ADD_KEYPTR(hh, hash, node->key, strlen(node->key), node);
+        if (!isdelete) {
+            HASH_DEL(patch, node);
+            HASH_ADD_KEYPTR(hh, hash, node->key, strlen(node->key), node);
+        }
     }
 
     theClient->allFlags = hash;
     LDi_unlock(&clientlock);
 
     LDi_freehash(patch);
-
 }
+
+static void
+onstreameventpatch(const char *data)
+{
+    cJSON *payload = cJSON_Parse(data);
+
+    if (!payload) {
+        LDi_log(5, "parsing patch failed\n");
+        return;
+    }
+    applypatch(payload, false);
+}
+
+
+static void
+onstreameventdelete(const char *data)
+{
+    cJSON *payload = cJSON_Parse(data);
+
+    if (!payload) {
+        LDi_log(5, "parsing delete patch failed\n");
+        return;
+    }
+    applypatch(payload, 1);
+    
+}
+
 
 static void
 onstreameventping(void)
@@ -296,6 +321,7 @@ onstreameventping(void)
     LDi_wrlock(&clientlock);
     oldhash = client->allFlags;
     client->allFlags = hash;
+    client->isinit = true;
     LDi_unlock(&clientlock);
     LDi_freehash(oldhash);
 }
@@ -339,6 +365,9 @@ streamcallback(const char *line)
         } else if (strcmp(eventtypebuf, "patch") == 0) {
             LDi_log(15, "PATCH\n");
             onstreameventpatch(line);
+        } else if (strcmp(eventtypebuf, "delete") == 0) {
+            LDi_log(15, "DELETE\n");
+            onstreameventdelete(line);
         } else if (strcmp(eventtypebuf, "ping") == 0) {
             LDi_log(15, "PING\n");
             onstreameventping();
@@ -356,6 +385,7 @@ bgfeaturestreamer(void *v)
 {
     LDClient *client = v;
 
+    int retries = 0;
     while (true) {
         LDi_rdlock(&clientlock);
         char *userurl = LDi_usertourl(client->user);
@@ -366,14 +396,34 @@ bgfeaturestreamer(void *v)
         
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
+        if (client->dead) {
+            LDi_unlock(&clientlock);
+            milliSleep(30000);
+            continue;
+        }
         LDi_unlock(&clientlock);
 
         int response;
         /* this won't return until it disconnects */
         LDi_readstream(url, authkey, &response, streamcallback);
-
-        /* need some better backoff logic here */
-        milliSleep(30000);
+        if (response == 401 || response == 403) {
+                client->dead = true;
+                retries = 0;
+        } else if (response == -1) {
+                retries++;
+        } else {
+                retries = 0;
+        }
+        if (retries) {
+            int backoff = 1000 * pow(2, retries - 2);
+            backoff += random() % backoff;
+            if (backoff > 3600 * 1000) {
+                backoff = 3600 * 1000;
+                retries--; /* avoid excessive incrementing */
+            }
+            milliSleep(backoff);
+            LDi_rdlock(&clientlock);
+        }
     }
 }
 
@@ -394,7 +444,8 @@ starteverything(void)
 static void
 checkconfig(LDConfig *config)
 {
-
+    if (config->pollingIntervalMillis < 300000)
+        config->pollingIntervalMillis = 300000;
 
 }
 
@@ -429,6 +480,21 @@ LDClient *
 LDClientGet()
 {
     return theClient;
+}
+
+void
+LDClientClose(LDClient *client)
+{
+    /* stop the threads */
+}
+
+bool
+LDClientIsInitialized(LDClient *client)
+{
+    LDi_rdlock(&clientlock);
+    bool isinit = client->isinit;
+    LDi_unlock(&clientlock);
+    return isinit;
 }
 
 static LDMapNode *
@@ -539,4 +605,10 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     LDi_unlock(&clientlock);
     LDi_recordfeature(client->user, key, LDNodeString, 0.0, news, 0.0, fallback);
     return news;
+}
+
+void
+LDClientFlush(LDClient *client)
+{
+    
 }
