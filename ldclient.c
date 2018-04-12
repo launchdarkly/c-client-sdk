@@ -468,7 +468,6 @@ LDClientInit(LDConfig *config, LDUser *user)
     theClient->user = user;
     theClient->dead = false;
 
-    int response;
     LDMapNode *hash = NULL;
     theClient->allFlags = hash;
 
@@ -489,7 +488,16 @@ LDClientGet()
 void
 LDClientClose(LDClient *client)
 {
+    LDMapNode *oldhash;
+
+    LDi_wrlock(&clientlock);
     client->dead = true;
+    oldhash = client->allFlags;
+    client->allFlags = NULL;
+    LDi_unlock(&clientlock);
+
+    LDi_freehash(oldhash);
+
     /* stop the threads */
 }
 
