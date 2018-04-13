@@ -249,8 +249,9 @@ applypatch(cJSON *payload, bool isdelete)
     }
     cJSON_Delete(payload);
 
+    LDClient *client = theClient;
     LDi_wrlock(&clientlock);
-    LDMapNode *hash = theClient->allFlags;
+    LDMapNode *hash = client->allFlags;
     LDMapNode *node, *tmp;
     HASH_ITER(hh, patch, node, tmp) {
         LDMapNode *res = NULL;
@@ -262,6 +263,11 @@ applypatch(cJSON *payload, bool isdelete)
         if (!isdelete) {
             HASH_DEL(patch, node);
             HASH_ADD_KEYPTR(hh, hash, node->key, strlen(node->key), node);
+        }
+        for (struct listener *list = client->listeners; list; list = list->next) {
+            if (strcmp(list->key, node->key) == 0) {
+                list->fn(node->key, isdelete ? 1 : 0);
+            }
         }
     }
 
@@ -624,6 +630,53 @@ void
 LDClientFlush(LDClient *client)
 {
     pthread_cond_signal(&bgeventcond);
+}
+
+bool
+LDClientRegisterFeatureFlagListener(LDClient *client, const char *key, LDlistenerfn fn)
+{
+    struct listener *list;
+
+
+    list = malloc(sizeof(*list));
+    if (!list)
+        return false;
+    list->fn = fn;
+    list->key = strdup(key);
+    if (!list->key) {
+        free(list);
+        return false;
+    }
+
+    LDi_wrlock(&clientlock);
+    list->next = client->listeners;
+    client->listeners = list;
+    LDi_unlock(&clientlock);
+
+    return true;
+}
+
+bool
+LDClientUnregisterFeatureFlagListener(LDClient *client, const char *key, LDlistenerfn fn)
+{
+    struct listener *list, *prev;
+
+    prev = NULL;
+    LDi_wrlock(&clientlock);
+    for (list = client->listeners; list; prev = list, list = list->next) {
+        if (list->fn == fn && strcmp(key, list->key)) {
+            if (prev) {
+                prev->next = list->next;
+            } else {
+                client->listeners = list->next;
+            }
+            free(list->key);
+            free(list);
+            break;
+        }
+    }
+    LDi_unlock(&clientlock);
+    return list != NULL;
 }
 
 void

@@ -67,6 +67,8 @@ struct LDClient_i;
 
 typedef struct LDClient_i LDClient;
 
+typedef void (*LDlistenerfn)(const char *, int);
+
 void LDSetString(char **, const char *);
 
 LDConfig *LDConfigNew();

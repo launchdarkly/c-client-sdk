@@ -2,6 +2,12 @@
 #include "cJSON.h"
 #include <pthread.h>
 
+struct listener {
+    LDlistenerfn fn;
+    char *key;
+    struct listener *next;
+};
+
 struct LDClient_i {
     LDConfig *config;
     LDUser *user;
@@ -9,6 +15,7 @@ struct LDClient_i {
     bool offline;
     bool dead;
     bool isinit;
+    struct listener *listeners;
 };
 
 struct IdentifyEvent {
@@ -60,6 +67,6 @@ void LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms);
 void LDi_condsignal(pthread_cond_t *cond);
 #endif
 
-#define LDi_mtxenter(mtx)
-#define LDi_mtxleave(mtx)
+#define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
+#define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
 
