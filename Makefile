@@ -1,4 +1,4 @@
-CC=gcc -std=c99 -D_XOPEN_SOURCE=500
+CC=gcc -std=c99 -D_XOPEN_SOURCE=600
 SRCS=ldclient.c ldutil.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c base64.c cJSON.c
 
 all: test
