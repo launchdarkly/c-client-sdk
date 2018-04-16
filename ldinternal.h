@@ -53,7 +53,8 @@ cJSON *LDi_usertojson(LDUser *lduser);
 
 void LDi_log(int level, const char *fmt, ...);
 
-
+void LDi_millisleep(int ms);
+void LDi_startthreads(LDClient *client);
 
 #if 0
 #define LDi_rdlock(lk) do { *(lk) = 1; } while (0)
@@ -70,3 +71,5 @@ void LDi_condsignal(pthread_cond_t *cond);
 #define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
 #define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
 
+extern pthread_rwlock_t LDi_clientlock;
+extern pthread_cond_t LDi_bgeventcond;

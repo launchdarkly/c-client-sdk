@@ -67,7 +67,6 @@ struct LDClient_i;
 
 typedef struct LDClient_i LDClient;
 
-typedef void (*LDlistenerfn)(const char *, int);
 
 void LDSetString(char **, const char *);
 
@@ -95,6 +94,16 @@ void LDFree(void *);
 
 void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *));
 
-/* listener registration is unimplemented */
-
+/*
+ * listener function for flag changes.
+ * arguments:
+ * flag name
+ * change type - 0 for new or updated, 1 for deleted
+ */
+typedef void (*LDlistenerfn)(const char *, int);
+/*
+ * register a new listener.
+ */
+bool LDClientRegisterListenerFunction(LDClient *, const char *, LDlistenerfn);
+bool LDClientUnregisterListenerFunction(LDClient *, const char *, LDlistenerfn);
 
