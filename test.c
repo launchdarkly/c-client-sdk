@@ -18,7 +18,7 @@ main(int argc, char **argv)
 {
     printf("back to basics\n");
 
-    LD_SetLogFunction(2, logger);
+    LD_SetLogFunction(20, logger);
 
     LDConfig *config = LDConfigNew("authkey");
 
@@ -26,10 +26,17 @@ main(int argc, char **argv)
 
     LDClient *client = LDClientInit(config, user);
 
+    while (!LDClientIsInitialized(client)) {
+        printf("not ready yet\n");
+        sleep(1);
+    }
+
     int delay = 0;
     while (true) {
     if (LDIntVariation(client, "bugcount", 10) > 5) {
         printf("it's greater than five\n");
+    } else {
+        break;
     }
     if (LDBoolVariation(client, "sort.order", true)) {
         printf("sort order is true\n");
@@ -41,7 +48,10 @@ main(int argc, char **argv)
     sleep(delay);
     
     printf("%d seconds up\n", delay);
+    LDClientFlush(client);
     }
+
+    LDClientClose(client);
 
     return 0;
 }
