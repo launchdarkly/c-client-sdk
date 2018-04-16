@@ -22,6 +22,7 @@ LDConfigNew(const char *mobileKey)
     LDConfig *config;
 
     config = malloc(sizeof(*config));
+    memset(config, 0, sizeof(*config));
     config->allAttributesPrivate = false;
     config->backgroundPollingIntervalMillis = 3600000;
     LDSetString(&config->appURI, "https://app.launchdarkly.com");
@@ -47,6 +48,7 @@ LDUserNew(const char *key)
     LDUser *user;
 
     user = malloc(sizeof(*user));
+    memset(user, 0, sizeof(*user));
     LDSetString(&user->key, key);
     user->anonymous = false;
     user->secondary = NULL;
