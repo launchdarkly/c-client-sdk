@@ -76,6 +76,8 @@ LDUser *LDUserNew(const char *);
 LDClient *LDClientInit(LDConfig *, LDUser *);
 LDClient *LDClientGet(void);
 
+void LDClientIdentify(LDClient *, LDUser *);
+
 void LDClientFlush(LDClient *client);
 bool LDClientIsInitialized(LDClient *);
 bool LDClientIsOffline(LDClient *);

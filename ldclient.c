@@ -42,6 +42,18 @@ LDConfigNew(const char *mobileKey)
     return config;
 }
 
+static void
+freeconfig(LDConfig *config)
+{
+    free(config->appURI);
+    free(config->eventsURI);
+    free(config->mobileKey);
+    free(config->streamURI);
+    /* free privateAttributeNames */
+    free(config);
+}
+
+
 LDUser *
 LDUserNew(const char *key)
 {
@@ -63,6 +75,21 @@ LDUserNew(const char *key)
 
     return user;
 }
+
+static void
+freeuser(LDUser *user)
+{
+    free(user->key);
+    free(user->secondary);
+    free(user->firstName);
+    free(user->lastName);
+    free(user->email);
+    free(user->name);
+    free(user->avatar);
+    /* free custom and privateAttributeNames */
+    free(user);
+}
+
 
 static void
 starteverything(void)
@@ -96,7 +123,13 @@ LDClientInit(LDConfig *config, LDUser *user)
 
     pthread_once(&clientonce, starteverything);
 
+    if (theClient->config != config) {
+        freeconfig(theClient->config);
+    }
     theClient->config = config;
+    if (theClient->user != user) {
+        freeuser(theClient->user);
+    }
     theClient->user = user;
     theClient->dead = false;
 
@@ -115,6 +148,17 @@ LDClient *
 LDClientGet()
 {
     return theClient;
+}
+
+void
+LDClientIdentify(LDClient *client, LDUser *user)
+{
+    LDi_wrlock(&LDi_clientlock);
+    if (user != client->user) {
+        freeuser(client->user);
+    }
+    client->user = user;
+    LDi_unlock(&LDi_clientlock);
 }
 
 void
