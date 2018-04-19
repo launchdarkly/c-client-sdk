@@ -1,6 +1,9 @@
 The C SDK follows the same pattern as other client SDKs with a few
 adaptations for the C language. No garbage collection here.
 
+#include "ldapi.h"
+You want this header. Do not include or use anything from ldinternal.h.
+
 void LDSetString(char **field, const char *value)
 A helper function to set string fields, allocating, freeing, and copying
 memory as needed.
