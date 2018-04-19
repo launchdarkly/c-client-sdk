@@ -159,6 +159,7 @@ LDClientIdentify(LDClient *client, LDUser *user)
     }
     client->user = user;
     LDi_unlock(&LDi_clientlock);
+    LDi_recordidentify(user);
 }
 
 void
