@@ -1,0 +1,57 @@
+The C SDK follows the same pattern as other client SDKs with a few
+adaptations for the C language. No garbage collection here.
+
+void LDSetString(char **field, const char *value)
+A helper function to set string fields, allocating, freeing, and copying
+memory as needed.
+
+LDConfig *LDConfigNew()
+Allocate a new default config. It may be modified at this time.
+Use LDSetString to modify string fields.
+
+LDUser *LDUserNew(const char *key)
+Allocate a new user. It may be modified. key is required.
+Use LDSetString to modify string fields.
+
+LDClient *LDClientInit(LDConfig *config, LDUser *user)
+Initialize the client with the config and user. After this call, the config
+and user must be considered immutable. May be called more than once to change
+config, in which case the old config is freed. There is only ever one LDClient.
+(Always inits and returns the same value.)
+
+LDClient *LDClientGet(void)
+Get the client. There's only one.
+
+void LDClientIdentify(LDClient *, LDUser *)
+Update the client with a new user. The old user is freed.
+
+void LDClientFlush(LDClient *client)
+Send any pending events to the server. They will normally be flushed after a
+timeout, but may also be flushed manually.
+
+bool LDClientIsInitialized(LDClient *)
+Returns true if the client has received feature flags from the server.
+
+void LDClientClose(LDClient *)
+Close the client, free resources, and generally shut down.
+
+bool LDBoolVariation(LDClient *, const char *name , bool default)
+int LDIntVariation(LDClient *, const char *name, int default)
+double LDDoubleVariation(LDClient *, const char *name, double default)
+Ask for a bool, int, or double flag, respectively. Return the default if not
+found.
+
+char *LDStringVariationAlloc(LDClient *, const char *name, const char *def)
+char *LDStringVariation(LDClient *, const char *name, const char *default,
+    char *buffer, size_t size)
+Ask for a string flag. The first version allocates memory on every call. This
+must then be freed with LDFree.
+To avoid allocations, the second function fills a caller provided buffer. Up to
+size bytes will be copied into buffer, truncating if necessary.
+Both functions return a pointer.
+
+void LDFree(void *)
+Free a string.
+
+void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *))
+Set the log function and log level. Increasing log levels result in increasing output.
