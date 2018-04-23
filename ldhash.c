@@ -82,6 +82,9 @@ LDi_jsontohash(cJSON *json, int flavor)
         case cJSON_Array:
             break;
         case cJSON_Object:
+            node->type = LDNodeMap;
+            printf("going down... %s\n", valueitem->string);
+            node->m = LDi_jsontohash(valueitem, 0);
             break;
         default:
             break;
@@ -92,7 +95,6 @@ LDi_jsontohash(cJSON *json, int flavor)
             break;
         }
     }
-    LDMapNode *node, *tmp;
     return hash;
 }
 
@@ -102,6 +104,8 @@ LDi_freenode(LDMapNode *node)
     free(node->key);
     if (node->type == LDNodeString)
         free(node->s);
+    if (node->type == LDNodeMap)
+        LDi_freehash(node->m);
     free(node);
 }
 

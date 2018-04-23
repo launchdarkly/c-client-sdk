@@ -24,7 +24,7 @@ typedef struct LDMapNode_i {
         bool b;
         char *s;
         double n;
-        struct LDStringMap_s *m;
+        struct LDMapNode_i *m;
     };
     UT_hash_handle hh;
 } LDMapNode;
@@ -91,6 +91,8 @@ int LDIntVariation(LDClient *, const char *, int);
 double LDDoubleVariation(LDClient *, const char *, double);
 char *LDStringVariationAlloc(LDClient *, const char *, const char *);
 char *LDStringVariation(LDClient *, const char *, const char *, char *, size_t);
+LDMapNode *LDJSONVariation(LDClient *client, const char *key);
+void LDJSONRelease(LDClient *client, LDMapNode *m);
 
 void LDFree(void *);
 

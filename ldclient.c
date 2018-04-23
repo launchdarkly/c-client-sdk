@@ -304,6 +304,27 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     return news;
 }
 
+LDMapNode *
+LDJSONVariation(LDClient *client, const char *key)
+{
+    LDMapNode *res;
+
+    LDi_rdlock(&LDi_clientlock);
+    res = lookupnode(client->allFlags, key);
+    if (res && res->type == LDNodeMap) {
+        return res->m;
+    }
+    LDi_unlock(&LDi_clientlock);
+    return NULL;
+}
+
+void
+LDJSONRelease(LDClient *client, LDMapNode *m)
+{
+    if (m)
+        LDi_unlock(&LDi_clientlock);
+}
+
 void
 LDClientFlush(LDClient *client)
 {

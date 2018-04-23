@@ -96,10 +96,13 @@ bgfeaturepoller(void *v)
         LDi_rdlock(&LDi_clientlock);
         int ms = client->config->pollingIntervalMillis;
         bool skippolling = client->config->streaming;
+        if (!skippolling && !client->isinit)
+            ms = 0;
         LDi_unlock(&LDi_clientlock);
 
         LDi_log(20, "bg poller sleeping\n");
-        LDi_millisleep(ms);
+        if (ms > 0)
+            LDi_millisleep(ms);
         if (skippolling) {
             continue;
         }
@@ -142,6 +145,7 @@ static void
 onstreameventput(const char *data)
 {
     cJSON *payload = cJSON_Parse(data);
+    printf("I have a put payload: %s\n", data);
 
     if (!payload) {
         LDi_log(5, "parsing failed\n");
@@ -204,6 +208,7 @@ applypatch(cJSON *payload, bool isdelete)
 static void
 onstreameventpatch(const char *data)
 {
+    printf("I have a patch payload: %s\n", data);
     cJSON *payload = cJSON_Parse(data);
 
     if (!payload) {
@@ -330,7 +335,7 @@ bgfeaturestreamer(void *v)
         
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
-        if (client->dead) {
+        if (client->dead || !client->config->streaming) {
             LDi_unlock(&LDi_clientlock);
             LDi_millisleep(30000);
             continue;
