@@ -60,7 +60,7 @@ char *
 LDi_usertourl(LDUser *user)
 {
     cJSON *jsonuser = LDi_usertojson(user);
-    char *textuser = cJSON_Print(jsonuser);
+    char *textuser = cJSON_PrintUnformatted(jsonuser);
     cJSON_Delete(jsonuser);
     size_t b64len;
     char *b64text = LDi_base64_encode(textuser, strlen(textuser), &b64len);

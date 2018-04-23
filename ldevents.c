@@ -128,7 +128,7 @@ LDi_geteventdata(void)
 
     char *data = NULL;
     if (hadevents) {
-        data = cJSON_Print(events);
+        data = cJSON_PrintUnformatted(events);
     }
     cJSON_Delete(events);
     return data;
