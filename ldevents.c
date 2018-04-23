@@ -93,8 +93,8 @@ LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const
     cJSON_AddStringToObject(json, "kind", "feature");
     cJSON_AddStringToObject(json, "key", feature);
     if (type == LDNodeNumber) {
-        cJSON_AddNumberToObject(json, "value", 0);
-        cJSON_AddNumberToObject(json, "default", 1);
+        cJSON_AddNumberToObject(json, "value", n);
+        cJSON_AddNumberToObject(json, "default", defaultn);
     } else if (type == LDNodeString) {
         cJSON_AddStringToObject(json, "value", s);
         cJSON_AddStringToObject(json, "default", defaults);
