@@ -45,6 +45,8 @@ LDConfigNew(const char *mobileKey)
 static void
 freeconfig(LDConfig *config)
 {
+    if (!config)
+        return;
     free(config->appURI);
     free(config->eventsURI);
     free(config->mobileKey);
@@ -79,6 +81,8 @@ LDUserNew(const char *key)
 static void
 freeuser(LDUser *user)
 {
+    if (!user)
+        return;
     free(user->key);
     free(user->secondary);
     free(user->firstName);
