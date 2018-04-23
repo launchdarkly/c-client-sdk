@@ -214,7 +214,7 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
     LDi_rdlock(&LDi_clientlock);
     res = lookupnode(client->allFlags, key);
     if (res && res->type == LDNodeBool) {
-        LDi_log(15, "found result\n");    
+        LDi_log(15, "found result for %s\n", key);
         b = res->b;
     } else {
         LDi_log(15, "no result for %s\n", key);
