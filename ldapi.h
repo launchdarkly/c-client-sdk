@@ -3,6 +3,10 @@
 
 #include "uthash.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     char **strings;
 } LDStringSet;
@@ -65,34 +69,36 @@ typedef struct LDUser_i {
 
 struct LDClient_i;
 
+#if !defined(__cplusplus) && !defined(LD_C_API)
 typedef struct LDClient_i LDClient;
+#endif
 
 
 void LDSetString(char **, const char *);
 
-LDConfig *LDConfigNew();
+LDConfig *LDConfigNew(const char *);
 LDUser *LDUserNew(const char *);
 
-LDClient *LDClientInit(LDConfig *, LDUser *);
-LDClient *LDClientGet(void);
+struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
+struct LDClient_i *LDClientGet(void);
 
-void LDClientIdentify(LDClient *, LDUser *);
+void LDClientIdentify(struct LDClient_i *, LDUser *);
 
-void LDClientFlush(LDClient *client);
-bool LDClientIsInitialized(LDClient *);
-bool LDClientIsOffline(LDClient *);
-void LDClientSetOffline(LDClient *);
-void LDClientSetOnline(LDClient *);
-void LDClientClose(LDClient *);
+void LDClientFlush(struct LDClient_i *client);
+bool LDClientIsInitialized(struct LDClient_i *);
+bool LDClientIsOffline(struct LDClient_i *);
+void LDClientSetOffline(struct LDClient_i *);
+void LDClientSetOnline(struct LDClient_i *);
+void LDClientClose(struct LDClient_i *);
 
 
-bool LDBoolVariation(LDClient *, const char *, bool);
-int LDIntVariation(LDClient *, const char *, int);
-double LDDoubleVariation(LDClient *, const char *, double);
-char *LDStringVariationAlloc(LDClient *, const char *, const char *);
-char *LDStringVariation(LDClient *, const char *, const char *, char *, size_t);
-LDMapNode *LDJSONVariation(LDClient *client, const char *key);
-void LDJSONRelease(LDClient *client, LDMapNode *m);
+bool LDBoolVariation(struct LDClient_i *, const char *, bool);
+int LDIntVariation(struct LDClient_i *, const char *, int);
+double LDDoubleVariation(struct LDClient_i *, const char *, double);
+char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
+char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
+LDMapNode *LDJSONVariation(struct LDClient_i *client, const char *key);
+void LDJSONRelease(struct LDClient_i *client, LDMapNode *m);
 
 void LDFree(void *);
 
@@ -108,6 +114,29 @@ typedef void (*LDlistenerfn)(const char *, int);
 /*
  * register a new listener.
  */
-bool LDClientRegisterListenerFunction(LDClient *, const char *, LDlistenerfn);
-bool LDClientUnregisterListenerFunction(LDClient *, const char *, LDlistenerfn);
+bool LDClientRegisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn);
+bool LDClientUnregisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn);
 
+#ifdef __cplusplus
+}
+
+#include <string>
+
+class LDClient {
+    public:
+        static LDClient *Get(void);
+        static LDClient *Init(LDConfig *, LDUser *);
+
+        bool isInitialized(void);
+
+        bool boolVariation(const std::string &, bool);
+        int intVariation(const std::string &, int);
+
+        void flush(void);
+        void close(void);
+    private:
+        struct LDClient_i *client;
+};
+
+
+#endif
