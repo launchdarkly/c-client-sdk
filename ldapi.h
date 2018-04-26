@@ -131,6 +131,9 @@ class LDClient {
 
         bool boolVariation(const std::string &, bool);
         int intVariation(const std::string &, int);
+        std::string stringVariation(const std::string &, const std::string &);
+        char *stringVariation(const std::string &, const std::string &, char *, size_t);
+
 
         void flush(void);
         void close(void);

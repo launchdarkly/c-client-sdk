@@ -30,6 +30,19 @@ int LDClient::intVariation(const std::string &key, int def)
     return LDIntVariation(this->client, key.c_str(), def);
 }
 
+std::string LDClient::stringVariation(const std::string &key, const std::string &def)
+{
+    char *s = LDStringVariationAlloc(this->client, key.c_str(), def.c_str());
+    std::string res(s);
+    free(s);
+    return res;
+}
+
+char * LDClient::stringVariation(const std::string &key, const std::string &def, char *buf, size_t len)
+{
+    return LDStringVariation(this->client, key.c_str(), def.c_str(), buf, len);
+}
+
 void LDClient::flush(void)
 {
     return LDClientFlush(this->client);
