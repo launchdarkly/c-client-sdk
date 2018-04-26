@@ -309,7 +309,7 @@ LDJSONVariation(LDClient *client, const char *key)
 }
 
 void
-LDJSONRelease(LDClient *client, LDMapNode *m)
+LDJSONRelease(LDMapNode *m)
 {
     if (m)
         LDi_unlock(&LDi_clientlock);

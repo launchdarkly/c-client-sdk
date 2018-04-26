@@ -55,7 +55,12 @@ Both functions return a pointer.
 
 LDMapNode *LDJSONVariation(LDClient *client, const char *name)
 Ask for a JSON variation, returned as a parsed tree of LDMapNodes.
+After examination, it must be released by calling LDJSONRelease().
 See also LDMapLookup.
+
+void LDJSONRelease(LDMapNode *hash)
+Release a JSON node. Only the node returned by LDJSONVariation must be
+released. Sub-nodes looked up via LDMapLookup should not be released.
 
 LDMapNode *LDMapLookup(LDMapNode *hash, const char *key)
 Lookup a node in a hash map.

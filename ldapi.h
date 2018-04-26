@@ -4,6 +4,8 @@
 #include "uthash.h"
 
 #ifdef __cplusplus
+#include <string>
+
 extern "C" {
 #endif
 
@@ -31,6 +33,10 @@ typedef struct LDMapNode_i {
         struct LDMapNode_i *m;
     };
     UT_hash_handle hh;
+#ifdef __cplusplus
+    struct LDMapNode_i *lookup(const std::string &key);
+    void release(void);
+#endif
 } LDMapNode;
 
 typedef LDMapNode LDStringMap;
@@ -98,7 +104,7 @@ double LDDoubleVariation(struct LDClient_i *, const char *, double);
 char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
 char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
 LDMapNode *LDJSONVariation(struct LDClient_i *client, const char *key);
-void LDJSONRelease(struct LDClient_i *client, LDMapNode *m);
+void LDJSONRelease(LDMapNode *m);
 
 void LDFree(void *);
 
@@ -122,7 +128,6 @@ bool LDClientUnregisterListenerFunction(struct LDClient_i *, const char *, LDlis
 #ifdef __cplusplus
 }
 
-#include <string>
 
 class LDClient {
     public:
@@ -135,6 +140,8 @@ class LDClient {
         int intVariation(const std::string &, int);
         std::string stringVariation(const std::string &, const std::string &);
         char *stringVariation(const std::string &, const std::string &, char *, size_t);
+
+        LDMapNode *JSONVariation(const std::string &);
 
 
         void flush(void);
