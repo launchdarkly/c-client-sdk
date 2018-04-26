@@ -53,8 +53,17 @@ To avoid allocations, the second function fills a caller provided buffer. Up to
 size bytes will be copied into buffer, truncating if necessary.
 Both functions return a pointer.
 
+LDMapNode *LDJSONVariation(LDClient *client, const char *name)
+Ask for a JSON variation, returned as a parsed tree of LDMapNodes.
+See also LDMapLookup.
+
+LDMapNode *LDMapLookup(LDMapNode *hash, const char *key)
+Lookup a node in a hash map.
+
 void LDFree(void *)
 Free a string.
+
+
 
 void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *))
 Set the log function and log level. Increasing log levels result in increasing output.

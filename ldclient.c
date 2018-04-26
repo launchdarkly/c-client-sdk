@@ -194,16 +194,6 @@ LDClientIsInitialized(LDClient *client)
 /*
  * a block of functions to look up feature flags
  */
-static LDMapNode *
-lookupnode(LDMapNode *hash, const char *key)
-{
-    LDMapNode *res = NULL;
-
-    LDMapNode *node, *tmp;
-
-    HASH_FIND_STR(hash, key, res);   
-    return res;
-}
 
 bool
 LDBoolVariation(LDClient *client, const char *key, bool fallback)
@@ -212,7 +202,7 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
     bool b;
 
     LDi_rdlock(&LDi_clientlock);
-    res = lookupnode(client->allFlags, key);
+    res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeBool) {
         LDi_log(15, "found result for %s\n", key);
         b = res->b;
@@ -232,7 +222,7 @@ LDIntVariation(LDClient *client, const char *key, int fallback)
     int i;
 
     LDi_rdlock(&LDi_clientlock);
-    res = lookupnode(client->allFlags, key);
+    res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeNumber)
         i = (int)res->n;
     else
@@ -249,7 +239,7 @@ LDDoubleVariation(LDClient *client, const char *key, double fallback)
     double d;
 
     LDi_rdlock(&LDi_clientlock);
-    res = lookupnode(client->allFlags, key);
+    res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeNumber)
         d = res->n;
     else
@@ -268,7 +258,7 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
     size_t len;
 
     LDi_rdlock(&LDi_clientlock);
-    res = lookupnode(client->allFlags, key);
+    res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeString)
         s = res->s;
     else
@@ -292,7 +282,7 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     char *news;
 
     LDi_rdlock(&LDi_clientlock);
-    res = lookupnode(client->allFlags, key);
+    res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeString)
         s = res->s;
     else
@@ -310,7 +300,7 @@ LDJSONVariation(LDClient *client, const char *key)
     LDMapNode *res;
 
     LDi_rdlock(&LDi_clientlock);
-    res = lookupnode(client->allFlags, key);
+    res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeMap) {
         return res->m;
     }

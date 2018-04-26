@@ -28,6 +28,17 @@ LDi_millisleep(int ms)
     sleep(ms / 1000);
 }
 
+LDMapNode *
+LDMapLookup(LDMapNode *hash, const char *key)
+{
+    LDMapNode *res = NULL;
+
+    LDMapNode *node, *tmp;
+
+    HASH_FIND_STR(hash, key, res);
+    return res;
+}
+
 
 /*
  * some functions to help with threads.

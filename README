@@ -3,6 +3,7 @@ This is the (alpha) C SDK for Launch Darkly. It implements the "mobile" SDK.
 BUILDING
 
 Should build with make in a posix (linux) environment. Requires libcurl to be installed.
+Uses libpthread.
 
 DOCUMENTATION
 
@@ -14,6 +15,8 @@ Exported functions and types have an LD prefix to avoid namespace collisions.
 
 Internal functions which may leak into the application namespace have an LDi
 prefix for Launch Darkly internal. They should not be used by application code.
+
+The cJSON code is currently exposed as is.
 
 THIRD PARTY
 

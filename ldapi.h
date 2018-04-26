@@ -102,6 +102,8 @@ void LDJSONRelease(struct LDClient_i *client, LDMapNode *m);
 
 void LDFree(void *);
 
+LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
+
 void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *));
 
 /*
