@@ -53,3 +53,13 @@ void LDClient::close(void)
     LDClientClose(this->client);
     this->client = 0;
 }
+
+LDMapNode * LDMapNode::lookup(const std::string &key)
+{
+    return LDMapLookup(this, key.c_str());
+}
+
+void LDMapNode::release(void)
+{
+    LDJSONRelease(this);
+}
