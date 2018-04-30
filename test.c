@@ -27,7 +27,7 @@ main(int argc, char **argv)
 
     LDClient *client = LDClientInit(config, user);
 
-    char *testflags = "{ \"sort.order\": false }";
+    char *testflags = "{ \"sort.order\": false, \"bugcount\": 0 }";
 
     LDClientRestoreFlags(client, testflags);
 
@@ -41,6 +41,7 @@ main(int argc, char **argv)
     if (LDIntVariation(client, "bugcount", 10) > 5) {
         printf("it's greater than five\n");
     } else {
+        printf("zarro boogs\n");
         break;
     }
     if (LDBoolVariation(client, "sort.order", true)) {
