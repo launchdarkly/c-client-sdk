@@ -88,6 +88,9 @@ LDUser *LDUserNew(const char *);
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
 struct LDClient_i *LDClientGet(void);
 
+char *LDClientSaveFlags(struct LDClient_i *client);
+void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
+
 void LDClientIdentify(struct LDClient_i *, LDUser *);
 
 void LDClientFlush(struct LDClient_i *client);

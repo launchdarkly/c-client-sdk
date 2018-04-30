@@ -206,11 +206,11 @@ LDClientSaveFlags(LDClient *client)
 void
 LDClientRestoreFlags(LDClient *client, const char *data)
 {
-    LDi_clientsetflags(client, data);
+    LDi_clientsetflags(client, data, 0);
 }
 
 void
-LDi_clientsetflags(LDClient *client, const char *data)
+LDi_clientsetflags(LDClient *client, const char *data, int flavor)
 {
     cJSON *payload = cJSON_Parse(data);
 
@@ -220,7 +220,7 @@ LDi_clientsetflags(LDClient *client, const char *data)
     }
     LDMapNode *hash = NULL;
     if (payload->type == cJSON_Object) {
-        hash = LDi_jsontohash(payload, 1);
+        hash = LDi_jsontohash(payload, flavor);
     }
     cJSON_Delete(payload);
 
