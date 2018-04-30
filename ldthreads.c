@@ -124,48 +124,21 @@ bgfeaturepoller(void *v)
         LDi_unlock(&LDi_clientlock);
         
         int response = 0;
-        LDMapNode *hash = LDi_fetchfeaturemap(url, authkey, &response);
+        char *data = LDi_fetchfeaturemap(url, authkey, &response);
         if (response == 401 || response == 403) {
             client->dead = true;
         }
-        if (!hash)
+        if (!data)
             continue;
-        LDMapNode *oldhash;
-
-        LDi_wrlock(&LDi_clientlock);
-        oldhash = client->allFlags;
-        client->allFlags = hash;
-        client->isinit = true;
-        LDi_unlock(&LDi_clientlock);
-        LDi_freehash(oldhash);
+        LDi_clientsetflags(client, data);
+        free(data);
     }
 }
 
 static void
 onstreameventput(const char *data)
 {
-    cJSON *payload = cJSON_Parse(data);
-    printf("I have a put payload: %s\n", data);
-
-    if (!payload) {
-        LDi_log(5, "parsing failed\n");
-        return;
-    }
-    LDMapNode *hash = NULL;
-    if (payload->type == cJSON_Object) {
-        hash = LDi_jsontohash(payload, 1);
-    }
-    cJSON_Delete(payload);
-
-    LDClient *client = LDClientGet();
-
-    LDi_wrlock(&LDi_clientlock);
-    LDMapNode *oldhash = client->allFlags;
-    client->allFlags = hash;
-    client->isinit = true;
-    LDi_unlock(&LDi_clientlock);
-
-    LDi_freehash(oldhash);
+    LDi_clientsetflags(LDClientGet(), data);
 }
 
 static void
@@ -249,20 +222,14 @@ onstreameventping(void)
     LDi_unlock(&LDi_clientlock);
 
     int response = 0;
-    LDMapNode *hash = LDi_fetchfeaturemap(url, authkey, &response);
+    char *data = LDi_fetchfeaturemap(url, authkey, &response);
     if (response == 401 || response == 403) {
         client->dead = true;
     }
-    if (!hash)
+    if (!data)
         return;
-    LDMapNode *oldhash;
-
-    LDi_wrlock(&LDi_clientlock);
-    oldhash = client->allFlags;
-    client->allFlags = hash;
-    client->isinit = true;
-    LDi_unlock(&LDi_clientlock);
-    LDi_freehash(oldhash);
+    LDi_clientsetflags(client, data);
+    free(data);
 }
 
 /*

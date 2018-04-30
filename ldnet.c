@@ -252,22 +252,11 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
 }
 
 
-LDMapNode *
+char *
 LDi_fetchfeaturemap(const char *url, const char *authkey, int *response)
 {
     char *data = fetch_url(url, authkey, response);
-    if (!data)
-        return NULL;
-    cJSON *payload = cJSON_Parse(data);
-    free(data);
-
-    LDMapNode *hash = NULL;
-    if (payload->type == cJSON_Object) {
-        hash = LDi_jsontohash(payload, 0);
-    }
-    cJSON_Delete(payload);
-
-    return hash;
+    return data;
 }
 
 void

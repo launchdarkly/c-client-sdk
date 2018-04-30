@@ -192,6 +192,48 @@ LDClientIsInitialized(LDClient *client)
 }
 
 /*
+ * save and restore flags
+ */
+char *
+LDClientSaveFlags(LDClient *client)
+{
+    LDi_rdlock(&LDi_clientlock);
+    char *s = LDi_hashtojson(client->allFlags);
+    LDi_unlock(&LDi_clientlock);
+    return s;
+}
+
+void
+LDClientRestoreFlags(LDClient *client, const char *data)
+{
+    LDi_clientsetflags(client, data);
+}
+
+void
+LDi_clientsetflags(LDClient *client, const char *data)
+{
+    cJSON *payload = cJSON_Parse(data);
+
+    if (!payload) {
+        LDi_log(5, "parsing failed\n");
+        return;
+    }
+    LDMapNode *hash = NULL;
+    if (payload->type == cJSON_Object) {
+        hash = LDi_jsontohash(payload, 1);
+    }
+    cJSON_Delete(payload);
+
+    LDi_wrlock(&LDi_clientlock);
+    LDMapNode *oldhash = client->allFlags;
+    client->allFlags = hash;
+    client->isinit = true;
+    LDi_unlock(&LDi_clientlock);
+
+    LDi_freehash(oldhash);
+}
+
+/*
  * a block of functions to look up feature flags
  */
 
