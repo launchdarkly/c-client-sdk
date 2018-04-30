@@ -21,10 +21,15 @@ main(int argc, char **argv)
     LD_SetLogFunction(20, logger);
 
     LDConfig *config = LDConfigNew("authkey");
+    config->offline = true;
 
     LDUser *user = LDUserNew("user200");
 
     LDClient *client = LDClientInit(config, user);
+
+    char *testflags = "{ \"sort.order\": false }";
+
+    LDClientRestoreFlags(client, testflags);
 
     while (!LDClientIsInitialized(client)) {
         printf("not ready yet\n");
@@ -44,7 +49,7 @@ main(int argc, char **argv)
         printf("sort order is false\n");
     }
 
-    delay += 10;
+    delay = 10;
     sleep(delay);
     
     printf("%d seconds up\n", delay);
