@@ -52,6 +52,13 @@ main(int argc, char **argv)
         printf("ERROR: default malfunction\n");
     }
 
+    char buffer[10];
+    /* deliberately check for truncation (no overflow) */
+    LDStringVariation(client, "missing", "more than ten letters", buffer, sizeof(buffer));
+    if (strcmp(buffer, "more than") != 0) {
+        printf("ERROR: the string variation failed\n");
+    }
+
     LDMapNode *jnode = LDJSONVariation(client, "jj");
     LDMapNode *ii = LDMapLookup(jnode, "ii");
     if (ii->type != LDNodeNumber || ii->n != 7) {
