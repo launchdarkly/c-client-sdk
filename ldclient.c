@@ -138,8 +138,8 @@ LDClientInit(LDConfig *config, LDUser *user)
     theClient->dead = false;
     theClient->offline = config->offline;
 
-    LDMapNode *hash = NULL;
-    theClient->allFlags = hash;
+    theClient->allFlags = NULL;
+    theClient->isinit = false;
 
     LDi_unlock(&LDi_clientlock);
 
