@@ -22,6 +22,10 @@ LDConfigNew(const char *mobileKey)
     LDConfig *config;
 
     config = malloc(sizeof(*config));
+    if (!config) {
+        LDi_log(2, "no memory for config\n");
+        return NULL;
+    }
     memset(config, 0, sizeof(*config));
     config->allAttributesPrivate = false;
     config->backgroundPollingIntervalMillis = 3600000;
@@ -62,6 +66,10 @@ LDUserNew(const char *key)
     LDUser *user;
 
     user = malloc(sizeof(*user));
+    if (!user) {
+        LDi_log(2, "no memory for user\n");
+        return NULL;
+    }
     memset(user, 0, sizeof(*user));
     LDSetString(&user->key, key);
     user->anonymous = false;
@@ -102,6 +110,10 @@ starteverything(void)
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     theClient = malloc(sizeof(*theClient));
+    if (!theClient) {
+        LDi_log(2, "no memory for the client\n");
+        return;
+    }
     memset(theClient, 0, sizeof(*theClient));
 
     LDi_startthreads(theClient);
@@ -126,6 +138,9 @@ LDClientInit(LDConfig *config, LDUser *user)
     LDi_wrlock(&LDi_clientlock);
 
     pthread_once(&clientonce, starteverything);
+    if (!theClient) {
+        return NULL;
+    }
 
     if (theClient->config != config) {
         freeconfig(theClient->config);

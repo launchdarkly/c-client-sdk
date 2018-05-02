@@ -8,8 +8,9 @@ void LDSetString(char **field, const char *value)
 A helper function to set string fields, allocating, freeing, and copying
 memory as needed.
 
-LDConfig *LDConfigNew()
+LDConfig *LDConfigNew(const char *authkey)
 Allocate a new default config. It may be modified at this time.
+authkey is required.
 Use LDSetString to modify string fields.
 
 LDUser *LDUserNew(const char *key)
