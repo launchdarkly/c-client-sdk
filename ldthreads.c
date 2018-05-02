@@ -42,7 +42,7 @@ bgeventsender(void *v)
         }
 
         LDi_rdlock(&LDi_clientlock);
-        if (client->dead || client->config->offline) {
+        if (client->dead || client->offline) {
             LDi_unlock(&LDi_clientlock);
             continue;
         }
@@ -95,7 +95,7 @@ bgfeaturepoller(void *v)
     while (true) {
         LDi_rdlock(&LDi_clientlock);
         int ms = client->config->pollingIntervalMillis;
-        bool skippolling = client->config->streaming || client->config->offline;
+        bool skippolling = client->config->streaming || client->offline;
         if (!skippolling && !client->isinit)
             ms = 0;
         LDi_unlock(&LDi_clientlock);
@@ -299,7 +299,7 @@ bgfeaturestreamer(void *v)
         
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
-        if (client->dead || !client->config->streaming || client->config->offline) {
+        if (client->dead || !client->config->streaming || client->offline) {
             LDi_unlock(&LDi_clientlock);
             LDi_millisleep(30000);
             continue;

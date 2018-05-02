@@ -68,7 +68,18 @@ Lookup a node in a hash map.
 void LDFree(void *)
 Free a string.
 
+char *LDClientSaveFlags(LDClient *)
+Return a string representing internal feature flag state.
+Free with LDFree().
 
+void LDClientRestoreFlags(LDClient *, const char *)
+Restore previously saved feature flags.
+
+void LDClientSetOffline(LDClient *)
+Make the client operate in offline mode. No network traffic.
+
+void LDClientSetOnline(LDClient *)
+Return the client to online mode.
 
 void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *))
 Set the log function and log level. Increasing log levels result in increasing output.

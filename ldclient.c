@@ -136,6 +136,7 @@ LDClientInit(LDConfig *config, LDUser *user)
     }
     theClient->user = user;
     theClient->dead = false;
+    theClient->offline = config->offline;
 
     LDMapNode *hash = NULL;
     theClient->allFlags = hash;
@@ -152,6 +153,30 @@ LDClient *
 LDClientGet()
 {
     return theClient;
+}
+
+void
+LDClientSetOffline(LDClient *client)
+{
+
+    LDi_wrlock(&LDi_clientlock);
+    client->offline = true;
+    LDi_unlock(&LDi_clientlock);
+}
+
+void
+LDClientSetOnline(LDClient *client)
+{
+    LDi_wrlock(&LDi_clientlock);
+    client->offline = false;
+    client->isinit = false;
+    LDi_unlock(&LDi_clientlock);
+}
+
+bool
+LDClientIsOffline(LDClient *client)
+{
+    return client->offline;
 }
 
 void
