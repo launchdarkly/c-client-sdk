@@ -10,13 +10,13 @@
 void
 logger(const char *s)
 {
-    printf("LD says %s\n", s);
+    printf("LD: %s", s);
 }
 
 int
 main(int argc, char **argv)
 {
-    printf("back to basics\n");
+    printf("Beginning tests\n");
 
     LD_SetLogFunction(20, logger);
 
@@ -27,37 +27,41 @@ main(int argc, char **argv)
 
     LDClient *client = LDClientInit(config, user);
 
-    char *testflags = "{ \"sort.order\": false, \"bugcount\": 0 }";
+    char *testflags = "{ \"sort.order\": false, \"bugcount\": 0, \"jj\": { \"ii\": 7 } }";
 
     LDClientRestoreFlags(client, testflags);
+
+    char *ss = LDClientSaveFlags(client);
+    printf("INFO: the output json is %s\n", ss);
 
     while (!LDClientIsInitialized(client)) {
         printf("not ready yet\n");
         sleep(1);
     }
 
-    int delay = 0;
-    while (true) {
-    if (LDIntVariation(client, "bugcount", 10) > 5) {
-        printf("it's greater than five\n");
-    } else {
-        printf("zarro boogs\n");
-        break;
+    int high, low;
+
+    low = LDIntVariation(client, "bugcount", 1);
+    high = LDIntVariation(client, "bugcount", 10);
+    if (high != low) {
+        printf("ERROR: bugcount inconsistent\n");
     }
-    if (LDBoolVariation(client, "sort.order", true)) {
-        printf("sort order is true\n");
-    } else {
-        printf("sort order is false\n");
+    low = LDIntVariation(client, "missing", 1);
+    high = LDIntVariation(client, "missing", 10);
+    if (high == low) {
+        printf("ERROR: default malfunction\n");
     }
 
-    delay = 10;
-    sleep(delay);
+    LDMapNode *jnode = LDJSONVariation(client, "jj");
+    LDMapNode *ii = LDMapLookup(jnode, "ii");
+    if (ii->type != LDNodeNumber || ii->n != 7) {
+        printf("ERROR: the json was not as expected\n");
+    }
+    LDJSONRelease(jnode);
     
-    printf("%d seconds up\n", delay);
-    LDClientFlush(client);
-    }
-
     LDClientClose(client);
+
+    printf("Completed all tests\n");
 
     return 0;
 }
