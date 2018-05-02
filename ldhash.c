@@ -5,12 +5,10 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-char *
-LDi_hashtojson(LDMapNode *hash)
+static cJSON *
+hashtojson(LDMapNode *hash)
 {
-    cJSON *json;
-
-    json = cJSON_CreateObject();
+    cJSON *json = cJSON_CreateObject();
     LDMapNode *node, *tmp;
     HASH_ITER(hh, hash, node, tmp) {
         switch (node->type) {
@@ -23,8 +21,18 @@ LDi_hashtojson(LDMapNode *hash)
         case LDNodeString:
             cJSON_AddStringToObject(json, node->key, node->s);
             break;
+        case LDNodeMap:
+            cJSON_AddItemToObject(json, node->key, hashtojson(node->m));
+            break;
         }
     }
+    return json;
+}
+
+char *
+LDi_hashtojson(LDMapNode *hash)
+{
+    cJSON *json = hashtojson(hash);
     char *s = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
     return s;
