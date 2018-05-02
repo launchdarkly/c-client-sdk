@@ -185,7 +185,7 @@ progressinspector(void *v, double dltotal, double dlnow, double ultotal, double 
         return 1;
     }
     LDClient *client = LDClientGet();
-    if (client->dead)
+    if (client->dead || client->offline)
         return 1;
 
     return 0;
