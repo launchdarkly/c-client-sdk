@@ -181,7 +181,6 @@ applypatch(cJSON *payload, bool isdelete)
 static void
 onstreameventpatch(const char *data)
 {
-    printf("I have a patch payload: %s\n", data);
     cJSON *payload = cJSON_Parse(data);
 
     if (!payload) {
@@ -278,10 +277,8 @@ streamcallback(const char *line)
             LDi_log(15, "PING\n");
             onstreameventping();
         }
-#if 0
-        printf("here is data for the event %s\n", eventtypebuf);
-        printf("the data: %s\n", line);
-#endif
+        LDi_log(100, "here is data for the event %s\n", eventtypebuf);
+        LDi_log(100, "the data: %s\n", line);
     }
     return 0;
 }

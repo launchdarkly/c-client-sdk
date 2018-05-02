@@ -64,7 +64,7 @@ LDi_jsontohash(cJSON *json, int flavor)
                 }
             }
             if (!valueitem) {
-                printf("version with no value\n");
+                LDi_log(5, "version with no value\n");
                 continue;
             }
             break;
@@ -82,7 +82,7 @@ LDi_jsontohash(cJSON *json, int flavor)
                 }
             }
             if (!valueitem) {
-                printf("lost the value\n");
+                LDi_log(5, "lost the value\n");
                 continue;
             }
             break;
@@ -115,7 +115,6 @@ LDi_jsontohash(cJSON *json, int flavor)
             break;
         case cJSON_Object:
             node->type = LDNodeMap;
-            printf("going down... %s\n", valueitem->string);
             node->m = LDi_jsontohash(valueitem, 0);
             break;
         default:
