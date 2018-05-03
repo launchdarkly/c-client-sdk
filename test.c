@@ -58,6 +58,11 @@ main(int argc, char **argv)
     if (strcmp(buffer, "more than") != 0) {
         printf("ERROR: the string variation failed\n");
     }
+    char *letters = LDStringVariationAlloc(client, "missing", "more than ten letters");
+    if (strcmp(letters, "more than ten letters") != 0) {
+        printf("ERROR: the string variation failed\n");
+    }
+    LDFree(letters);
 
     LDMapNode *jnode = LDJSONVariation(client, "jj");
     LDMapNode *ii = LDMapLookup(jnode, "ii");

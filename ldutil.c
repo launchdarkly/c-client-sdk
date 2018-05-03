@@ -39,6 +39,11 @@ LDMapLookup(LDMapNode *hash, const char *key)
     return res;
 }
 
+void
+LDFree(void *v)
+{
+    free(v);
+}
 
 /*
  * some functions to help with threads.
