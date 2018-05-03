@@ -63,3 +63,31 @@ void LDMapNode::release(void)
 {
     LDJSONRelease(this);
 }
+
+void LDClient::setOffline(void)
+{
+    LDClientSetOffline(this->client);
+}
+
+void LDClient::setOnline(void)
+{
+    LDClientSetOnline(this->client);
+}
+
+bool LDClient::isOffline(void)
+{
+    return LDClientIsOffline(this->client);
+}
+
+std::string LDClient::saveFlags(void)
+{
+    char *s = LDClientSaveFlags(this->client);
+    std::string rv(s);
+    free(s);
+    return rv;
+}
+
+void LDClient::restoreFlags(const std::string &flags)
+{
+    LDClientRestoreFlags(this->client, flags.c_str());
+}

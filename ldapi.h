@@ -146,6 +146,12 @@ class LDClient {
 
         LDMapNode *JSONVariation(const std::string &);
 
+        void setOffline();
+        void setOnline();
+        bool isOffline();
+
+        std::string saveFlags();
+        void restoreFlags(const std::string &);
 
         void flush(void);
         void close(void);
