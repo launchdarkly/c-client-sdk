@@ -19,6 +19,7 @@ struct streamdata {
     time_t lastdatatime;
     double lastdataamt;
 };
+
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
@@ -53,14 +54,11 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
         return 0;
     }
 
-
- 
     memcpy(&(mem->memory[mem->size]), contents, realsize);
     mem->size += realsize;
     mem->memory[mem->size] = 0;
 
     char *nl;
-
     nl = memchr(mem->memory, '\n', mem->size);
     if (nl) {
         size_t eaten = 0;
@@ -73,9 +71,7 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
         memmove(mem->memory, mem->memory + eaten, eaten);
         mem->size -= eaten;
     }
- 
     return realsize;
-
 }
 
 static char *
@@ -120,7 +116,6 @@ fetch_url(const char *url, const char *authkey, int *response)
     curl_easy_cleanup(curl);
 
     return data.memory;
-
 }
 
 static char *
@@ -170,6 +165,10 @@ post_data(const char *url, const char *authkey, const char *postbody, int *respo
     return data.memory;
 }
 
+/*
+ * record the timestamp of the last received data. if nothing has been
+ * seen for a while, disconnect. this shouldn't normally happen.
+ */
 static int
 progressinspector(void *v, double dltotal, double dlnow, double ultotal, double ulnow)
 {
@@ -211,7 +210,6 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
     streamdata.callback = callback;
     streamdata.lastdatatime = time(NULL);
     
-
     curl = curl_easy_init();
 
     snprintf(auth, sizeof(auth), "Authorization: %s", authkey);
@@ -243,12 +241,10 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
         *response = -1;
     }
 
+    free(streamdata.mem.memory);
     free(headers.memory);
 
     curl_easy_cleanup(curl);
-
-    free(streamdata.mem.memory);
-
 }
 
 

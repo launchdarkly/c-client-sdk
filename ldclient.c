@@ -408,7 +408,6 @@ LDClientRegisterFeatureFlagListener(LDClient *client, const char *key, LDlistene
 {
     struct listener *list;
 
-
     list = malloc(sizeof(*list));
     if (!list)
         return false;

@@ -190,7 +190,6 @@ onstreameventpatch(const char *data)
     applypatch(payload, false);
 }
 
-
 static void
 onstreameventdelete(const char *data)
 {
@@ -201,9 +200,7 @@ onstreameventdelete(const char *data)
         return;
     }
     applypatch(payload, 1);
-    
 }
-
 
 static void
 onstreameventping(void)
