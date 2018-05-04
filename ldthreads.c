@@ -96,8 +96,10 @@ bgfeaturepoller(void *v)
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
-        int ms = client->config->pollingIntervalMillis;
-        bool skippolling = client->config->streaming || client->offline;
+        int ms = 3000000;
+        if (client->config)
+            ms = client->config->pollingIntervalMillis;
+        bool skippolling = client->dead || client->config->streaming || client->offline;
         if (!skippolling && !client->isinit)
             ms = 0;
         LDi_unlock(&LDi_clientlock);
@@ -210,6 +212,10 @@ onstreameventping(void)
     LDClient *client = LDClientGet();
 
     LDi_rdlock(&LDi_clientlock);
+    if (client->dead) {
+        LDi_unlock(&LDi_clientlock);
+        return;
+    }
     char *userurl = LDi_usertourl(client->user);
     char url[4096];
     snprintf(url, sizeof(url), "%s/msdk/eval/users/%s", client->config->appURI, userurl);
@@ -290,6 +296,11 @@ bgfeaturestreamer(void *v)
     int retries = 0;
     while (true) {
         LDi_rdlock(&LDi_clientlock);
+        if (client->dead || !client->config->streaming || client->offline) {
+            LDi_unlock(&LDi_clientlock);
+            LDi_millisleep(30000);
+            continue;
+        }
         char *userurl = LDi_usertourl(client->user);
 
         char url[4096];
@@ -298,11 +309,7 @@ bgfeaturestreamer(void *v)
         
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
-        if (client->dead || !client->config->streaming || client->offline) {
-            LDi_unlock(&LDi_clientlock);
-            LDi_millisleep(30000);
-            continue;
-        }
+
         LDi_unlock(&LDi_clientlock);
 
         int response;
