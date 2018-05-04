@@ -75,6 +75,10 @@ main(int argc, char **argv)
 
     printf("Completed all tests\n");
 
+    extern unsigned long long LD_allocations, LD_frees;
+
+    printf("Memory consumed: %lld allocs %lld frees\n", LD_allocations, LD_frees);
+
     return 0;
 }
 

@@ -21,7 +21,7 @@ LDConfigNew(const char *mobileKey)
 {
     LDConfig *config;
 
-    config = malloc(sizeof(*config));
+    config = LDAlloc(sizeof(*config));
     if (!config) {
         LDi_log(2, "no memory for config\n");
         return NULL;
@@ -51,12 +51,12 @@ freeconfig(LDConfig *config)
 {
     if (!config)
         return;
-    free(config->appURI);
-    free(config->eventsURI);
-    free(config->mobileKey);
-    free(config->streamURI);
+    LDFree(config->appURI);
+    LDFree(config->eventsURI);
+    LDFree(config->mobileKey);
+    LDFree(config->streamURI);
     /* free privateAttributeNames */
-    free(config);
+    LDFree(config);
 }
 
 
@@ -65,7 +65,7 @@ LDUserNew(const char *key)
 {
     LDUser *user;
 
-    user = malloc(sizeof(*user));
+    user = LDAlloc(sizeof(*user));
     if (!user) {
         LDi_log(2, "no memory for user\n");
         return NULL;
@@ -91,15 +91,15 @@ freeuser(LDUser *user)
 {
     if (!user)
         return;
-    free(user->key);
-    free(user->secondary);
-    free(user->firstName);
-    free(user->lastName);
-    free(user->email);
-    free(user->name);
-    free(user->avatar);
+    LDFree(user->key);
+    LDFree(user->secondary);
+    LDFree(user->firstName);
+    LDFree(user->lastName);
+    LDFree(user->email);
+    LDFree(user->name);
+    LDFree(user->avatar);
     /* free custom and privateAttributeNames */
-    free(user);
+    LDFree(user);
 }
 
 
@@ -109,7 +109,7 @@ starteverything(void)
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
-    theClient = malloc(sizeof(*theClient));
+    theClient = LDAlloc(sizeof(*theClient));
     if (!theClient) {
         LDi_log(2, "no memory for the client\n");
         return;
@@ -215,6 +215,10 @@ LDClientClose(LDClient *client)
     client->dead = true;
     oldhash = client->allFlags;
     client->allFlags = NULL;
+    freeconfig(client->config);
+    client->config = NULL;
+    freeuser(client->user);
+    client->user = NULL;
     LDi_unlock(&LDi_clientlock);
 
     LDi_freehash(oldhash);
@@ -370,7 +374,7 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     else
         s = fallback;
     
-    news = strdup(s);
+    news = LDi_strdup(s);
     LDi_unlock(&LDi_clientlock);
     LDi_recordfeature(client->user, key, LDNodeString, 0.0, news, 0.0, fallback);
     return news;
@@ -408,13 +412,13 @@ LDClientRegisterFeatureFlagListener(LDClient *client, const char *key, LDlistene
 {
     struct listener *list;
 
-    list = malloc(sizeof(*list));
+    list = LDAlloc(sizeof(*list));
     if (!list)
         return false;
     list->fn = fn;
-    list->key = strdup(key);
+    list->key = LDi_strdup(key);
     if (!list->key) {
-        free(list);
+        LDFree(list);
         return false;
     }
 
@@ -440,8 +444,8 @@ LDClientUnregisterFeatureFlagListener(LDClient *client, const char *key, LDliste
             } else {
                 client->listeners = list->next;
             }
-            free(list->key);
-            free(list);
+            LDFree(list->key);
+            LDFree(list);
             break;
         }
     }

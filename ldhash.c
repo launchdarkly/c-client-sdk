@@ -88,9 +88,9 @@ LDi_jsontohash(cJSON *json, int flavor)
             break;
         }
 
-        LDMapNode *node = malloc(sizeof(*node));
+        LDMapNode *node = LDAlloc(sizeof(*node));
         memset(node, 0, sizeof(*node));
-        node->key = strdup(key);
+        node->key = LDi_strdup(key);
 
         switch (valueitem->type) {
         case cJSON_False:
@@ -109,7 +109,7 @@ LDi_jsontohash(cJSON *json, int flavor)
             break;
         case cJSON_String:
             node->type = LDNodeString;
-            node->s = strdup(valueitem->valuestring);
+            node->s = LDi_strdup(valueitem->valuestring);
             break;
         case cJSON_Array:
             break;
@@ -132,12 +132,12 @@ LDi_jsontohash(cJSON *json, int flavor)
 void
 LDi_freenode(LDMapNode *node)
 {
-    free(node->key);
+    LDFree(node->key);
     if (node->type == LDNodeString)
-        free(node->s);
+        LDFree(node->s);
     if (node->type == LDNodeMap)
         LDi_freehash(node->m);
-    free(node);
+    LDFree(node);
 }
 
 void

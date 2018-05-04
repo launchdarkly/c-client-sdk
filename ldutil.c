@@ -13,9 +13,9 @@
 void
 LDSetString(char **target, const char *value)
 {
-    free(*target);
+    LDFree(*target);
     if (value) {
-        *target = strdup(value);
+        *target = LDi_strdup(value);
     } else {
         *target = NULL;
     }
@@ -39,11 +39,46 @@ LDMapLookup(LDMapNode *hash, const char *key)
     return res;
 }
 
+static pthread_mutex_t allocmtx = PTHREAD_MUTEX_INITIALIZER;
+unsigned long long LD_allocations;
+unsigned long long LD_frees;
+
+void *
+LDAlloc(size_t amt)
+{
+    void *v = malloc(amt);
+    if (v) {
+        LDi_mtxenter(&allocmtx);
+        LD_allocations++;
+        LDi_mtxleave(&allocmtx);
+    }
+    return v;
+}
+
 void
 LDFree(void *v)
 {
-    free(v);
+    if (v) {
+        LDi_mtxenter(&allocmtx);
+        LD_frees++;
+        LDi_mtxleave(&allocmtx);
+        free(v);
+    }
 }
+
+
+char *
+LDi_strdup(const char *src)
+{
+    char *cp = strdup(src);
+    if (cp) {
+        LDi_mtxenter(&allocmtx);
+        LD_allocations++;
+        LDi_mtxleave(&allocmtx);
+    }
+    return cp;
+}
+
 
 /*
  * some functions to help with threads.

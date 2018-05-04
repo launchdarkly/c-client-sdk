@@ -110,6 +110,7 @@ LDMapNode *LDJSONVariation(struct LDClient_i *client, const char *key);
 void LDJSONRelease(LDMapNode *m);
 
 void LDFree(void *);
+void *LDAlloc(size_t amt);
 
 LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
 

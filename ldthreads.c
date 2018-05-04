@@ -26,7 +26,9 @@ bgeventsender(void *v)
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
-        int ms = client->config->eventsFlushIntervalMillis;
+        int ms = 30000;
+        if (client->config)
+            ms = client->config->eventsFlushIntervalMillis;
         LDi_unlock(&LDi_clientlock);
 
         LDi_log(20, "bg sender sleeping\n");

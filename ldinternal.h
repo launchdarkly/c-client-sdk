@@ -41,6 +41,8 @@ LDMapNode *LDi_jsontohash(cJSON *json, int flavor);
 void LDi_initevents(int capacity);
 char * LDi_usertourl(LDUser *user);
 
+char *LDi_strdup(const char *src);
+
 void LDi_clientsetflags(LDClient *client, const char *data, int flavor);
 
 char *LDi_fetchfeaturemap(const char *url, const char *authkey, int *response);
