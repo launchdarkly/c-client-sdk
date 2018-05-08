@@ -242,7 +242,7 @@ char *
 LDClientSaveFlags(LDClient *client)
 {
     LDi_rdlock(&LDi_clientlock);
-    char *s = LDi_hashtojson(client->allFlags);
+    char *s = LDi_hashtostring(client->allFlags);
     LDi_unlock(&LDi_clientlock);
     return s;
 }
@@ -400,6 +400,10 @@ LDJSONVariation(LDClient *client, const char *key)
     LDi_rdlock(&LDi_clientlock);
     res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeMap) {
+        char *s = LDi_hashtostring(res->m);
+        if (!isPrivateAttr(client, key))
+            LDi_recordfeature(client->user, key, LDNodeMap, 0.0, s, 0.0, "");
+        LDFree(s);
         return res->m;
     }
     LDi_unlock(&LDi_clientlock);

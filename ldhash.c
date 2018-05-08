@@ -30,11 +30,13 @@ hashtojson(LDMapNode *hash)
 }
 
 char *
-LDi_hashtojson(LDMapNode *hash)
+LDi_hashtostring(LDMapNode *hash)
 {
     cJSON *json = hashtojson(hash);
-    char *s = cJSON_PrintUnformatted(json);
+    char *tmp = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
+    char *s = LDi_strdup(tmp);
+    free(tmp);
     return s;
 }
 
