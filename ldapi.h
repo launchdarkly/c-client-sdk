@@ -80,6 +80,9 @@ LDUser *LDUserNew(const char *);
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
 struct LDClient_i *LDClientGet(void);
 
+void LDConfigAddPrivateAttribute(LDConfig *, const char *name);
+void LDUserAddPrivateAttribute(LDUser *, const char *name);
+
 char *LDClientSaveFlags(struct LDClient_i *client);
 void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
 

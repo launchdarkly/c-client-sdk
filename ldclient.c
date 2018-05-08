@@ -55,7 +55,7 @@ freeconfig(LDConfig *config)
     LDFree(config->eventsURI);
     LDFree(config->mobileKey);
     LDFree(config->streamURI);
-    /* free privateAttributeNames */
+    LDi_freehash(config->privateAttributeNames);
     LDFree(config);
 }
 
@@ -98,7 +98,7 @@ freeuser(LDUser *user)
     LDFree(user->email);
     LDFree(user->name);
     LDFree(user->avatar);
-    /* free custom and privateAttributeNames */
+    LDi_freehash(user->privateAttributeNames);
     LDFree(user);
 }
 
@@ -281,6 +281,13 @@ LDi_clientsetflags(LDClient *client, const char *data, int flavor)
  * a block of functions to look up feature flags
  */
 
+ bool
+ isPrivateAttr(LDClient *client, const char *key)
+ {
+     return (LDMapLookup(client->config->privateAttributeNames, key) != NULL) ||
+        (LDMapLookup(client->user->privateAttributeNames, key) != NULL);
+ }
+
 bool
 LDBoolVariation(LDClient *client, const char *key, bool fallback)
 {
@@ -296,8 +303,9 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
         LDi_log(15, "no result for %s\n", key);
         b = fallback;
     }
+    if (!isPrivateAttr(client, key))
+        LDi_recordfeature(client->user, key, LDNodeBool, (double)b, NULL, (double)fallback, NULL);
     LDi_unlock(&LDi_clientlock);
-    LDi_recordfeature(client->user, key, LDNodeBool, (double)b, NULL, (double)fallback, NULL);
     return b;
 }
 
@@ -313,8 +321,9 @@ LDIntVariation(LDClient *client, const char *key, int fallback)
         i = (int)res->n;
     else
         i = fallback;
+    if (!isPrivateAttr(client, key))
+        LDi_recordfeature(client->user, key, LDNodeNumber, (double)i, NULL, (double)fallback, NULL);
     LDi_unlock(&LDi_clientlock);
-    LDi_recordfeature(client->user, key, LDNodeNumber, (double)i, NULL, (double)fallback, NULL);
     return i;
 }
 
@@ -330,8 +339,9 @@ LDDoubleVariation(LDClient *client, const char *key, double fallback)
         d = res->n;
     else
         d = fallback;
+    if (!isPrivateAttr(client, key))
+        LDi_recordfeature(client->user, key, LDNodeNumber, d, NULL, fallback, NULL);
     LDi_unlock(&LDi_clientlock);
-    LDi_recordfeature(client->user, key, LDNodeNumber, d, NULL, fallback, NULL);
     return d;
 }
 
@@ -355,8 +365,9 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
         len = space - 1;
     memcpy(buffer, s, len);
     buffer[len] = 0;
+    if (!isPrivateAttr(client, key))
+        LDi_recordfeature(client->user, key, LDNodeString, 0.0, buffer, 0.0, fallback);
     LDi_unlock(&LDi_clientlock);
-    LDi_recordfeature(client->user, key, LDNodeString, 0.0, buffer, 0.0, fallback);
     return buffer;
 }
 
@@ -375,8 +386,9 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
         s = fallback;
     
     news = LDi_strdup(s);
+    if (!isPrivateAttr(client, key))
+        LDi_recordfeature(client->user, key, LDNodeString, 0.0, news, 0.0, fallback);
     LDi_unlock(&LDi_clientlock);
-    LDi_recordfeature(client->user, key, LDNodeString, 0.0, news, 0.0, fallback);
     return news;
 }
 
@@ -451,4 +463,28 @@ LDClientUnregisterFeatureFlagListener(LDClient *client, const char *key, LDliste
     }
     LDi_unlock(&LDi_clientlock);
     return list != NULL;
+}
+
+void
+LDConfigAddPrivateAttribute(LDConfig *config, const char *key)
+{
+    LDMapNode *node = LDAlloc(sizeof(*node));
+    memset(node, 0, sizeof(*node));
+    node->key = LDi_strdup(key);
+    node->type = LDNodeBool;
+    node->b = true;
+
+    HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
+}
+
+void
+LDUserAddPrivateAttribute(LDUser *user, const char *key)
+{
+    LDMapNode *node = LDAlloc(sizeof(*node));
+    memset(node, 0, sizeof(*node));
+    node->key = LDi_strdup(key);
+    node->type = LDNodeBool;
+    node->b = true;
+
+    HASH_ADD_KEYPTR(hh, user->privateAttributeNames, node->key, strlen(node->key), node);
 }
