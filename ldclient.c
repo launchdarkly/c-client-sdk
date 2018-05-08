@@ -304,7 +304,8 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
         b = fallback;
     }
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeBool, (double)b, NULL, (double)fallback, NULL);
+        LDi_recordfeature(client->user, key, LDNodeBool,
+            (double)b, NULL, NULL, (double)fallback, NULL, NULL);
     LDi_unlock(&LDi_clientlock);
     return b;
 }
@@ -322,7 +323,8 @@ LDIntVariation(LDClient *client, const char *key, int fallback)
     else
         i = fallback;
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeNumber, (double)i, NULL, (double)fallback, NULL);
+        LDi_recordfeature(client->user, key, LDNodeNumber,
+            (double)i, NULL, NULL, (double)fallback, NULL, NULL);
     LDi_unlock(&LDi_clientlock);
     return i;
 }
@@ -340,7 +342,8 @@ LDDoubleVariation(LDClient *client, const char *key, double fallback)
     else
         d = fallback;
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeNumber, d, NULL, fallback, NULL);
+        LDi_recordfeature(client->user, key, LDNodeNumber,
+            d, NULL, NULL, fallback, NULL, NULL);
     LDi_unlock(&LDi_clientlock);
     return d;
 }
@@ -366,7 +369,8 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
     memcpy(buffer, s, len);
     buffer[len] = 0;
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeString, 0.0, buffer, 0.0, fallback);
+        LDi_recordfeature(client->user, key, LDNodeString,
+            0.0, buffer, NULL, 0.0, fallback, NULL);
     LDi_unlock(&LDi_clientlock);
     return buffer;
 }
@@ -387,34 +391,35 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     
     news = LDi_strdup(s);
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeString, 0.0, news, 0.0, fallback);
+        LDi_recordfeature(client->user, key, LDNodeString,
+            0.0, news, NULL, 0.0, fallback, NULL);
     LDi_unlock(&LDi_clientlock);
     return news;
 }
 
 LDMapNode *
-LDJSONVariation(LDClient *client, const char *key)
+LDJSONVariation(LDClient *client, const char *key, LDMapNode *fallback)
 {
     LDMapNode *res;
+    LDMapNode *j;
 
     LDi_rdlock(&LDi_clientlock);
     res = LDMapLookup(client->allFlags, key);
     if (res && res->type == LDNodeMap) {
-        char *s = LDi_hashtostring(res->m);
-        if (!isPrivateAttr(client, key))
-            LDi_recordfeature(client->user, key, LDNodeMap, 0.0, s, 0.0, "");
-        LDFree(s);
-        return res->m;
+        j = res->m;
+    } else {
+        j = fallback;
     }
-    LDi_unlock(&LDi_clientlock);
-    return NULL;
+    if (!isPrivateAttr(client, key))
+        LDi_recordfeature(client->user, key, LDNodeMap,
+            0.0, NULL, j, 0.0, NULL, fallback);
+    return j;
 }
 
 void
 LDJSONRelease(LDMapNode *m)
 {
-    if (m)
-        LDi_unlock(&LDi_clientlock);
+    LDi_unlock(&LDi_clientlock);
 }
 
 void

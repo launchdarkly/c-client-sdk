@@ -37,6 +37,7 @@ void LDi_freehash(LDMapNode *hash);
 void LDi_freenode(LDMapNode *node);
 
 char *LDi_hashtostring(LDMapNode *hash);
+cJSON *LDi_hashtojson(LDMapNode *hash);
 LDMapNode *LDi_jsontohash(cJSON *json, int flavor);
 void LDi_initevents(int capacity);
 char * LDi_usertourl(LDUser *user);
@@ -50,7 +51,7 @@ void LDi_readstream(const char *url, const char *authkey, int *response, int cal
 
 void LDi_recordidentify(LDUser *lduser);
 void LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,
-    double defaultn, const char *defaults);
+    LDMapNode *, double defaultn, const char *defaults, LDMapNode *);
 char *LDi_geteventdata(void);
 void LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response);
 

@@ -82,7 +82,7 @@ LDi_recordidentify(LDUser *lduser)
 
 void
 LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,
-    double defaultn, const char *defaults)
+    LDMapNode *m, double defaultn, const char *defaults, LDMapNode *defaultm)
 {
     if (numevents >= eventscapacity) {
         return;
@@ -101,6 +101,9 @@ LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const
     } else if (type == LDNodeBool) {
         cJSON_AddBoolToObject(json, "value", (int)n);
         cJSON_AddBoolToObject(json, "default", (int)defaultn);
+    } else if (type == LDNodeMap) {
+        cJSON_AddItemToObject(json, "value", LDi_hashtojson(m));
+        cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
     cJSON *juser = LDi_usertojson(lduser);

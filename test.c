@@ -33,6 +33,7 @@ main(int argc, char **argv)
 
     char *ss = LDClientSaveFlags(client);
     printf("INFO: the output json is %s\n", ss);
+    LDFree(ss);
 
     while (!LDClientIsInitialized(client)) {
         printf("not ready yet\n");
@@ -64,10 +65,16 @@ main(int argc, char **argv)
     }
     LDFree(letters);
 
-    LDMapNode *jnode = LDJSONVariation(client, "jj");
+    LDMapNode *jnode = LDJSONVariation(client, "jj", NULL);
     LDMapNode *ii = LDMapLookup(jnode, "ii");
     if (ii->type != LDNodeNumber || ii->n != 7) {
         printf("ERROR: the json was not as expected\n");
+    }
+    LDJSONRelease(jnode);
+    jnode = LDJSONVariation(client, "missing", NULL);
+    ii = LDMapLookup(jnode, "ii");
+    if (ii != NULL) {
+        printf("ERROR: found some unexpected json\n");
     }
     LDJSONRelease(jnode);
     

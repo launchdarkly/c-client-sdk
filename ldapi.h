@@ -101,7 +101,7 @@ int LDIntVariation(struct LDClient_i *, const char *, int);
 double LDDoubleVariation(struct LDClient_i *, const char *, double);
 char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
 char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
-LDMapNode *LDJSONVariation(struct LDClient_i *client, const char *key);
+LDMapNode *LDJSONVariation(struct LDClient_i *client, const char *key, LDMapNode *);
 void LDJSONRelease(LDMapNode *m);
 
 void LDFree(void *);
