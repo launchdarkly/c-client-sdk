@@ -11,7 +11,7 @@ struct listener {
 struct LDClient_i {
     LDConfig *config;
     LDUser *user;
-    LDStringMap *allFlags;
+    LDMapNode *allFlags;
     bool offline;
     bool dead;
     bool isinit;

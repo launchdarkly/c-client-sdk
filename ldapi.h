@@ -9,12 +9,6 @@
 extern "C" {
 #endif
 
-typedef struct {
-    char **strings;
-} LDStringSet;
-
-struct LDStringMap_i;
-
 typedef enum {
     LDNodeNone = 0,
     LDNodeString,
@@ -39,8 +33,6 @@ typedef struct LDMapNode_i {
 #endif
 } LDMapNode;
 
-typedef LDMapNode LDStringMap;
-
 typedef struct LDConfig_i {
     bool allAttributesPrivate;
     int backgroundPollingIntervalMillis;
@@ -53,7 +45,7 @@ typedef struct LDConfig_i {
     char *mobileKey;
     bool offline;
     int pollingIntervalMillis;
-    LDStringSet *privateAttributeNames;
+    LDMapNode *privateAttributeNames;
     bool streaming;
     char *streamURI;
     bool useReport;
@@ -69,8 +61,8 @@ typedef struct LDUser_i {
     char *email;
     char *name;
     char *avatar;
-    LDStringMap *custom;
-    LDStringSet *privateAttributeNames;
+    LDMapNode *custom;
+    LDMapNode *privateAttributeNames;
 } LDUser;
 
 struct LDClient_i;
