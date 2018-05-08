@@ -54,9 +54,10 @@ To avoid allocations, the second function fills a caller provided buffer. Up to
 size bytes will be copied into buffer, truncating if necessary.
 Both functions return a pointer.
 
-LDMapNode *LDJSONVariation(LDClient *client, const char *name)
+LDMapNode *LDJSONVariation(LDClient *client, const char *name, LDMapNode *default)
 Ask for a JSON variation, returned as a parsed tree of LDMapNodes.
-After examination, it must be released by calling LDJSONRelease().
+The node returned is an internal data structure of the client. After examination,
+it must be released by calling LDJSONRelease() which will unlock the client.
 See also LDMapLookup.
 
 void LDJSONRelease(LDMapNode *hash)
