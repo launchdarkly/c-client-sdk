@@ -16,15 +16,15 @@ logger(const char *s)
 int
 main(int argc, char **argv)
 {
-    printf("back to basics\n");
-
-    LD_SetLogFunction(20, logger);
+    LD_SetLogFunction(5, logger);
 
     LDConfig *config = LDConfigNew("authkey");
+    config->offline = true;
 
     LDUser *user = LDUserNew("user200");
 
     LDClient *client = LDClient::Init(config, user);
+    client->restoreFlags("{ \"sort.order\": false, \"bugcount\": 0, \"jj\": { \"ii\": 7 } }");
 
     while (!client->isInitialized()) {
         printf("not ready yet\n");
@@ -32,26 +32,24 @@ main(int argc, char **argv)
     }
 
     int delay = 0;
-    while (true) {
-
-        if (client->intVariation("bugcount", 10) < 5) {
-            break;
-        }
-    
     if (client->boolVariation("sort.order", true)) {
         printf("sort order is true\n");
     } else {
         printf("sort order is false\n");
     }
 
-    delay = 10;
-    sleep(delay);
-    
-    printf("%d seconds up\n", delay);
-    client->flush();
+    LDMapNode *jnode = client->JSONVariation("jj", NULL);
+    LDMapNode *ii = jnode->lookup("ii");
+    if (ii->type != LDNodeNumber || ii->n != 7) {
+        printf("ERROR: the json was not as expected\n");
     }
+    jnode->release();
+
+    client->flush();
 
     client->close();
+
+    printf("CXX tests completed\n");
     return 0;
 }
 

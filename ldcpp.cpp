@@ -43,6 +43,11 @@ char * LDClient::stringVariation(const std::string &key, const std::string &def,
     return LDStringVariation(this->client, key.c_str(), def.c_str(), buf, len);
 }
 
+LDMapNode *LDClient::JSONVariation(const std::string &key, LDMapNode *def)
+{
+    return LDJSONVariation(this->client, key.c_str(), def);
+}
+
 void LDClient::flush(void)
 {
     return LDClientFlush(this->client);

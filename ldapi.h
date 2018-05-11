@@ -140,7 +140,7 @@ class LDClient {
         std::string stringVariation(const std::string &, const std::string &);
         char *stringVariation(const std::string &, const std::string &, char *, size_t);
 
-        LDMapNode *JSONVariation(const std::string &);
+        LDMapNode *JSONVariation(const std::string &, LDMapNode *);
 
         void setOffline();
         void setOnline();
