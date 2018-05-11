@@ -15,7 +15,7 @@ libldapi.so: ldapi.h ldinternal.h $(COBJS)
 	$(CC) -o libldapi.so -fPIC -shared $(SRCS) $(LIBS)
 
 libldapiplus.so: ldapi.h ldinternal.h $(COBJS) $(CXXOBJS)
-	$(CC) -o libldapiplus.so -fPIC -shared $(COBJS) $(CXXOBJS) $(LIBS)
+	$(CXX) -o libldapiplus.so -fPIC -shared $(COBJS) $(CXXOBJS) $(LIBS)
 
 test: ldapi.h test.o $(COBJS)
 	$(CC) -o test test.o $(COBJS) $(LIBS)
