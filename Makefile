@@ -1,22 +1,24 @@
-CC=gcc -std=c99 -D_XOPEN_SOURCE=600
-CXX=g++ -D_XOPEN_SOURCE=600
-SRCS=ldclient.c ldutil.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c base64.c cJSON.c
+CC=gcc -fPIC -std=c99 -D_XOPEN_SOURCE=600
+CXX=g++ -fPIC -D_XOPEN_SOURCE=600
+CSRCS=ldclient.c ldutil.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c base64.c cJSON.c
+CXXSRCS=ldcpp.cpp
+COBJS=$(CSRCS:.c=.o)
+CXXOBJS=$(CXXSRCS:.cpp=.o)
 LIBS=-lcurl -lpthread -lm
 
-all: test testcpp
+all: libldapi.so libldapiplus.so test testcpp
 
 clean:
-	rm -f libldapi.so libldapiplus.so test testcpp
+	rm -f *.o libldapi.so libldapiplus.so test testcpp
 
-libldapi.so: ldapi.h ldinternal.h $(SRCS)
+libldapi.so: ldapi.h ldinternal.h $(COBJS)
 	$(CC) -o libldapi.so -fPIC -shared $(SRCS) $(LIBS)
 
-libldapiplus.so: ldapi.h ldinternal.h $(SRCS) ldcpp.cpp
-	$(CC) -o libldapiplus.so -fPIC -shared $(SRCS) -x c++ ldcpp.cpp $(LIBS)
+libldapiplus.so: ldapi.h ldinternal.h $(COBJS) $(CXXOBJS)
+	$(CC) -o libldapiplus.so -fPIC -shared $(COBJS) $(CXXOBJS) $(LIBS)
 
-test: test.c ldapi.h libldapi.so
-	$(CC) -o test test.c $(SRCS) $(LIBS)
+test: ldapi.h test.o $(COBJS)
+	$(CC) -o test test.o $(COBJS) $(LIBS)
 
-XCSRCS=$(addprefix -x c ,$(SRCS))
-testcpp: testcpp.cpp ldapi.h libldapiplus.so
-	$(CXX) -o testcpp testcpp.cpp ldcpp.cpp $(XCSRCS) $(LIBS)
+testcpp: ldapi.h testcpp.o $(COBJS) $(CXXOBJS)
+	$(CXX) -o testcpp testcpp.o $(COBJS) $(CXXOBJS) $(LIBS)
