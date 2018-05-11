@@ -15,7 +15,8 @@ libldapiplus.so: ldapi.h ldinternal.h $(SRCS) ldcpp.cpp
 	$(CC) -o libldapiplus.so -fPIC -shared $(SRCS) -x c++ ldcpp.cpp $(LIBS)
 
 test: test.c ldapi.h libldapi.so
-	$(CC) -o test test.c -Wl,-rpath=. libldapi.so $(LIBS)
+	$(CC) -o test test.c $(SRCS) $(LIBS)
 
+XCSRCS=$(addprefix -x c ,$(SRCS))
 testcpp: testcpp.cpp ldapi.h libldapiplus.so
-	$(CXX) -o testcpp testcpp.cpp -Wl,-rpath=. libldapiplus.so $(LIBS)
+	$(CXX) -o testcpp testcpp.cpp ldcpp.cpp $(XCSRCS) $(LIBS)
