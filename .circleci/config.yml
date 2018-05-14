@@ -7,5 +7,5 @@ jobs:
        - checkout
        - run: 
           name: Install libcurl
-          command: sudo apt get libcurl4-openssl-dev
+          command: sudo apt-get libcurl4-openssl-dev
        - run: make
