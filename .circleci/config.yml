@@ -5,4 +5,7 @@ jobs:
        - image:  circleci/golang:1.9.6
      steps:
        - checkout
+       - run: 
+        name: Install libcurl
+        command: 'sudo apt get libcurl4-openssl-dev'
        - run: make
