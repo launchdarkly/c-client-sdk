@@ -6,6 +6,8 @@ The LaunchDarkly C / C++ SDK is designed primarily for use in desktop and embedd
 Quick setup
 -----------
 
+The C / C++ SDK requires a POSIX environment, and assumes that both `libcurl` and `libpthread` are installed.
+
 Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application. Once integrated, you can follow these steps to initialize a client instance:
 
 
