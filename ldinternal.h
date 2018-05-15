@@ -58,6 +58,7 @@ void LDi_sendevents(const char *url, const char *authkey, const char *eventdata,
 cJSON *LDi_usertojson(LDUser *lduser);
 
 void LDi_log(int level, const char *fmt, ...);
+void (*LDi_statuscallback)(int);
 
 void LDi_millisleep(int ms);
 void LDi_startthreads(LDClient *client);

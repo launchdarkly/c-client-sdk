@@ -64,6 +64,8 @@ bgeventsender(void *v)
                 sent = true; /* consider it done */
                 client->dead = true;
                 retries = 0;
+                if (LDi_statuscallback)
+                    LDi_statuscallback(0);
             } else if (response == -1) {
                 retries++;
             } else {
@@ -131,6 +133,8 @@ bgfeaturepoller(void *v)
         char *data = LDi_fetchfeaturemap(url, authkey, &response);
         if (response == 401 || response == 403) {
             client->dead = true;
+            if (LDi_statuscallback)
+                    LDi_statuscallback(0);
         }
         if (!data)
             continue;
@@ -229,6 +233,8 @@ onstreameventping(void)
     char *data = LDi_fetchfeaturemap(url, authkey, &response);
     if (response == 401 || response == 403) {
         client->dead = true;
+        if (LDi_statuscallback)
+            LDi_statuscallback(0);
     }
     if (!data)
         return;
@@ -318,6 +324,8 @@ bgfeaturestreamer(void *v)
         if (response == 401 || response == 403) {
                 client->dead = true;
                 retries = 0;
+                if (LDi_statuscallback)
+                    LDi_statuscallback(0);
         } else if (response == -1) {
                 retries++;
         } else {
