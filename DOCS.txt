@@ -4,9 +4,8 @@ adaptations for the C language. No garbage collection here.
 #include "ldapi.h"
 You want this header. Do not include or use anything from ldinternal.h.
 
-void LDSetString(char **field, const char *value)
-A helper function to set string fields, allocating, freeing, and copying
-memory as needed.
+
+-- CONFIGURATION --
 
 LDConfig *LDConfigNew(const char *authkey)
 Allocate a new default config. It may be modified at this time.
@@ -23,21 +22,18 @@ and user must be considered immutable. May be called more than once to change
 config, in which case the old config is freed. There is only ever one LDClient.
 (Always inits and returns the same value.)
 
-LDClient *LDClientGet(void)
-Get the client. There's only one.
-
-void LDClientIdentify(LDClient *, LDUser *)
-Update the client with a new user. The old user is freed.
-
-void LDClientFlush(LDClient *client)
-Send any pending events to the server. They will normally be flushed after a
-timeout, but may also be flushed manually.
-
-bool LDClientIsInitialized(LDClient *)
-Returns true if the client has received feature flags from the server.
-
 void LDClientClose(LDClient *)
 Close the client, free resources, and generally shut down.
+
+void LDSetString(char **field, const char *value)
+A helper function to set string fields, allocating, freeing, and copying
+memory as needed.
+
+
+-- BASIC CLIENT FUNCTIONS --
+
+LDClient *LDClientGet(void)
+Get the client. There's only one.
 
 bool LDBoolVariation(LDClient *, const char *name , bool default)
 int LDIntVariation(LDClient *, const char *name, int default)
@@ -70,6 +66,19 @@ Lookup a node in a hash map.
 void LDFree(void *)
 Free a string.
 
+typedef void (*LDlistenerfn)(const char *name, int update);
+bool LDClientRegisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn)
+bool LDClientUnregisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn)
+Register and unregister callbacks when features change.
+The name argument indicates the changed value.
+The update argument is 0 for new or updated and 1 for deleted.
+
+
+-- MORE CLIENT FUNCTIONS --
+
+bool LDClientIsInitialized(LDClient *)
+Returns true if the client has received feature flags from the server.
+
 char *LDClientSaveFlags(LDClient *)
 Return a string representing internal feature flag state.
 Free with LDFree().
@@ -77,11 +86,32 @@ Free with LDFree().
 void LDClientRestoreFlags(LDClient *, const char *)
 Restore previously saved feature flags.
 
+void LDClientIdentify(LDClient *, LDUser *)
+Update the client with a new user. The old user is freed.
+
+void LDClientFlush(LDClient *client)
+Send any pending events to the server. They will normally be flushed after a
+timeout, but may also be flushed manually.
+
 void LDClientSetOffline(LDClient *)
 Make the client operate in offline mode. No network traffic.
 
 void LDClientSetOnline(LDClient *)
 Return the client to online mode.
+
+bool LDClientIsOffline(void)
+Returns the offline status of the client.
+
+void LDSetClientStatusCallback(void (callback)(int status))
+Set a callback function for client status changes. These are major
+status changes only, not updates to the feature map.
+Current status code:
+0 - Offline. The client has been shut down, likely due to a permission failure.
+1 - Ready. The client has received an initial feature map from the server
+    and is ready to proceed.
+
+
+-- MISC --
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *))
 Set the log function and log level. Increasing log levels result in increasing output.
