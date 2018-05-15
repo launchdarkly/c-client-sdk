@@ -83,5 +83,5 @@ Make the client operate in offline mode. No network traffic.
 void LDClientSetOnline(LDClient *)
 Return the client to online mode.
 
-void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *))
+void LDSetLogFunction(int userlevel, void (userlogfn)(const char *))
 Set the log function and log level. Increasing log levels result in increasing output.

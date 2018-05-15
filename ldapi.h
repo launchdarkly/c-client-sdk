@@ -95,6 +95,7 @@ void LDClientSetOffline(struct LDClient_i *);
 void LDClientSetOnline(struct LDClient_i *);
 void LDClientClose(struct LDClient_i *);
 
+void LDSetClientStatusCallback(void (callback)(int));
 
 bool LDBoolVariation(struct LDClient_i *, const char *, bool);
 int LDIntVariation(struct LDClient_i *, const char *, int);
@@ -109,7 +110,7 @@ void *LDAlloc(size_t amt);
 
 LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
 
-void LD_SetLogFunction(int userlevel, void (userlogfn)(const char *));
+void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 
 /*
  * listener function for flag changes.

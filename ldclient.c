@@ -16,6 +16,8 @@ static pthread_once_t clientonce = PTHREAD_ONCE_INIT;
 static LDClient *theClient;
 pthread_rwlock_t LDi_clientlock = PTHREAD_RWLOCK_INITIALIZER;
 
+void (*LDi_statuscallback)(int);
+
 LDConfig *
 LDConfigNew(const char *mobileKey)
 {
@@ -173,7 +175,6 @@ LDClientGet()
 void
 LDClientSetOffline(LDClient *client)
 {
-
     LDi_wrlock(&LDi_clientlock);
     client->offline = true;
     LDi_unlock(&LDi_clientlock);
@@ -191,7 +192,10 @@ LDClientSetOnline(LDClient *client)
 bool
 LDClientIsOffline(LDClient *client)
 {
-    return client->offline;
+    LDi_rdlock(&LDi_clientlock);
+    bool offline = client->offline;
+    LDi_unlock(&LDi_clientlock);
+    return offline;
 }
 
 void
@@ -235,6 +239,12 @@ LDClientIsInitialized(LDClient *client)
     return isinit;
 }
 
+void
+LDSetClientStatusCallback(void (callback)(int))
+{
+    LDi_statuscallback = callback;
+}
+
 /*
  * save and restore flags
  */
@@ -251,6 +261,8 @@ void
 LDClientRestoreFlags(LDClient *client, const char *data)
 {
     LDi_clientsetflags(client, data, 0);
+    if (LDi_statuscallback)
+        LDi_statuscallback(1);
 }
 
 void

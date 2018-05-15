@@ -16,7 +16,7 @@ logger(const char *s)
 int
 main(int argc, char **argv)
 {
-    LD_SetLogFunction(5, logger);
+    LDSetLogFunction(5, logger);
 
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;

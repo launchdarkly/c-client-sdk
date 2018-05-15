@@ -13,12 +13,20 @@ logger(const char *s)
     printf("LD: %s", s);
 }
 
+void
+statusupdate(int status)
+{
+    printf("The status is now %d\n", status);
+}
+
 int
 main(int argc, char **argv)
 {
     printf("Beginning tests\n");
 
-    LD_SetLogFunction(20, logger);
+    LDSetLogFunction(20, logger);
+
+    LDSetClientStatusCallback(statusupdate);
 
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;
@@ -29,16 +37,13 @@ main(int argc, char **argv)
 
     char *testflags = "{ \"sort.order\": false, \"bugcount\": 0, \"jj\": { \"ii\": 7 } }";
 
+    printf("Restoring flags\n");
     LDClientRestoreFlags(client, testflags);
+    printf("Done restoring. Did the status change?\n");
 
     char *ss = LDClientSaveFlags(client);
     printf("INFO: the output json is %s\n", ss);
     LDFree(ss);
-
-    while (!LDClientIsInitialized(client)) {
-        printf("not ready yet\n");
-        sleep(1);
-    }
 
     int high, low;
 

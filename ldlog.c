@@ -5,7 +5,7 @@ static void (*logfn)(const char *);
 static int loglevel;
 
 void
-LD_SetLogFunction(int userlevel, void (userlogfn)(const char *))
+LDSetLogFunction(int userlevel, void (userlogfn)(const char *))
 {
     logfn = userlogfn;
     loglevel = userlevel;
