@@ -123,10 +123,10 @@ typedef void (*LD_filer_closer)(void *);
 void
 LD_filer_setfns(void *context, LD_filer_opener, LD_filer_stringwriter, LD_filer_stringreader, LD_filer_closer);
 
-void *LD_filer_open(void *, const char *name, const char *mode, size_t len);
-bool LD_filer_writestring(void *h, const char *data);
-const char *LD_filer_readstring(void *h);
-void LD_filer_close(void *h);
+void *LD_filer_fileopen(void *, const char *name, const char *mode, size_t len);
+bool LD_filer_filewrite(void *h, const char *data);
+const char *LD_filer_fileread(void *h);
+void LD_filer_fileclose(void *h);
 
 /*
  * listener function for flag changes.

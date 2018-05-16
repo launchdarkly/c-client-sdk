@@ -39,7 +39,7 @@ fake_stringwriter(void *handle, const char *data)
 void
 test1(void)
 {
-    LD_filer_setfns(NULL, LD_filer_open, NULL /* no writer */, LD_filer_readstring, LD_filer_close);
+    LD_filer_setfns(NULL, LD_filer_fileopen, NULL /* no writer */, LD_filer_fileread, LD_filer_fileclose);
 
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;
@@ -79,8 +79,6 @@ int
 main(int argc, char **argv)
 {
     printf("Beginning tests\n");
-
-    LDSetLogFunction(20, logger);
 
     test1();
 

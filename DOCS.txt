@@ -141,11 +141,11 @@ Memory is to be managed by the handle.
 typedef void (*LD_filer_closer)(void *handle);
 Close a handle and free resources (e.g. the string returned by stringreader).
 
-A simple set of functions that operate on text files is provided.
-void *LD_filer_open(void *, const char *name, const char *mode, size_t len);
-bool LD_filer_writestring(void *h, const char *data);
-const char *LD_filer_readstring(void *h);
-void LD_filer_close(void *h);
+A simple set of functions that operate on text files is provided:
+void *LD_filer_fileopen(void *, const char *name, const char *mode, size_t len);
+bool LD_filer_filewrite(void *h, const char *data);
+const char *LD_filer_fileread(void *h);
+void LD_filer_fileclose(void *h);
 
 
 

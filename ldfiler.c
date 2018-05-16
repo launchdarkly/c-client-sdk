@@ -69,7 +69,7 @@ struct stdio_filer {
 };
 
 void *
-LD_filer_open(void *context, const char *name, const char *mode, size_t len)
+LD_filer_fileopen(void *context, const char *name, const char *mode, size_t len)
 {
     struct stdio_filer *handle = LDAlloc(sizeof(*handle));
     if (!handle)
@@ -87,14 +87,14 @@ LD_filer_open(void *context, const char *name, const char *mode, size_t len)
 }
 
 bool
-LD_filer_writestring(void *h, const char *data)
+LD_filer_filewrite(void *h, const char *data)
 {
     struct stdio_filer *handle = h;
     return fwrite(data, 1, strlen(data), handle->fp) == strlen(data);
 }
 
 const char *
-LD_filer_readstring(void *h)
+LD_filer_fileread(void *h)
 {
     struct stdio_filer *handle = h;
     char *buf;
@@ -133,7 +133,7 @@ LD_filer_readstring(void *h)
 }
 
 void
-LD_filer_close(void *h)
+LD_filer_fileclose(void *h)
 {
     struct stdio_filer *handle = h;
     fclose(handle->fp);
