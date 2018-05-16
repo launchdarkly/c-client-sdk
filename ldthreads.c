@@ -145,8 +145,9 @@ bgfeaturepoller(void *v)
     }
 }
 
-static void
-onstreameventput(const char *data)
+/* exposed for testing */
+void
+LDi_onstreameventput(const char *data)
 {
     LDClient *client = LDClientGet();
     if (LDi_clientsetflags(client, true, data, 1)) {
@@ -286,7 +287,7 @@ streamcallback(const char *line)
         line += 5;
         if (strcmp(eventtypebuf, "put") == 0) {
             LDi_log(15, "PUT\n");
-            onstreameventput(line);
+            LDi_onstreameventput(line);
         } else if (strcmp(eventtypebuf, "patch") == 0) {
             LDi_log(15, "PATCH\n");
             onstreameventpatch(line);
