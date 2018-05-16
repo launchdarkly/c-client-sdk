@@ -138,7 +138,9 @@ bgfeaturepoller(void *v)
         }
         if (!data)
             continue;
-        LDi_clientsetflags(client, data, 0);
+        if (LDi_clientsetflags(client, true, data, 0)) {
+            LDi_savedata("features", client->user->key, data);
+        }
         free(data);
     }
 }
@@ -146,7 +148,10 @@ bgfeaturepoller(void *v)
 static void
 onstreameventput(const char *data)
 {
-    LDi_clientsetflags(LDClientGet(), data, 1);
+    LDClient *client = LDClientGet();
+    if (LDi_clientsetflags(client, true, data, 1)) {
+        LDi_savedata("features", client->user->key, data);
+    }
 }
 
 static void
@@ -196,6 +201,7 @@ onstreameventpatch(const char *data)
         return;
     }
     applypatch(payload, false);
+    LDi_savehash(LDClientGet());
 }
 
 static void
@@ -208,6 +214,7 @@ onstreameventdelete(const char *data)
         return;
     }
     applypatch(payload, 1);
+    LDi_savehash(LDClientGet());
 }
 
 static void
@@ -238,7 +245,9 @@ onstreameventping(void)
     }
     if (!data)
         return;
-    LDi_clientsetflags(client, data, 1);
+    if (LDi_clientsetflags(client, true, data, 1)) {
+        LDi_savedata("features", client->user->key, data);
+    }
     free(data);
 }
 

@@ -44,7 +44,8 @@ char * LDi_usertourl(LDUser *user);
 
 char *LDi_strdup(const char *src);
 
-void LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor);
+bool LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor);
+void LDi_savehash(LDClient *client);
 
 char *LDi_fetchfeaturemap(const char *url, const char *authkey, int *response);
 void LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *));

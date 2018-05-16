@@ -269,17 +269,19 @@ LDClientSaveFlags(LDClient *client)
 void
 LDClientRestoreFlags(LDClient *client, const char *data)
 {
-    LDi_clientsetflags(client, true, data, 0);
+    if (LDi_clientsetflags(client, true, data, 0)) {
+        LDi_savedata("features", client->user->key, data);
+    }
 }
 
-void
+bool
 LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor)
 {
     cJSON *payload = cJSON_Parse(data);
 
     if (!payload) {
         LDi_log(5, "parsing failed\n");
-        return;
+        return false;
     }
     LDMapNode *hash = NULL;
     if (payload->type == cJSON_Object) {
@@ -301,6 +303,18 @@ LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor
         LDi_statuscallback(1);
 
     LDi_freehash(oldhash);
+
+    return true;
+}
+
+void
+LDi_savehash(LDClient *client)
+{
+    LDi_rdlock(&LDi_clientlock);
+    char *s = LDi_hashtostring(client->allFlags);
+    LDi_savedata("features", client->user->key, s);
+    LDi_unlock(&LDi_clientlock);
+    LDFree(s);
 }
 
 /*
