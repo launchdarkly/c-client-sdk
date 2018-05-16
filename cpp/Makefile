@@ -1,6 +1,6 @@
 CC=gcc -fPIC -std=c99 -D_XOPEN_SOURCE=600 -I..
 CXX=g++ -fPIC -D_XOPEN_SOURCE=600 -I..
-UPCSRCS=ldclient.c ldutil.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c base64.c cJSON.c
+UPCSRCS=ldclient.c ldutil.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c ldfiler.c base64.c cJSON.c
 CSRCS=$(addprefix ../,$(UPCSRCS))
 CXXSRCS=ldcpp.cpp
 COBJS=$(CSRCS:.c=.o)

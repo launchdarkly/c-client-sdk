@@ -113,6 +113,22 @@ LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 
 /*
+ * filer interface. open files, read/write strings, ...
+ */
+typedef void *(*LD_filer_opener)(void *, const char *, const char *, size_t);
+typedef bool (*LD_filer_stringwriter)(void *, const char *data);
+typedef const char *(*LD_filer_stringreader)(void *);
+typedef void (*LD_filer_closer)(void *);
+
+void
+LD_filer_setfns(void *context, LD_filer_opener, LD_filer_stringwriter, LD_filer_stringreader, LD_filer_closer);
+
+void *LD_filer_open(void *, const char *name, const char *mode, size_t len);
+bool LD_filer_writestring(void *h, const char *data);
+const char *LD_filer_readstring(void *h);
+void LD_filer_close(void *h);
+
+/*
  * listener function for flag changes.
  * arguments:
  * flag name

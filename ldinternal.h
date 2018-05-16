@@ -44,7 +44,7 @@ char * LDi_usertourl(LDUser *user);
 
 char *LDi_strdup(const char *src);
 
-void LDi_clientsetflags(LDClient *client, const char *data, int flavor);
+void LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor);
 
 char *LDi_fetchfeaturemap(const char *url, const char *authkey, int *response);
 void LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *));
@@ -62,6 +62,10 @@ void (*LDi_statuscallback)(int);
 
 void LDi_millisleep(int ms);
 void LDi_startthreads(LDClient *client);
+
+/* calls into the filer interface */
+void LDi_savedata(const char *dataname, const char *username, const char *data);
+char *LDi_loaddata(const char *dataname, const char *username);
 
 #if 0
 #define LDi_rdlock(lk) do { *(lk) = 1; } while (0)

@@ -133,6 +133,8 @@ checkconfig(LDConfig *config)
 LDClient *
 LDClientInit(LDConfig *config, LDUser *user)
 {
+    LDi_log(10, "LDClientInit called\n");
+
     checkconfig(config);
 
     LDi_initevents(config->eventsCapacity);
@@ -144,26 +146,33 @@ LDClientInit(LDConfig *config, LDUser *user)
         return NULL;
     }
 
-    if (theClient->config != config) {
-        freeconfig(theClient->config);
-    }
-    theClient->config = config;
-    if (theClient->user != user) {
-        freeuser(theClient->user);
-    }
-    theClient->user = user;
-    theClient->dead = false;
-    theClient->offline = config->offline;
+    LDClient *client = theClient;
 
-    theClient->allFlags = NULL;
-    theClient->isinit = false;
+    if (client->config != config) {
+        freeconfig(client->config);
+    }
+    client->config = config;
+    if (client->user != user) {
+        freeuser(client->user);
+    }
+    client->user = user;
+    client->dead = false;
+    client->offline = config->offline;
 
+    client->isinit = false;
+    client->allFlags = NULL;
+    char *flags = LDi_loaddata("features", user->key);
+    if (flags) {
+        LDi_clientsetflags(client, false, flags, 0);
+        LDFree(flags);
+    }
+    
     LDi_unlock(&LDi_clientlock);
 
     LDi_recordidentify(user);
 
-    LDi_log(10, "init done\n");
-    return theClient;
+    LDi_log(10, "Client init done\n");
+    return client;
 }
 
 LDClient *
@@ -260,13 +269,11 @@ LDClientSaveFlags(LDClient *client)
 void
 LDClientRestoreFlags(LDClient *client, const char *data)
 {
-    LDi_clientsetflags(client, data, 0);
-    if (LDi_statuscallback)
-        LDi_statuscallback(1);
+    LDi_clientsetflags(client, true, data, 0);
 }
 
 void
-LDi_clientsetflags(LDClient *client, const char *data, int flavor)
+LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor)
 {
     cJSON *payload = cJSON_Parse(data);
 
@@ -280,11 +287,18 @@ LDi_clientsetflags(LDClient *client, const char *data, int flavor)
     }
     cJSON_Delete(payload);
 
-    LDi_wrlock(&LDi_clientlock);
+    if (needlock)
+        LDi_wrlock(&LDi_clientlock);
+    bool statuschange = client->isinit == false;
     LDMapNode *oldhash = client->allFlags;
     client->allFlags = hash;
     client->isinit = true;
-    LDi_unlock(&LDi_clientlock);
+    if (needlock)
+        LDi_unlock(&LDi_clientlock);
+
+    /* tell application we are ready to go */
+    if (statuschange && LDi_statuscallback)
+        LDi_statuscallback(1);
 
     LDi_freehash(oldhash);
 }
