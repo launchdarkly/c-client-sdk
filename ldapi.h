@@ -138,8 +138,8 @@ typedef void (*LDlistenerfn)(const char *, int);
 /*
  * register a new listener.
  */
-bool LDClientRegisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn);
-bool LDClientUnregisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn);
+bool LDClientRegisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
+bool LDClientUnregisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
 
 #ifdef __cplusplus
 }

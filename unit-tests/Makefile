@@ -6,19 +6,17 @@ COBJS=$(CSRCS:.c=.o)
 
 LIBS=-lcurl -lpthread -lm
 
-TESTS=test-private-attr test-filer
+TESTS=test-private-attr.test test-filer.test test-hooks.test
 
 all: $(TESTS) run-tests
 
 clean:
-	rm -f $(TESTS)
+	rm -f $(TESTS) *.o
 
-test-private-attr: ../ldapi.h test-private-attr.o $(COBJS)
-	$(CC) -o test-private-attr test-private-attr.o $(COBJS) $(LIBS)
-
-test-filer: ../ldapi.h test-filer.o $(COBJS)
-	$(CC) -o test-filer test-filer.o $(COBJS) $(LIBS)
+%.test: %.o ../ldapi.h $(COBJS)
+	$(CC) -o $@ $< $(COBJS) $(LIBS)
 
 run-tests:
-	./test-private-attr
-	./test-filer
+	./test-private-attr.test
+	./test-filer.test
+	./test-hooks.test

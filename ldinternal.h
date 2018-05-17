@@ -56,8 +56,9 @@ void LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, 
 char *LDi_geteventdata(void);
 void LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response);
 
-void
-LDi_onstreameventput(const char *data);
+void LDi_onstreameventput(const char *data);
+void LDi_onstreameventpatch(const char *data);
+void LDi_onstreameventdelete(const char *data);
 
 cJSON *LDi_usertojson(LDUser *lduser);
 

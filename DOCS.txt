@@ -67,8 +67,8 @@ void LDFree(void *)
 Free a string.
 
 typedef void (*LDlistenerfn)(const char *name, int update);
-bool LDClientRegisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn)
-bool LDClientUnregisterListenerFunction(struct LDClient_i *, const char *, LDlistenerfn)
+bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn)
+bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn)
 Register and unregister callbacks when features change.
 The name argument indicates the changed value.
 The update argument is 0 for new or updated and 1 for deleted.

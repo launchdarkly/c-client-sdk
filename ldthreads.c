@@ -192,8 +192,8 @@ applypatch(cJSON *payload, bool isdelete)
     LDi_freehash(patch);
 }
 
-static void
-onstreameventpatch(const char *data)
+void
+LDi_onstreameventpatch(const char *data)
 {
     cJSON *payload = cJSON_Parse(data);
 
@@ -205,8 +205,8 @@ onstreameventpatch(const char *data)
     LDi_savehash(LDClientGet());
 }
 
-static void
-onstreameventdelete(const char *data)
+void
+LDi_onstreameventdelete(const char *data)
 {
     cJSON *payload = cJSON_Parse(data);
 
@@ -290,10 +290,10 @@ streamcallback(const char *line)
             LDi_onstreameventput(line);
         } else if (strcmp(eventtypebuf, "patch") == 0) {
             LDi_log(15, "PATCH\n");
-            onstreameventpatch(line);
+            LDi_onstreameventpatch(line);
         } else if (strcmp(eventtypebuf, "delete") == 0) {
             LDi_log(15, "DELETE\n");
-            onstreameventdelete(line);
+            LDi_onstreameventdelete(line);
         } else if (strcmp(eventtypebuf, "ping") == 0) {
             LDi_log(15, "PING\n");
             onstreameventping();
