@@ -36,6 +36,9 @@ fake_stringwriter(void *handle, const char *data)
     gotcallback = true;
 }
 
+/*
+ * Read flags from an external file and check for expected value.
+ */
 void
 test1(void)
 {
@@ -55,6 +58,9 @@ test1(void)
 
 }
 
+/*
+ * Test that flags get written out after receiving an update.
+ */
 void
 test2(void)
 {

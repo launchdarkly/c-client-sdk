@@ -9,11 +9,15 @@
 #include "ldinternal.h"
 
 
-int
-main(int argc, char **argv)
+/*
+ * Set `password` as a private attribute.
+ * Test some string variations to create events.
+ * Check `bgcolor` is present to verify events are working.
+ * Make sure `password` doesn't appear in the output.
+ */
+void
+test1()
 {
-    printf("Beginning tests\n");
-
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;
     LDConfigAddPrivateAttribute(config, "password");
@@ -35,6 +39,16 @@ main(int argc, char **argv)
     }
 
     LDClientClose(client);
+
+}
+
+int
+main(int argc, char **argv)
+{
+    printf("Beginning tests\n");
+
+    test1();
+
     printf("Completed all tests\n");
     return 0;
 }

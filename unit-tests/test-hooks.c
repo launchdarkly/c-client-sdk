@@ -21,6 +21,10 @@ hook(const char *name, int change)
     fixed = true;
 }
 
+/*
+ * Verify that the hook is run when a patch is received.
+ * fixed should be set to true.
+ */
 void
 test1(void)
 {
