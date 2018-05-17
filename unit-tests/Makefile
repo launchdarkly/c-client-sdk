@@ -8,7 +8,7 @@ LIBS=-lcurl -lpthread -lm
 
 TESTS=test-private-attr.test test-filer.test test-hooks.test
 
-all: $(TESTS) run-tests
+all: run-tests
 
 clean:
 	rm -f $(TESTS) *.o
@@ -16,7 +16,5 @@ clean:
 %.test: %.o ../ldapi.h $(COBJS)
 	$(CC) -o $@ $< $(COBJS) $(LIBS)
 
-run-tests:
-	./test-private-attr.test
-	./test-filer.test
-	./test-hooks.test
+run-tests: $(TESTS)
+	for t in $(TESTS) ; do ./$$t || echo FAIL: $$t ; done
