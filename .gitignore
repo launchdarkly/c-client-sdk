@@ -52,3 +52,5 @@ Mkfile.old
 dkms.conf
 
 test
+unit-tests/*.test
+unit-tests/test-private-attr
