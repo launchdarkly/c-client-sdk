@@ -9,3 +9,4 @@ jobs:
           name: Install libcurl
           command: sudo apt-get install libcurl4-openssl-dev
        - run: make
+       - run: make -C ./unit-tests all
