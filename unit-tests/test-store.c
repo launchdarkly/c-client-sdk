@@ -42,7 +42,7 @@ fake_stringwriter(void *handle, const char *data)
 void
 test1(void)
 {
-    LD_filer_setfns(NULL, LD_filer_fileopen, NULL /* no writer */, LD_filer_fileread, LD_filer_fileclose);
+    LD_store_setfns(NULL, LD_store_fileopen, NULL /* no writer */, LD_store_fileread, LD_store_fileclose);
 
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;
@@ -64,7 +64,7 @@ test1(void)
 void
 test2(void)
 {
-    LD_filer_setfns(NULL, fake_opener, fake_stringwriter, NULL, fake_closer);
+    LD_store_setfns(NULL, fake_opener, fake_stringwriter, NULL, fake_closer);
 
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;

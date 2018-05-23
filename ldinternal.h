@@ -68,7 +68,7 @@ void (*LDi_statuscallback)(int);
 void LDi_millisleep(int ms);
 void LDi_startthreads(LDClient *client);
 
-/* calls into the filer interface */
+/* calls into the store interface */
 void LDi_savedata(const char *dataname, const char *username, const char *data);
 char *LDi_loaddata(const char *dataname, const char *username);
 

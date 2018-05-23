@@ -8,35 +8,35 @@
  #include "ldapi.h"
  #include "ldinternal.h"
 
-void *filer_ctx;
-LD_filer_opener filer_open;
-LD_filer_stringwriter filer_writestring;
-LD_filer_stringreader filer_readstring;
-LD_filer_closer filer_close;
+void *store_ctx;
+LD_store_opener store_open;
+LD_store_stringwriter store_writestring;
+LD_store_stringreader store_readstring;
+LD_store_closer store_close;
 
 void
-LD_filer_setfns(void *context, LD_filer_opener openfn, LD_filer_stringwriter writefn,
-    LD_filer_stringreader readfn, LD_filer_closer closefn)
+LD_store_setfns(void *context, LD_store_opener openfn, LD_store_stringwriter writefn,
+    LD_store_stringreader readfn, LD_store_closer closefn)
 {
-    filer_ctx = context;
-    filer_open = openfn;
-    filer_writestring = writefn;
-    filer_readstring = readfn;
-    filer_close = closefn;
+    store_ctx = context;
+    store_open = openfn;
+    store_writestring = writefn;
+    store_readstring = readfn;
+    store_close = closefn;
 }
 
 void
 LDi_savedata(const char *dataname, const char *username, const char *data)
 {
-    if (!filer_writestring)
+    if (!store_writestring)
         return;
     char fullname[1024];
     snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username);
-    void *handle = filer_open(filer_ctx, fullname, "w", strlen(data));
+    void *handle = store_open(store_ctx, fullname, "w", strlen(data));
     if (!handle)
         return;
-    filer_writestring(handle, data);
-    filer_close(handle);
+    store_writestring(handle, data);
+    store_close(handle);
 }
 
 char *
@@ -44,18 +44,18 @@ LDi_loaddata(const char *dataname, const char *username)
 {
     char *data = NULL;
     
-    if (!filer_readstring)
+    if (!store_readstring)
         return NULL;
     char fullname[1024];
     snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username);
     LDi_log(15, "About to open abstract file %s\n", fullname);
-    void *handle = filer_open(filer_ctx, fullname, "r", 0);
+    void *handle = store_open(store_ctx, fullname, "r", 0);
     if (!handle)
         return NULL;
-    const char *s = filer_readstring(handle);
+    const char *s = store_readstring(handle);
     if (s)
         data = LDi_strdup(s);
-    filer_close(handle);
+    store_close(handle);
     return data;
 }
 
@@ -63,15 +63,15 @@ LDi_loaddata(const char *dataname, const char *username)
  * concrete implementation using standard C stdio
  */
 
-struct stdio_filer {
+struct stdio_store {
     FILE *fp;
     char *s;
 };
 
 void *
-LD_filer_fileopen(void *context, const char *name, const char *mode, size_t len)
+LD_store_fileopen(void *context, const char *name, const char *mode, size_t len)
 {
-    struct stdio_filer *handle = LDAlloc(sizeof(*handle));
+    struct stdio_store *handle = LDAlloc(sizeof(*handle));
     if (!handle)
         return NULL;
     char filename[1024];
@@ -87,16 +87,16 @@ LD_filer_fileopen(void *context, const char *name, const char *mode, size_t len)
 }
 
 bool
-LD_filer_filewrite(void *h, const char *data)
+LD_store_filewrite(void *h, const char *data)
 {
-    struct stdio_filer *handle = h;
+    struct stdio_store *handle = h;
     return fwrite(data, 1, strlen(data), handle->fp) == strlen(data);
 }
 
 const char *
-LD_filer_fileread(void *h)
+LD_store_fileread(void *h)
 {
-    struct stdio_filer *handle = h;
+    struct stdio_store *handle = h;
     char *buf;
     size_t bufsize, bufspace, buflen;
     
@@ -133,9 +133,9 @@ LD_filer_fileread(void *h)
 }
 
 void
-LD_filer_fileclose(void *h)
+LD_store_fileclose(void *h)
 {
-    struct stdio_filer *handle = h;
+    struct stdio_store *handle = h;
     fclose(handle->fp);
     free(handle->s);
     LDFree(handle);
