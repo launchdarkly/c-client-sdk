@@ -36,6 +36,8 @@ unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 void LDi_freehash(LDMapNode *hash);
 void LDi_freenode(LDMapNode *node);
 
+void LDi_freeuser(LDUser *user);
+
 char *LDi_hashtostring(LDMapNode *hash);
 cJSON *LDi_hashtojson(LDMapNode *hash);
 LDMapNode *LDi_jsontohash(cJSON *json, int flavor);

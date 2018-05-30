@@ -28,17 +28,6 @@ LDi_millisleep(int ms)
     sleep(ms / 1000);
 }
 
-LDMapNode *
-LDMapLookup(LDMapNode *hash, const char *key)
-{
-    LDMapNode *res = NULL;
-
-    LDMapNode *node, *tmp;
-
-    HASH_FIND_STR(hash, key, res);
-    return res;
-}
-
 static pthread_mutex_t allocmtx = PTHREAD_MUTEX_INITIALIZER;
 unsigned long long LD_allocations;
 unsigned long long LD_frees;

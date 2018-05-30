@@ -16,6 +16,11 @@ LDUser *LDUserNew(const char *key)
 Allocate a new user. It may be modified. key is required.
 Use LDSetString to modify string fields.
 
+bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring)
+Helper function to set custom attributes for the user. The custom field
+may be build programmatically using the LDMap functions (see below), or
+may be set all at once with a json string.
+
 LDClient *LDClientInit(LDConfig *config, LDUser *user)
 Initialize the client with the config and user. After this call, the config
 and user must be considered immutable. May be called more than once to change
@@ -109,6 +114,51 @@ Current status code:
 0 - Offline. The client has been shut down, likely due to a permission failure.
 1 - Ready. The client has received an initial feature map from the server
     and is ready to proceed.
+
+-- MAP INTERFACE --
+
+The LD client uses JSON to communicate. In places where it is exposed to
+the application, it is represented as a hash table of LDMapNode structures.
+
+LDMapNode *LDMapCreate(void);
+Create a new empty hash.
+(Implementation note: empty hash is a NULL pointer, not indicative of failure).
+
+void LDMapAddBool(LDMapNode **hash, const char *key, bool b);
+void LDMapAddNumber(LDMapNode **hash, const char *key, double n);
+void LDMapAddString(LDMapNode **hash, const char *key, const char *s);
+void LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m);
+Add a new node to the hash table.
+Memory ownership: The string s will be duplicated internally. The map m
+is _not_ duplicated. It will be owned by the contianing hash.
+
+LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
+Find a node in a hash. See below for structure.
+
+void LDMapFree(LDMapNode **hash);
+Free a map and all internal memory.
+
+A map node will have a type, one of string, number, bool, or map.
+The corresponding union field, s, n, b, or m will be set.
+
+typedef enum {
+    LDNodeNone = 0,
+    LDNodeString,
+    LDNodeNumber,
+    LDNodeBool,
+    LDNodeMap,
+} LDNodeType;
+
+typedef struct {
+    char *key;
+    LDNodeType type;
+    union {
+        bool b;
+        char *s;
+        double n;
+        LDMapNode *m;
+    };
+} LDMapNode;
 
 -- STORE INTERFACE --
 

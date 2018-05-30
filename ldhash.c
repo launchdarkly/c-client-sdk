@@ -5,6 +5,69 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
+LDMapNode *
+LDMapCreate()
+{
+    /* empty hash is represented by NULL pointer */
+    return NULL;
+}
+
+static LDMapNode *
+newnode(LDMapNode **hash, const char *key, LDNodeType type)
+{
+    LDMapNode *node = LDAlloc(sizeof(*node));
+    memset(node, 0, sizeof(*node));
+    node->key = LDi_strdup(key);
+    node->type = type;
+    HASH_ADD_KEYPTR(hh, *hash, node->key, strlen(node->key), node);
+    return node;
+}
+
+void
+LDMapAddBool(LDMapNode **hash, const char *key, bool b)
+{
+    LDMapNode *node = newnode(hash, key, LDNodeBool);
+    node->b = b;
+}
+
+void
+LDMapAddNumber(LDMapNode **hash, const char *key, double n)
+{
+    LDMapNode *node = newnode(hash, key, LDNodeNumber);
+    node->n = n;
+}
+
+void
+LDMapAddString(LDMapNode **hash, const char *key, const char *s)
+{
+    LDMapNode *node = newnode(hash, key, LDNodeString);
+    node->s = LDi_strdup(s);
+}
+
+void
+LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m)
+{
+    LDMapNode *node = newnode(hash, key, LDNodeMap);
+    node->m = m;
+}
+
+LDMapNode *
+LDMapLookup(LDMapNode *hash, const char *key)
+{
+    LDMapNode *res = NULL;
+    LDMapNode *node, *tmp;
+
+    HASH_FIND_STR(hash, key, res);
+    return res;
+}
+
+void
+LDMapFree(LDMapNode **hash)
+{
+    LDi_freehash(*hash);
+    *hash = NULL;
+}
+
 cJSON *
 LDi_hashtojson(LDMapNode *hash)
 {
@@ -90,39 +153,30 @@ LDi_jsontohash(cJSON *json, int flavor)
             break;
         }
 
-        LDMapNode *node = LDAlloc(sizeof(*node));
-        memset(node, 0, sizeof(*node));
-        node->key = LDi_strdup(key);
-
         switch (valueitem->type) {
         case cJSON_False:
-            node->type = LDNodeBool;
-            node->b = false;
+            LDMapAddBool(&hash, key, false);
             break;
         case cJSON_True:
-            node->type = LDNodeBool;
-            node->b = true;
+            LDMapAddBool(&hash, key, true);
             break;
         case cJSON_NULL:
             break;
         case cJSON_Number:
-            node->type = LDNodeNumber;
-            node->n = valueitem->valuedouble;
+            LDMapAddNumber(&hash, key, valueitem->valuedouble);
             break;
         case cJSON_String:
-            node->type = LDNodeString;
-            node->s = LDi_strdup(valueitem->valuestring);
+            LDMapAddString(&hash, key, valueitem->valuestring);
             break;
         case cJSON_Array:
             break;
         case cJSON_Object:
-            node->type = LDNodeMap;
-            node->m = LDi_jsontohash(valueitem, 0);
+            LDMapAddMap(&hash, key, LDi_jsontohash(valueitem, 0));
             break;
         default:
             break;
         }
-        HASH_ADD_KEYPTR(hh, hash, node->key, strlen(node->key), node);
+        
         if (flavor == 2) {
             /* stop */
             break;
@@ -150,5 +204,4 @@ LDi_freehash(LDMapNode *hash)
         HASH_DEL(hash, node);
         LDi_freenode(node);
     }
-
 }

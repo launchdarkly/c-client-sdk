@@ -62,49 +62,6 @@ freeconfig(LDConfig *config)
 }
 
 
-LDUser *
-LDUserNew(const char *key)
-{
-    LDUser *user;
-
-    user = LDAlloc(sizeof(*user));
-    if (!user) {
-        LDi_log(2, "no memory for user\n");
-        return NULL;
-    }
-    memset(user, 0, sizeof(*user));
-    LDSetString(&user->key, key);
-    user->anonymous = false;
-    user->secondary = NULL;
-    user->ip = NULL;
-    user->firstName = NULL;
-    user->lastName = NULL;
-    user->email = NULL;
-    user->name = NULL;
-    user->avatar = NULL;
-    user->custom = NULL;
-    user->privateAttributeNames = NULL;
-
-    return user;
-}
-
-static void
-freeuser(LDUser *user)
-{
-    if (!user)
-        return;
-    LDFree(user->key);
-    LDFree(user->secondary);
-    LDFree(user->firstName);
-    LDFree(user->lastName);
-    LDFree(user->email);
-    LDFree(user->name);
-    LDFree(user->avatar);
-    LDi_freehash(user->privateAttributeNames);
-    LDFree(user);
-}
-
-
 static void
 starteverything(void)
 {
@@ -153,7 +110,7 @@ LDClientInit(LDConfig *config, LDUser *user)
     }
     client->config = config;
     if (client->user != user) {
-        freeuser(client->user);
+        LDi_freeuser(client->user);
     }
     client->user = user;
     client->dead = false;
@@ -212,7 +169,7 @@ LDClientIdentify(LDClient *client, LDUser *user)
 {
     LDi_wrlock(&LDi_clientlock);
     if (user != client->user) {
-        freeuser(client->user);
+        LDi_freeuser(client->user);
     }
     client->user = user;
     LDi_unlock(&LDi_clientlock);
@@ -230,7 +187,7 @@ LDClientClose(LDClient *client)
     client->allFlags = NULL;
     freeconfig(client->config);
     client->config = NULL;
-    freeuser(client->user);
+    LDi_freeuser(client->user);
     client->user = NULL;
     LDi_unlock(&LDi_clientlock);
 
@@ -524,16 +481,4 @@ LDConfigAddPrivateAttribute(LDConfig *config, const char *key)
     node->b = true;
 
     HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
-}
-
-void
-LDUserAddPrivateAttribute(LDUser *user, const char *key)
-{
-    LDMapNode *node = LDAlloc(sizeof(*node));
-    memset(node, 0, sizeof(*node));
-    node->key = LDi_strdup(key);
-    node->type = LDNodeBool;
-    node->b = true;
-
-    HASH_ADD_KEYPTR(hh, user->privateAttributeNames, node->key, strlen(node->key), node);
 }

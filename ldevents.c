@@ -16,27 +16,6 @@ milliTimestamp(void)
     return t;
 }
 
-cJSON *
-LDi_usertojson(LDUser *lduser)
-{
-    cJSON *json;
-
-    json = cJSON_CreateObject();
-    cJSON_AddStringToObject(json, "key", lduser->key);
-    if (lduser->anonymous)
-        cJSON_AddBoolToObject(json, "anonymous", lduser->anonymous);
-#define addstring(field) if (lduser->field) cJSON_AddStringToObject(json, #field, lduser->field)
-    addstring(secondary);
-    addstring(ip);
-    addstring(firstName);
-    addstring(lastName);
-    addstring(email);
-    addstring(name);
-    addstring(avatar);
-#undef addstring
-    return json;
-}
-
 static cJSON *eventarray;
 static int numevents;
 static int eventscapacity;

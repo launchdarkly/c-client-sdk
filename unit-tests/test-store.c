@@ -86,6 +86,8 @@ main(int argc, char **argv)
 {
     printf("Beginning tests\n");
 
+    LDSetLogFunction(1, logger);
+
     test1();
 
     test2();

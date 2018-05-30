@@ -76,6 +76,7 @@ void LDSetString(char **, const char *);
 
 LDConfig *LDConfigNew(const char *);
 LDUser *LDUserNew(const char *);
+bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
 
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
 struct LDClient_i *LDClientGet(void);
@@ -108,7 +109,14 @@ void LDJSONRelease(LDMapNode *m);
 void LDFree(void *);
 void *LDAlloc(size_t amt);
 
+/* functions for working with hash tables */
+LDMapNode *LDMapCreate(void);
+void LDMapAddBool(LDMapNode **hash, const char *key, bool b);
+void LDMapAddNumber(LDMapNode **hash, const char *key, double n);
+void LDMapAddString(LDMapNode **hash, const char *key, const char *s);
+void LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m);
 LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
+void LDMapFree(LDMapNode **hash);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 
