@@ -120,8 +120,16 @@ void LDMapAddBool(LDMapNode **hash, const char *key, bool b);
 void LDMapAddNumber(LDMapNode **hash, const char *key, double n);
 void LDMapAddString(LDMapNode **hash, const char *key, const char *s);
 void LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m);
+void LDMapAddArray(LDMapNode **hash, const char *key, LDMapNode *a);
 LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
 void LDMapFree(LDMapNode **hash);
+unsigned int LDMapCount(LDMapNode *hash);
+/* arrays are about the same thing as hashes */
+LDMapNode *LDMapArray(void);
+void LDMapAppendBool(LDMapNode **array, bool b);
+void LDMapAppendNumber(LDMapNode **array, double n);
+void LDMapAppendString(LDMapNode **array, const char *s);
+LDMapNode *LDMapIndex(LDMapNode *array, unsigned int idx);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 

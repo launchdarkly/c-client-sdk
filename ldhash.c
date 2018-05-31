@@ -101,10 +101,22 @@ LDMapNode *
 LDMapLookup(LDMapNode *hash, const char *key)
 {
     LDMapNode *res = NULL;
-    LDMapNode *node, *tmp;
-
     HASH_FIND_STR(hash, key, res);
     return res;
+}
+
+LDMapNode *
+LDMapIndex(LDMapNode *array, unsigned int idx)
+{
+    LDMapNode *res = NULL;
+    HASH_FIND_INT(array, &idx, res);
+    return res;
+}
+
+unsigned int
+LDMapCount(LDMapNode *hash)
+{
+    return HASH_COUNT(hash);
 }
 
 void
@@ -168,6 +180,12 @@ LDi_arraytojson(LDMapNode *hash)
     return json;
 }
 
+/*
+ * translation layer from json to map. this does two things.
+ * abstracts the cJSON interface from the user, allowing us to swap libraries.
+ * also decodes and normalizes what I am calling "flavors" which are the 
+ * different payload variations sent by the LD servers which vary by endpoint.
+ */
 
 char *
 LDi_hashtostring(LDMapNode *hash)

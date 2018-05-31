@@ -138,8 +138,24 @@ Find a node in a hash. See below for structure.
 void LDMapFree(LDMapNode **hash);
 Free a map and all internal memory.
 
-A map node will have a type, one of string, number, bool, or map.
-The corresponding union field, s, n, b, or m will be set.
+Maps also serve as arrays.
+
+LDMapNode *LDMapArray();
+Create an empty array.
+
+void LDMapAppendBool(LDMapNode **array, bool b);
+void LDMapAppendNumber(LDMapNode **array, double n);
+void LDMapAppendString(LDMapNode **array, const char *s);
+Add a bool, number, or string to an array.
+
+LDMapNode *LDMapIndex(LDMapNode *array, unsigned int idx);
+Retrieve the element at index idx.
+
+unsigned int LDMapCount(LDMapNode *hash)
+Return the number of elements in a map or array.
+
+A map node will have a type, one of string, number, bool, map, or array.
+The corresponding union field, s, n, b, m, or a will be set.
 
 typedef enum {
     LDNodeNone = 0,
@@ -147,6 +163,7 @@ typedef enum {
     LDNodeNumber,
     LDNodeBool,
     LDNodeMap,
+    LDNodeArray,
 } LDNodeType;
 
 typedef struct {
@@ -157,6 +174,7 @@ typedef struct {
         char *s;
         double n;
         LDMapNode *m;
+        LDMapNode *a;
     };
 } LDMapNode;
 
