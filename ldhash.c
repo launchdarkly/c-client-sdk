@@ -51,6 +51,52 @@ LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m)
     node->m = m;
 }
 
+void
+LDMapAddArray(LDMapNode **hash, const char *key, LDMapNode *a)
+{
+    LDMapNode *node = newnode(hash, key, LDNodeArray);
+    node->a = a;
+}
+
+LDMapNode *
+LDMapArray()
+{
+    /* same thing as map actually */
+    return NULL;
+}
+
+static LDMapNode *
+appendnode(LDMapNode **array, LDNodeType type)
+{
+    LDMapNode *node = LDAlloc(sizeof(*node));
+    memset(node, 0, sizeof(*node));
+    node->idx = HASH_COUNT(*array);
+    node->type = type;
+    HASH_ADD_INT(*array, idx, node);
+    return node;
+}
+
+void
+LDMapAppendBool(LDMapNode **array, bool b)
+{
+    LDMapNode *node = appendnode(array, LDNodeBool);
+    node->b = b;
+}
+
+void
+LDMapAppendNumber(LDMapNode **array, double n)
+{
+    LDMapNode *node = appendnode(array, LDNodeNumber);
+    node->n = n;
+}
+
+void
+LDMapAppendString(LDMapNode **array, const char *s)
+{
+    LDMapNode *node = appendnode(array, LDNodeString);
+    node->s = LDi_strdup(s);
+}
+
 LDMapNode *
 LDMapLookup(LDMapNode *hash, const char *key)
 {
@@ -87,10 +133,41 @@ LDi_hashtojson(LDMapNode *hash)
         case LDNodeMap:
             cJSON_AddItemToObject(json, node->key, LDi_hashtojson(node->m));
             break;
+        case LDNodeArray:
+            cJSON_AddItemToObject(json, node->key, LDi_arraytojson(node->a));
+            break;
         }
     }
     return json;
 }
+
+cJSON *
+LDi_arraytojson(LDMapNode *hash)
+{
+    cJSON *json = cJSON_CreateArray();
+    LDMapNode *node, *tmp;
+    HASH_ITER(hh, hash, node, tmp) {
+        switch (node->type) {
+        case LDNodeBool:
+            cJSON_AddItemToArray(json, cJSON_CreateBool((int)node->b));
+            break;
+        case LDNodeNumber:
+            cJSON_AddItemToArray(json, cJSON_CreateNumber(node->n));
+            break;
+        case LDNodeString:
+            cJSON_AddItemToArray(json, cJSON_CreateString(node->s));
+            break;
+        case LDNodeMap:
+            cJSON_AddItemToArray(json, LDi_hashtojson(node->m));
+            break;
+        case LDNodeArray:
+            cJSON_AddItemToArray(json, LDi_arraytojson(node->a));
+            break;
+        }
+    }
+    return json;
+}
+
 
 char *
 LDi_hashtostring(LDMapNode *hash)
@@ -101,6 +178,35 @@ LDi_hashtostring(LDMapNode *hash)
     char *s = LDi_strdup(tmp);
     free(tmp);
     return s;
+}
+
+LDMapNode *
+jsontoarray(cJSON *json)
+{
+    LDMapNode *array = NULL;
+
+    cJSON *item;
+    for (item = json->child; item; item = item->next) {
+        switch (item->type) {
+        case cJSON_False:
+            LDMapAppendBool(&array, false);
+            break;
+        case cJSON_True:
+            LDMapAppendBool(&array, true);
+            break;
+        case cJSON_NULL:
+            break;
+        case cJSON_Number:
+            LDMapAppendNumber(&array, item->valuedouble);
+            break;
+        case cJSON_String:
+            LDMapAppendString(&array, item->valuestring);
+            break;
+        default:
+            break;
+        }
+    }
+    return array;
 }
 
 LDMapNode *
@@ -168,8 +274,11 @@ LDi_jsontohash(cJSON *json, int flavor)
         case cJSON_String:
             LDMapAddString(&hash, key, valueitem->valuestring);
             break;
-        case cJSON_Array:
+        case cJSON_Array: {
+            LDMapNode *array = jsontoarray(valueitem);
+            LDMapAddArray(&hash, key, array);
             break;
+        }
         case cJSON_Object:
             LDMapAddMap(&hash, key, LDi_jsontohash(valueitem, 0));
             break;
@@ -185,23 +294,40 @@ LDi_jsontohash(cJSON *json, int flavor)
     return hash;
 }
 
-void
-LDi_freenode(LDMapNode *node)
+static void freehash(LDMapNode *node, bool);
+
+static void
+freenode(LDMapNode *node, bool freekey)
 {
-    LDFree(node->key);
+    if (freekey)
+        LDFree(node->key);
     if (node->type == LDNodeString)
         LDFree(node->s);
     if (node->type == LDNodeMap)
-        LDi_freehash(node->m);
+        freehash(node->m, true);
+    if (node->type == LDNodeArray)
+        freehash(node->a, false);
     LDFree(node);
+}
+
+static void
+freehash(LDMapNode *hash, bool freekey)
+{
+    LDMapNode *node, *tmp;
+    HASH_ITER(hh, hash, node, tmp) {
+        HASH_DEL(hash, node);
+        freenode(node, freekey);
+    }
+}
+
+void
+LDi_freenode(LDMapNode *node)
+{
+    freenode(node, true);
 }
 
 void
 LDi_freehash(LDMapNode *hash)
 {
-    LDMapNode *node, *tmp;
-    HASH_ITER(hh, hash, node, tmp) {
-        HASH_DEL(hash, node);
-        LDi_freenode(node);
-    }
+    freehash(hash, true);
 }

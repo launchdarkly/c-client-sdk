@@ -40,6 +40,7 @@ LDi_freeuser(LDUser *user)
     LDFree(user->email);
     LDFree(user->name);
     LDFree(user->avatar);
+    LDi_freehash(user->custom);
     LDi_freehash(user->privateAttributeNames);
     LDFree(user);
 }

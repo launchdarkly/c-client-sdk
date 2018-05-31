@@ -40,6 +40,7 @@ void LDi_freeuser(LDUser *user);
 
 char *LDi_hashtostring(LDMapNode *hash);
 cJSON *LDi_hashtojson(LDMapNode *hash);
+cJSON *LDi_arraytojson(LDMapNode *hash);
 LDMapNode *LDi_jsontohash(cJSON *json, int flavor);
 void LDi_initevents(int capacity);
 char * LDi_usertourl(LDUser *user);

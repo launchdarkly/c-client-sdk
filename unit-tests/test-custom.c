@@ -40,6 +40,34 @@ test1(void)
         printf("ERROR: User json %s was not expected\n", str);
     }
 
+    LDi_freeuser(user);
+
+}
+
+/*
+ * test setting json directly. also has a list of custom attributes.
+ */
+void
+test2(void)
+{
+    
+    LDUser *user = LDUserNew("username");
+    LDSetString(&user->firstName, "Tsrif");
+    LDSetString(&user->lastName, "Tsal");
+    LDSetString(&user->avatar, "pirate");
+    LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
+    
+    cJSON *json = LDi_usertojson(user);
+    char *str = cJSON_PrintUnformatted(json);
+
+    char *expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
+    "\"avatar\":\"pirate\",\"custom\":{\"toppings\":[\"pineapple\",\"ham\"]}}";
+
+    if (strcmp(str, expected) != 0) {
+        printf("ERROR: User json %s was not expected\n", str);
+    }
+
+    LDi_freeuser(user);
 }
 
 int
@@ -50,6 +78,12 @@ main(int argc, char **argv)
     LDSetLogFunction(1, logger);
 
     test1();
+
+    test2();
+
+    extern unsigned long long LD_allocations, LD_frees;
+
+    // printf("Memory consumed: %lld allocs %lld frees\n", LD_allocations, LD_frees);
 
     printf("Completed all tests\n");
     return 0;

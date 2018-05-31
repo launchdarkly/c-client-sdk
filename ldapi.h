@@ -15,16 +15,21 @@ typedef enum {
     LDNodeNumber,
     LDNodeBool,
     LDNodeMap,
+    LDNodeArray,
 } LDNodeType;
 
 typedef struct LDMapNode_i {
-    char *key;
+    union {
+        char *key;
+        unsigned int idx;
+    };
     LDNodeType type;
     union {
         bool b;
         char *s;
         double n;
         struct LDMapNode_i *m;
+        struct LDMapNode_i *a;
     };
     UT_hash_handle hh;
 #ifdef __cplusplus
