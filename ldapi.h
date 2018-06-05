@@ -35,6 +35,7 @@ typedef struct LDNode_i {
     int version;
 #ifdef __cplusplus
     struct LDNode_i *lookup(const std::string &key);
+    struct LDNode_i *index(unsigned int idx);
     void release(void);
 #endif
 } LDNode;

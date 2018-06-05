@@ -69,6 +69,11 @@ LDNode * LDNode::lookup(const std::string &key)
     return LDNodeLookup(this, key.c_str());
 }
 
+LDNode * LDNode::index(unsigned int idx)
+{
+    return LDNodeIndex(this, idx);
+}
+
 void LDNode::release(void)
 {
     LDJSONRelease(this);
