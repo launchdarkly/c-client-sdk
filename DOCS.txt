@@ -78,6 +78,7 @@ Register and unregister callbacks when features change.
 The name argument indicates the changed value.
 The update argument is 0 for new or updated and 1 for deleted.
 
+A C++ interface is also available; see below.
 
 -- MORE CLIENT FUNCTIONS --
 
@@ -215,9 +216,50 @@ bool LD_store_filewrite(void *h, const char *data);
 const char *LD_store_fileread(void *h);
 void LD_store_fileclose(void *h);
 
-
-
 -- MISC --
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *))
 Set the log function and log level. Increasing log levels result in increasing output.
+
+-- C++ INTERFACE --
+
+A C++ interface to LDClient is also available. Other C functions remain available.
+
+class LDClient {
+        static LDClient *Get(void);
+        Return the LDClient singleton.
+
+        static LDClient *Init(LDConfig *, LDUser *);
+        Initialize the client.
+
+        bool boolVariation(const std::string &, bool);
+        int intVariation(const std::string &, int);
+        std::string stringVariation(const std::string &, const std::string &);
+        char *stringVariation(const std::string &, const std::string &, char *, size_t);
+
+        Functions to ask for variations.
+
+
+        LDMapNode *JSONVariation(const std::string &, LDMapNode *);
+        Request a JSON variation. It must be released.
+
+        void setOffline();
+        void setOnline();
+        bool isOffline();
+
+        std::string saveFlags();
+        void restoreFlags(const std::string &);
+
+        void flush(void);
+        void close(void);
+}
+
+In C++, LDMapNode has the following member functions.
+
+class LDMapNode {
+    LDMapNode *lookup(const std::string &key);
+    Find a subnode.
+
+    void release(void);
+    Release a node, as returned from LDClient::JSONVariation.
+}
