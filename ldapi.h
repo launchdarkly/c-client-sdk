@@ -89,6 +89,15 @@ struct LDClient_i *LDClientGet(void);
 void LDConfigAddPrivateAttribute(LDConfig *, const char *name);
 void LDUserAddPrivateAttribute(LDUser *, const char *name);
 
+
+void LDUserSetIP(LDUser *user, const char *str);
+void LDUserSetFirstName(LDUser *user, const char *str);
+void LDUserSetLastName(LDUser *user, const char *str);
+void LDUserSetEmail(LDUser *user, const char *str);
+void LDUserSetName(LDUser *user, const char *str);
+void LDUserSetAvatar(LDUser *user, const char *str);
+
+
 char *LDClientSaveFlags(struct LDClient_i *client);
 void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
 

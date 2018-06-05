@@ -52,9 +52,9 @@ test2(void)
 {
     
     LDUser *user = LDUserNew("username");
-    LDSetString(&user->firstName, "Tsrif");
-    LDSetString(&user->lastName, "Tsal");
-    LDSetString(&user->avatar, "pirate");
+    LDUserSetFirstName(user, "Tsrif");
+    LDUserSetLastName(user, "Tsal");
+    LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
     
     cJSON *json = LDi_usertojson(user);

@@ -95,3 +95,34 @@ LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring)
 
     return true;
 }
+
+void
+LDUserSetIP(LDUser *user, const char *str)
+{
+    LDSetString(&user->ip, str);
+}
+void
+LDUserSetFirstName(LDUser *user, const char *str)
+{
+    LDSetString(&user->firstName, str);
+}
+void
+LDUserSetLastName(LDUser *user, const char *str)
+{
+    LDSetString(&user->lastName, str);
+}
+void
+LDUserSetEmail(LDUser *user, const char *str)
+{
+    LDSetString(&user->email, str);
+}
+void
+LDUserSetName(LDUser *user, const char *str)
+{
+    LDSetString(&user->name, str);
+}
+void
+LDUserSetAvatar(LDUser *user, const char *str)
+{
+    LDSetString(&user->avatar, str);
+}
