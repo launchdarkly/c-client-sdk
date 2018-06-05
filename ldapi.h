@@ -14,7 +14,7 @@ typedef enum {
     LDNodeString,
     LDNodeNumber,
     LDNodeBool,
-    LDNodeMap,
+    LDNodeHash,
     LDNodeArray,
 } LDNodeType;
 
@@ -28,10 +28,11 @@ typedef struct LDNode_i {
         bool b;
         char *s;
         double n;
-        struct LDNode_i *m;
+        struct LDNode_i *h;
         struct LDNode_i *a;
     };
     UT_hash_handle hh;
+    int version;
 #ifdef __cplusplus
     struct LDNode_i *lookup(const std::string &key);
     void release(void);
@@ -125,19 +126,19 @@ void *LDAlloc(size_t amt);
 
 /* functions for working with (JSON) nodes (aka hash tables) */
 LDNode *LDNodeCreateHash(void);
-void LDNodeAddBool(LDNode **hash, const char *key, bool b);
-void LDNodeAddNumber(LDNode **hash, const char *key, double n);
-void LDNodeAddString(LDNode **hash, const char *key, const char *s);
-void LDNodeAddMap(LDNode **hash, const char *key, LDNode *m);
-void LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
+LDNode * LDNodeAddBool(LDNode **hash, const char *key, bool b);
+LDNode * LDNodeAddNumber(LDNode **hash, const char *key, double n);
+LDNode * LDNodeAddString(LDNode **hash, const char *key, const char *s);
+LDNode * LDNodeAddHash(LDNode **hash, const char *key, LDNode *h);
+LDNode * LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
 LDNode *LDNodeLookup(LDNode *hash, const char *key);
 void LDNodeFree(LDNode **hash);
 unsigned int LDNodeCount(LDNode *hash);
 /* functions for treating nodes as arrays */
 LDNode *LDNodeCreateArray(void);
-void LDNodeAppendBool(LDNode **array, bool b);
-void LDNodeAppendNumber(LDNode **array, double n);
-void LDNodeAppendString(LDNode **array, const char *s);
+LDNode * LDNodeAppendBool(LDNode **array, bool b);
+LDNode * LDNodeAppendNumber(LDNode **array, double n);
+LDNode * LDNodeAppendString(LDNode **array, const char *s);
 LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));

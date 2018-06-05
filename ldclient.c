@@ -402,13 +402,13 @@ LDJSONVariation(LDClient *client, const char *key, LDNode *fallback)
 
     LDi_rdlock(&LDi_clientlock);
     res = LDNodeLookup(client->allFlags, key);
-    if (res && res->type == LDNodeMap) {
+    if (res && res->type == LDNodeHash) {
         j = res->m;
     } else {
         j = fallback;
     }
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeMap,
+        LDi_recordfeature(client->user, key, LDNodeHash,
             0.0, NULL, j, 0.0, NULL, fallback);
     return j;
 }

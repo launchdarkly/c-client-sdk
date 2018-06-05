@@ -118,9 +118,8 @@ Current status code:
 
 -- NODE INTERFACE --
 
-The LD client uses JSON to communicate. In places where it is exposed to
-the application, it is represented as LDNode structures. Both arrays and
-objects (hash tables) are supported.
+The LD client uses JSON to communicate, which is represented as LDNode
+structures. Both arrays and hashes (objects) are supported.
 
 LDNode *LDNodeCreateHash(void);
 Create a new empty hash.
@@ -129,7 +128,7 @@ Create a new empty hash.
 LDNode * LDNodeAddBool(LDNode **hash, const char *key, bool b);
 LDNode * LDNodeAddNumber(LDNode **hash, const char *key, double n);
 LDNode * LDNodeAddString(LDNode **hash, const char *key, const char *s);
-LDNode * LDNodeAddMap(LDNode **hash, const char *key, LDNode *m);
+LDNode * LDNodeAddHash(LDNode **hash, const char *key, LDNode *h);
 Add a new node to the hash table.
 Memory ownership: The string s will be duplicated internally. The map m
 is _not_ duplicated. It will be owned by the contianing hash.
@@ -138,7 +137,7 @@ LDNode *LDNodeLookup(LDNode *hash, const char *key);
 Find a node in a hash. See below for structure.
 
 void LDNodeFree(LDNode **hash);
-Free a map and all internal memory.
+Free a hash and all internal memory.
 
 In addition to hash tables, arrays are also supported.
 
@@ -156,15 +155,15 @@ Retrieve the element at index idx.
 unsigned int LDNodeCount(LDNode *hash)
 Return the number of elements in a hash or array.
 
-A node will have a type, one of string, number, bool, map (hash), or array.
-The corresponding union field, s, n, b, m, or a will be set.
+A node will have a type, one of string, number, bool, hash, or array.
+The corresponding union field, s, n, b, h, or a will be set.
 
 typedef enum {
     LDNodeNone = 0,
     LDNodeString,
     LDNodeNumber,
     LDNodeBool,
-    LDNodeMap,
+    LDNodeHash,
     LDNodeArray,
 } LDNodeType;
 
@@ -175,7 +174,7 @@ typedef struct {
         bool b;
         char *s;
         double n;
-        LDNode *m;
+        LDNode *h;
         LDNode *a;
     };
 } LDNode;

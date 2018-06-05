@@ -23,39 +23,44 @@ newnode(LDNode **hash, const char *key, LDNodeType type)
     return node;
 }
 
-void
+LDNode *
 LDNodeAddBool(LDNode **hash, const char *key, bool b)
 {
     LDNode *node = newnode(hash, key, LDNodeBool);
     node->b = b;
+    return node;
 }
 
-void
+LDNode *
 LDNodeAddNumber(LDNode **hash, const char *key, double n)
 {
     LDNode *node = newnode(hash, key, LDNodeNumber);
     node->n = n;
+    return node;
 }
 
-void
+LDNode *
 LDNodeAddString(LDNode **hash, const char *key, const char *s)
 {
     LDNode *node = newnode(hash, key, LDNodeString);
     node->s = LDi_strdup(s);
+    return node;
 }
 
-void
-LDNodeAddMap(LDNode **hash, const char *key, LDNode *m)
+LDNode *
+LDNodeAddHash(LDNode **hash, const char *key, LDNode *h)
 {
-    LDNode *node = newnode(hash, key, LDNodeMap);
-    node->m = m;
+    LDNode *node = newnode(hash, key, LDNodeHash);
+    node->h = h;
+    return node;
 }
 
-void
+LDNode *
 LDNodeAddArray(LDNode **hash, const char *key, LDNode *a)
 {
     LDNode *node = newnode(hash, key, LDNodeArray);
     node->a = a;
+    return node;
 }
 
 LDNode *
@@ -76,25 +81,28 @@ appendnode(LDNode **array, LDNodeType type)
     return node;
 }
 
-void
+LDNode *
 LDNodeAppendBool(LDNode **array, bool b)
 {
     LDNode *node = appendnode(array, LDNodeBool);
     node->b = b;
+    return node;
 }
 
-void
+LDNode *
 LDNodeAppendNumber(LDNode **array, double n)
 {
     LDNode *node = appendnode(array, LDNodeNumber);
     node->n = n;
+    return node;
 }
 
-void
+LDNode *
 LDNodeAppendString(LDNode **array, const char *s)
 {
     LDNode *node = appendnode(array, LDNodeString);
     node->s = LDi_strdup(s);
+    return node;
 }
 
 LDNode *
@@ -142,8 +150,8 @@ LDi_hashtojson(LDNode *hash)
         case LDNodeString:
             cJSON_AddStringToObject(json, node->key, node->s);
             break;
-        case LDNodeMap:
-            cJSON_AddItemToObject(json, node->key, LDi_hashtojson(node->m));
+        case LDNodeHash:
+            cJSON_AddItemToObject(json, node->key, LDi_hashtojson(node->h));
             break;
         case LDNodeArray:
             cJSON_AddItemToObject(json, node->key, LDi_arraytojson(node->a));
@@ -169,8 +177,8 @@ LDi_arraytojson(LDNode *hash)
         case LDNodeString:
             cJSON_AddItemToArray(json, cJSON_CreateString(node->s));
             break;
-        case LDNodeMap:
-            cJSON_AddItemToArray(json, LDi_hashtojson(node->m));
+        case LDNodeHash:
+            cJSON_AddItemToArray(json, LDi_hashtojson(node->h));
             break;
         case LDNodeArray:
             cJSON_AddItemToArray(json, LDi_arraytojson(node->a));
@@ -181,7 +189,7 @@ LDi_arraytojson(LDNode *hash)
 }
 
 /*
- * translation layer from json to map. this does two things.
+ * translation layer from json to hash. this does two things.
  * abstracts the cJSON interface from the user, allowing us to swap libraries.
  * also decodes and normalizes what I am calling "flavors" which are the 
  * different payload variations sent by the LD servers which vary by endpoint.
@@ -239,6 +247,7 @@ LDi_jsontohash(cJSON *json, int flavor)
             item = json;
         }
         const char *key = item->string;
+        int version = 0;
         
         cJSON *valueitem = item;
         switch (flavor) {
@@ -247,6 +256,13 @@ LDi_jsontohash(cJSON *json, int flavor)
             break;
         case 1:
             /* versioned, value is hiding one level down */
+            /* grab the version first */
+            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
+                if (strcmp(valueitem->string, "version") == 0) {
+                    version = (int)valueitem->valuedouble;
+                    break;
+                }
+            }
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "value") == 0) {
                     break;
@@ -266,6 +282,12 @@ LDi_jsontohash(cJSON *json, int flavor)
                 }
             }
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
+                if (strcmp(valueitem->string, "version") == 0) {
+                    version = (int)valueitem->valuedouble;
+                    break;
+                }
+            }
+            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "value") == 0) {
                     break;
                 }
@@ -277,31 +299,35 @@ LDi_jsontohash(cJSON *json, int flavor)
             break;
         }
 
+        LDNode *node = NULL;
         switch (valueitem->type) {
         case cJSON_False:
-            LDNodeAddBool(&hash, key, false);
+            node = LDNodeAddBool(&hash, key, false);
             break;
         case cJSON_True:
-            LDNodeAddBool(&hash, key, true);
+            node = LDNodeAddBool(&hash, key, true);
             break;
         case cJSON_NULL:
             break;
         case cJSON_Number:
-            LDNodeAddNumber(&hash, key, valueitem->valuedouble);
+            node = LDNodeAddNumber(&hash, key, valueitem->valuedouble);
             break;
         case cJSON_String:
-            LDNodeAddString(&hash, key, valueitem->valuestring);
+            node = LDNodeAddString(&hash, key, valueitem->valuestring);
             break;
         case cJSON_Array: {
             LDNode *array = jsontoarray(valueitem);
-            LDNodeAddArray(&hash, key, array);
+            node = LDNodeAddArray(&hash, key, array);
             break;
         }
         case cJSON_Object:
-            LDNodeAddMap(&hash, key, LDi_jsontohash(valueitem, 0));
+            node = LDNodeAddHash(&hash, key, LDi_jsontohash(valueitem, 0));
             break;
         default:
             break;
+        }
+        if (version && node) {
+            node->version = version;
         }
         
         if (flavor == 2) {
@@ -321,8 +347,8 @@ freenode(LDNode *node, bool freekey)
         LDFree(node->key);
     if (node->type == LDNodeString)
         LDFree(node->s);
-    if (node->type == LDNodeMap)
-        freehash(node->m, true);
+    if (node->type == LDNodeHash)
+        freehash(node->h, true);
     if (node->type == LDNodeArray)
         freehash(node->a, false);
     LDFree(node);

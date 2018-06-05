@@ -80,7 +80,7 @@ LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const
     } else if (type == LDNodeBool) {
         cJSON_AddBoolToObject(json, "value", (int)n);
         cJSON_AddBoolToObject(json, "default", (int)defaultn);
-    } else if (type == LDNodeMap) {
+    } else if (type == LDNodeHash) {
         cJSON_AddItemToObject(json, "value", LDi_hashtojson(m));
         cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
