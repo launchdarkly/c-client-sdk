@@ -179,7 +179,7 @@ LDClientIdentify(LDClient *client, LDUser *user)
 void
 LDClientClose(LDClient *client)
 {
-    LDMapNode *oldhash;
+    LDNode *oldhash;
 
     LDi_wrlock(&LDi_clientlock);
     client->dead = true;
@@ -240,7 +240,7 @@ LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor
         LDi_log(5, "parsing failed\n");
         return false;
     }
-    LDMapNode *hash = NULL;
+    LDNode *hash = NULL;
     if (payload->type == cJSON_Object) {
         hash = LDi_jsontohash(payload, flavor);
     }
@@ -249,7 +249,7 @@ LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor
     if (needlock)
         LDi_wrlock(&LDi_clientlock);
     bool statuschange = client->isinit == false;
-    LDMapNode *oldhash = client->allFlags;
+    LDNode *oldhash = client->allFlags;
     client->allFlags = hash;
     client->isinit = true;
     if (needlock)
@@ -281,18 +281,18 @@ LDi_savehash(LDClient *client)
  bool
  isPrivateAttr(LDClient *client, const char *key)
  {
-     return (LDMapLookup(client->config->privateAttributeNames, key) != NULL) ||
-        (LDMapLookup(client->user->privateAttributeNames, key) != NULL);
+     return (LDNodeLookup(client->config->privateAttributeNames, key) != NULL) ||
+        (LDNodeLookup(client->user->privateAttributeNames, key) != NULL);
  }
 
 bool
 LDBoolVariation(LDClient *client, const char *key, bool fallback)
 {
-    LDMapNode *res;
+    LDNode *res;
     bool b;
 
     LDi_rdlock(&LDi_clientlock);
-    res = LDMapLookup(client->allFlags, key);
+    res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeBool) {
         LDi_log(15, "found result for %s\n", key);
         b = res->b;
@@ -310,11 +310,11 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
 int
 LDIntVariation(LDClient *client, const char *key, int fallback)
 {
-    LDMapNode *res;
+    LDNode *res;
     int i;
 
     LDi_rdlock(&LDi_clientlock);
-    res = LDMapLookup(client->allFlags, key);
+    res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeNumber)
         i = (int)res->n;
     else
@@ -329,11 +329,11 @@ LDIntVariation(LDClient *client, const char *key, int fallback)
 double
 LDDoubleVariation(LDClient *client, const char *key, double fallback)
 {
-    LDMapNode *res;
+    LDNode *res;
     double d;
 
     LDi_rdlock(&LDi_clientlock);
-    res = LDMapLookup(client->allFlags, key);
+    res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeNumber)
         d = res->n;
     else
@@ -349,12 +349,12 @@ char *
 LDStringVariation(LDClient *client, const char *key, const char *fallback,
     char *buffer, size_t space)
 {
-    LDMapNode *res;
+    LDNode *res;
     const char *s;
     size_t len;
 
     LDi_rdlock(&LDi_clientlock);
-    res = LDMapLookup(client->allFlags, key);
+    res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeString)
         s = res->s;
     else
@@ -375,12 +375,12 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
 char *
 LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
 {
-    LDMapNode *res;
+    LDNode *res;
     const char *s;
     char *news;
 
     LDi_rdlock(&LDi_clientlock);
-    res = LDMapLookup(client->allFlags, key);
+    res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeString)
         s = res->s;
     else
@@ -394,14 +394,14 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     return news;
 }
 
-LDMapNode *
-LDJSONVariation(LDClient *client, const char *key, LDMapNode *fallback)
+LDNode *
+LDJSONVariation(LDClient *client, const char *key, LDNode *fallback)
 {
-    LDMapNode *res;
-    LDMapNode *j;
+    LDNode *res;
+    LDNode *j;
 
     LDi_rdlock(&LDi_clientlock);
-    res = LDMapLookup(client->allFlags, key);
+    res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeMap) {
         j = res->m;
     } else {
@@ -414,7 +414,7 @@ LDJSONVariation(LDClient *client, const char *key, LDMapNode *fallback)
 }
 
 void
-LDJSONRelease(LDMapNode *m)
+LDJSONRelease(LDNode *m)
 {
     LDi_unlock(&LDi_clientlock);
 }
@@ -474,7 +474,7 @@ LDClientUnregisterFeatureFlagListener(LDClient *client, const char *key, LDliste
 void
 LDConfigAddPrivateAttribute(LDConfig *config, const char *key)
 {
-    LDMapNode *node = LDAlloc(sizeof(*node));
+    LDNode *node = LDAlloc(sizeof(*node));
     memset(node, 0, sizeof(*node));
     node->key = LDi_strdup(key);
     node->type = LDNodeBool;

@@ -48,7 +48,7 @@ char * LDClient::stringVariation(const std::string &key, const std::string &def,
     return LDStringVariation(this->client, key.c_str(), def.c_str(), buf, len);
 }
 
-LDMapNode *LDClient::JSONVariation(const std::string &key, LDMapNode *def)
+LDNode *LDClient::JSONVariation(const std::string &key, LDNode *def)
 {
     return LDJSONVariation(this->client, key.c_str(), def);
 }
@@ -64,12 +64,12 @@ void LDClient::close(void)
     this->client = 0;
 }
 
-LDMapNode * LDMapNode::lookup(const std::string &key)
+LDNode * LDNode::lookup(const std::string &key)
 {
-    return LDMapLookup(this, key.c_str());
+    return LDNodeLookup(this, key.c_str());
 }
 
-void LDMapNode::release(void)
+void LDNode::release(void)
 {
     LDJSONRelease(this);
 }

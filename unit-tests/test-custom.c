@@ -25,10 +25,10 @@ test1(void)
     LDSetString(&user->firstName, "Tsrif");
     LDSetString(&user->lastName, "Tsal");
     LDSetString(&user->avatar, "pirate");
-    user->custom = LDMapCreate();
-    LDMapAddNumber(&user->custom, "excellence", 10);
-    LDMapAddBool(&user->custom, "bossmode", true);
-    LDMapAddString(&user->custom, "species", "krell");
+    user->custom = LDNodeCreateHash();
+    LDNodeAddNumber(&user->custom, "excellence", 10);
+    LDNodeAddBool(&user->custom, "bossmode", true);
+    LDNodeAddString(&user->custom, "species", "krell");
 
     cJSON *json = LDi_usertojson(user);
     char *str = cJSON_PrintUnformatted(json);

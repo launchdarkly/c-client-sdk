@@ -74,7 +74,7 @@ LDi_usertojson(LDUser *lduser)
 void
 LDUserAddPrivateAttribute(LDUser *user, const char *key)
 {
-    LDMapNode *node = LDAlloc(sizeof(*node));
+    LDNode *node = LDAlloc(sizeof(*node));
     memset(node, 0, sizeof(*node));
     node->key = LDi_strdup(key);
     node->type = LDNodeBool;

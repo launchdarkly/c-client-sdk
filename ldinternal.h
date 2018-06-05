@@ -11,7 +11,7 @@ struct listener {
 struct LDClient_i {
     LDConfig *config;
     LDUser *user;
-    LDMapNode *allFlags;
+    LDNode *allFlags;
     bool offline;
     bool dead;
     bool isinit;
@@ -27,21 +27,21 @@ struct IdentifyEvent {
 struct FeatureRequestEvent {
     char *kind;
     char *key;
-    LDMapNode *value;
-    LDMapNode Default;
+    LDNode *value;
+    LDNode Default;
 };
 
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
-void LDi_freehash(LDMapNode *hash);
-void LDi_freenode(LDMapNode *node);
+void LDi_freehash(LDNode *hash);
+void LDi_freenode(LDNode *node);
 
 void LDi_freeuser(LDUser *user);
 
-char *LDi_hashtostring(LDMapNode *hash);
-cJSON *LDi_hashtojson(LDMapNode *hash);
-cJSON *LDi_arraytojson(LDMapNode *hash);
-LDMapNode *LDi_jsontohash(cJSON *json, int flavor);
+char *LDi_hashtostring(LDNode *hash);
+cJSON *LDi_hashtojson(LDNode *hash);
+cJSON *LDi_arraytojson(LDNode *hash);
+LDNode *LDi_jsontohash(cJSON *json, int flavor);
 void LDi_initevents(int capacity);
 char * LDi_usertourl(LDUser *user);
 
@@ -55,7 +55,7 @@ void LDi_readstream(const char *url, const char *authkey, int *response, int cal
 
 void LDi_recordidentify(LDUser *lduser);
 void LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,
-    LDMapNode *, double defaultn, const char *defaults, LDMapNode *);
+    LDNode *, double defaultn, const char *defaults, LDNode *);
 char *LDi_geteventdata(void);
 void LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response);
 

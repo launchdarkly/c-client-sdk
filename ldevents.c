@@ -61,7 +61,7 @@ LDi_recordidentify(LDUser *lduser)
 
 void
 LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,
-    LDMapNode *m, double defaultn, const char *defaults, LDMapNode *defaultm)
+    LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
     if (numevents >= eventscapacity) {
         return;

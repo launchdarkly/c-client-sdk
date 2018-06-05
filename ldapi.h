@@ -18,7 +18,7 @@ typedef enum {
     LDNodeArray,
 } LDNodeType;
 
-typedef struct LDMapNode_i {
+typedef struct LDNode_i {
     union {
         char *key;
         unsigned int idx;
@@ -28,15 +28,15 @@ typedef struct LDMapNode_i {
         bool b;
         char *s;
         double n;
-        struct LDMapNode_i *m;
-        struct LDMapNode_i *a;
+        struct LDNode_i *m;
+        struct LDNode_i *a;
     };
     UT_hash_handle hh;
 #ifdef __cplusplus
-    struct LDMapNode_i *lookup(const std::string &key);
+    struct LDNode_i *lookup(const std::string &key);
     void release(void);
 #endif
-} LDMapNode;
+} LDNode;
 
 typedef struct LDConfig_i {
     bool allAttributesPrivate;
@@ -50,7 +50,7 @@ typedef struct LDConfig_i {
     char *mobileKey;
     bool offline;
     int pollingIntervalMillis;
-    LDMapNode *privateAttributeNames;
+    LDNode *privateAttributeNames;
     bool streaming;
     char *streamURI;
     bool useReport;
@@ -66,8 +66,8 @@ typedef struct LDUser_i {
     char *email;
     char *name;
     char *avatar;
-    LDMapNode *custom;
-    LDMapNode *privateAttributeNames;
+    LDNode *custom;
+    LDNode *privateAttributeNames;
 } LDUser;
 
 struct LDClient_i;
@@ -108,28 +108,28 @@ int LDIntVariation(struct LDClient_i *, const char *, int);
 double LDDoubleVariation(struct LDClient_i *, const char *, double);
 char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
 char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
-LDMapNode *LDJSONVariation(struct LDClient_i *client, const char *key, LDMapNode *);
-void LDJSONRelease(LDMapNode *m);
+LDNode *LDJSONVariation(struct LDClient_i *client, const char *key, LDNode *);
+void LDJSONRelease(LDNode *m);
 
 void LDFree(void *);
 void *LDAlloc(size_t amt);
 
-/* functions for working with hash tables */
-LDMapNode *LDMapCreate(void);
-void LDMapAddBool(LDMapNode **hash, const char *key, bool b);
-void LDMapAddNumber(LDMapNode **hash, const char *key, double n);
-void LDMapAddString(LDMapNode **hash, const char *key, const char *s);
-void LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m);
-void LDMapAddArray(LDMapNode **hash, const char *key, LDMapNode *a);
-LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
-void LDMapFree(LDMapNode **hash);
-unsigned int LDMapCount(LDMapNode *hash);
-/* arrays are about the same thing as hashes */
-LDMapNode *LDMapArray(void);
-void LDMapAppendBool(LDMapNode **array, bool b);
-void LDMapAppendNumber(LDMapNode **array, double n);
-void LDMapAppendString(LDMapNode **array, const char *s);
-LDMapNode *LDMapIndex(LDMapNode *array, unsigned int idx);
+/* functions for working with (JSON) nodes (aka hash tables) */
+LDNode *LDNodeCreateHash(void);
+void LDNodeAddBool(LDNode **hash, const char *key, bool b);
+void LDNodeAddNumber(LDNode **hash, const char *key, double n);
+void LDNodeAddString(LDNode **hash, const char *key, const char *s);
+void LDNodeAddMap(LDNode **hash, const char *key, LDNode *m);
+void LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
+LDNode *LDNodeLookup(LDNode *hash, const char *key);
+void LDNodeFree(LDNode **hash);
+unsigned int LDNodeCount(LDNode *hash);
+/* functions for treating nodes as arrays */
+LDNode *LDNodeCreateArray(void);
+void LDNodeAppendBool(LDNode **array, bool b);
+void LDNodeAppendNumber(LDNode **array, double n);
+void LDNodeAppendString(LDNode **array, const char *s);
+LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 
@@ -179,7 +179,7 @@ class LDClient {
         std::string stringVariation(const std::string &, const std::string &);
         char *stringVariation(const std::string &, const std::string &, char *, size_t);
 
-        LDMapNode *JSONVariation(const std::string &, LDMapNode *);
+        LDNode *JSONVariation(const std::string &, LDNode *);
 
         void setOffline();
         void setOnline();

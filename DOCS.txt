@@ -18,7 +18,7 @@ Use LDSetString to modify string fields.
 
 bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring)
 Helper function to set custom attributes for the user. The custom field
-may be build programmatically using the LDMap functions (see below), or
+may be build programmatically using the LDNode functions (see below), or
 may be set all at once with a json string.
 
 LDClient *LDClientInit(LDConfig *config, LDUser *user)
@@ -55,17 +55,17 @@ To avoid allocations, the second function fills a caller provided buffer. Up to
 size bytes will be copied into buffer, truncating if necessary.
 Both functions return a pointer.
 
-LDMapNode *LDJSONVariation(LDClient *client, const char *name, LDMapNode *default)
-Ask for a JSON variation, returned as a parsed tree of LDMapNodes.
+LDNode *LDJSONVariation(LDClient *client, const char *name, LDNode *default)
+Ask for a JSON variation, returned as a parsed tree of LDNodes.
 The node returned is an internal data structure of the client. After examination,
 it must be released by calling LDJSONRelease() which will unlock the client.
-See also LDMapLookup.
+See also LDNodeLookup.
 
-void LDJSONRelease(LDMapNode *hash)
+void LDJSONRelease(LDNode *hash)
 Release a JSON node. Only the node returned by LDJSONVariation must be
-released. Sub-nodes looked up via LDMapLookup should not be released.
+released. Sub-nodes looked up via LDNodeLookup should not be released.
 
-LDMapNode *LDMapLookup(LDMapNode *hash, const char *key)
+LDNode *LDNodeLookup(LDNode *hash, const char *key)
 Lookup a node in a hash map.
 
 void LDFree(void *)
@@ -119,40 +119,40 @@ Current status code:
 -- MAP INTERFACE --
 
 The LD client uses JSON to communicate. In places where it is exposed to
-the application, it is represented as a hash table of LDMapNode structures.
+the application, it is represented as a hash table of LDNode structures.
 
-LDMapNode *LDMapCreate(void);
+LDNode *LDNodeCreate(void);
 Create a new empty hash.
 (Implementation note: empty hash is a NULL pointer, not indicative of failure).
 
-void LDMapAddBool(LDMapNode **hash, const char *key, bool b);
-void LDMapAddNumber(LDMapNode **hash, const char *key, double n);
-void LDMapAddString(LDMapNode **hash, const char *key, const char *s);
-void LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m);
+void LDNodeAddBool(LDNode **hash, const char *key, bool b);
+void LDNodeAddNumber(LDNode **hash, const char *key, double n);
+void LDNodeAddString(LDNode **hash, const char *key, const char *s);
+void LDNodeAddMap(LDNode **hash, const char *key, LDNode *m);
 Add a new node to the hash table.
 Memory ownership: The string s will be duplicated internally. The map m
 is _not_ duplicated. It will be owned by the contianing hash.
 
-LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
+LDNode *LDNodeLookup(LDNode *hash, const char *key);
 Find a node in a hash. See below for structure.
 
-void LDMapFree(LDMapNode **hash);
+void LDNodeFree(LDNode **hash);
 Free a map and all internal memory.
 
 Maps also serve as arrays.
 
-LDMapNode *LDMapArray();
+LDNode *LDNodeArray();
 Create an empty array.
 
-void LDMapAppendBool(LDMapNode **array, bool b);
-void LDMapAppendNumber(LDMapNode **array, double n);
-void LDMapAppendString(LDMapNode **array, const char *s);
+void LDNodeAppendBool(LDNode **array, bool b);
+void LDNodeAppendNumber(LDNode **array, double n);
+void LDNodeAppendString(LDNode **array, const char *s);
 Add a bool, number, or string to an array.
 
-LDMapNode *LDMapIndex(LDMapNode *array, unsigned int idx);
+LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
 Retrieve the element at index idx.
 
-unsigned int LDMapCount(LDMapNode *hash)
+unsigned int LDNodeCount(LDNode *hash)
 Return the number of elements in a map or array.
 
 A map node will have a type, one of string, number, bool, map, or array.
@@ -174,10 +174,10 @@ typedef struct {
         bool b;
         char *s;
         double n;
-        LDMapNode *m;
-        LDMapNode *a;
+        LDNode *m;
+        LDNode *a;
     };
-} LDMapNode;
+} LDNode;
 
 -- STORE INTERFACE --
 
@@ -240,7 +240,7 @@ class LDClient {
         Functions to ask for variations.
 
 
-        LDMapNode *JSONVariation(const std::string &, LDMapNode *);
+        LDNode *JSONVariation(const std::string &, LDNode *);
         Request a JSON variation. It must be released.
 
         void setOffline();
@@ -254,10 +254,10 @@ class LDClient {
         void close(void);
 }
 
-In C++, LDMapNode has the following member functions.
+In C++, LDNode has the following member functions.
 
-class LDMapNode {
-    LDMapNode *lookup(const std::string &key);
+class LDNode {
+    LDNode *lookup(const std::string &key);
     Find a subnode.
 
     void release(void);

@@ -158,7 +158,7 @@ LDi_onstreameventput(const char *data)
 static void
 applypatch(cJSON *payload, bool isdelete)
 {
-    LDMapNode *patch = NULL;
+    LDNode *patch = NULL;
     if (payload->type == cJSON_Object) {
         patch = LDi_jsontohash(payload, 2);
     }
@@ -166,10 +166,10 @@ applypatch(cJSON *payload, bool isdelete)
 
     LDClient *client = LDClientGet();
     LDi_wrlock(&LDi_clientlock);
-    LDMapNode *hash = client->allFlags;
-    LDMapNode *node, *tmp;
+    LDNode *hash = client->allFlags;
+    LDNode *node, *tmp;
     HASH_ITER(hh, patch, node, tmp) {
-        LDMapNode *res = NULL;
+        LDNode *res = NULL;
         HASH_FIND_STR(hash, node->key, res);
         if (res) {
             HASH_DEL(hash, res);

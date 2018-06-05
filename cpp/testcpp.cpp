@@ -38,8 +38,8 @@ main(int argc, char **argv)
         printf("sort order is false\n");
     }
 
-    LDMapNode *jnode = client->JSONVariation("jj", NULL);
-    LDMapNode *ii = jnode->lookup("ii");
+    LDNode *jnode = client->JSONVariation("jj", NULL);
+    LDNode *ii = jnode->lookup("ii");
     if (ii->type != LDNodeNumber || ii->n != 7) {
         printf("ERROR: the json was not as expected\n");
     }
