@@ -120,7 +120,7 @@ LDClientInit(LDConfig *config, LDUser *user)
     client->allFlags = NULL;
     char *flags = LDi_loaddata("features", user->key);
     if (flags) {
-        LDi_clientsetflags(client, false, flags, 0);
+        LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
     
@@ -218,7 +218,7 @@ char *
 LDClientSaveFlags(LDClient *client)
 {
     LDi_rdlock(&LDi_clientlock);
-    char *s = LDi_hashtostring(client->allFlags);
+    char *s = LDi_hashtostring(client->allFlags, true);
     LDi_unlock(&LDi_clientlock);
     return s;
 }
@@ -226,7 +226,7 @@ LDClientSaveFlags(LDClient *client)
 void
 LDClientRestoreFlags(LDClient *client, const char *data)
 {
-    if (LDi_clientsetflags(client, true, data, 0)) {
+    if (LDi_clientsetflags(client, true, data, 1)) {
         LDi_savedata("features", client->user->key, data);
     }
 }
@@ -268,7 +268,7 @@ void
 LDi_savehash(LDClient *client)
 {
     LDi_rdlock(&LDi_clientlock);
-    char *s = LDi_hashtostring(client->allFlags);
+    char *s = LDi_hashtostring(client->allFlags, true);
     LDi_savedata("features", client->user->key, s);
     LDi_unlock(&LDi_clientlock);
     LDFree(s);
@@ -403,7 +403,7 @@ LDJSONVariation(LDClient *client, const char *key, LDNode *fallback)
     LDi_rdlock(&LDi_clientlock);
     res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeHash) {
-        j = res->m;
+        j = res->h;
     } else {
         j = fallback;
     }

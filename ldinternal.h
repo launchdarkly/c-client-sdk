@@ -38,7 +38,7 @@ void LDi_freenode(LDNode *node);
 
 void LDi_freeuser(LDUser *user);
 
-char *LDi_hashtostring(LDNode *hash);
+char *LDi_hashtostring(LDNode *hash, bool versioned);
 cJSON *LDi_hashtojson(LDNode *hash);
 cJSON *LDi_arraytojson(LDNode *hash);
 LDNode *LDi_jsontohash(cJSON *json, int flavor);

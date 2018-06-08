@@ -135,6 +135,38 @@ LDNodeFree(LDNode **hash)
 }
 
 cJSON *
+LDi_hashtoversionedjson(LDNode *hash)
+{
+    cJSON *json = cJSON_CreateObject();
+    LDNode *node, *tmp;
+    HASH_ITER(hh, hash, node, tmp) {
+        cJSON *val = cJSON_CreateObject();
+        switch (node->type) {
+        case LDNodeBool:
+            cJSON_AddBoolToObject(val, "value", (int)node->b);
+            break;
+        case LDNodeNumber:
+            cJSON_AddNumberToObject(val, "value", node->n);
+            break;
+        case LDNodeString:
+            cJSON_AddStringToObject(val, "value", node->s);
+            break;
+        case LDNodeHash:
+            cJSON_AddItemToObject(val, "value", LDi_hashtojson(node->h));
+            break;
+        case LDNodeArray:
+            cJSON_AddItemToObject(val, "value", LDi_arraytojson(node->a));
+            break;
+        }
+        cJSON_AddNumberToObject(val, "version", node->version);
+
+        cJSON_AddItemToObject(json, node->key, val);
+
+    }
+    return json;
+}
+
+cJSON *
 LDi_hashtojson(LDNode *hash)
 {
     cJSON *json = cJSON_CreateObject();
@@ -196,9 +228,14 @@ LDi_arraytojson(LDNode *hash)
  */
 
 char *
-LDi_hashtostring(LDNode *hash)
+LDi_hashtostring(LDNode *hash, bool versioned)
 {
-    cJSON *json = LDi_hashtojson(hash);
+    cJSON *json;
+    if (versioned) {
+        json = LDi_hashtoversionedjson(hash);
+    } else {
+        json = LDi_hashtojson(hash);
+    }
     char *tmp = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
     char *s = LDi_strdup(tmp);

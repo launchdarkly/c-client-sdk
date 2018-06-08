@@ -139,7 +139,7 @@ bgfeaturepoller(void *v)
         if (!data)
             continue;
         if (LDi_clientsetflags(client, true, data, 0)) {
-            LDi_savedata("features", client->user->key, data);
+            LDi_savehash(client);
         }
         free(data);
     }
@@ -171,6 +171,11 @@ applypatch(cJSON *payload, bool isdelete)
     HASH_ITER(hh, patch, node, tmp) {
         LDNode *res = NULL;
         HASH_FIND_STR(hash, node->key, res);
+        if (res && res->version > node->version) {
+            /* stale patch, skip */
+            LDi_log(10, "patch for %s version %d is staler than %d\n", node->key, node->version, res->version);
+            continue;
+        }
         if (res) {
             HASH_DEL(hash, res);
             LDi_freenode(res);

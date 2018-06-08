@@ -54,6 +54,21 @@ test1(void)
     if (strcmp(buffer, "as expected") != 0) {
         printf("ERROR: didn't load file data\n");
     }
+
+    char *patch = "{ \"key\": \"filedata\", \"value\": \"updated\", \"version\": 2 } }";
+    LDi_onstreameventpatch(patch);
+    LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
+    if (strcmp(buffer, "as expected") != 0) {
+        printf("ERROR: applied stale patch\n");
+    }
+
+    patch = "{ \"key\": \"filedata\", \"value\": \"updated\", \"version\": 4 } }";
+    LDi_onstreameventpatch(patch);
+    LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
+    if (strcmp(buffer, "updated") != 0) {
+        printf("ERROR: didn't apply good patch\n");
+    }
+
     LDClientClose(client);
 
 }

@@ -35,7 +35,7 @@ main(int argc, char **argv)
 
     LDClient *client = LDClientInit(config, user);
 
-    char *testflags = "{ \"sort.order\": false, \"bugcount\": 0, \"jj\": { \"ii\": 7 } }";
+    char *testflags = "{ \"sort.order\": { \"value\": false}, \"bugcount\": { \"value\": 0} , \"jj\": { \"value\": { \"ii\": 7 }} }";
 
     printf("Restoring flags\n");
     LDClientRestoreFlags(client, testflags);
