@@ -21,7 +21,7 @@ Marks all user attributes private.
 ```C
     int backgroundPollingIntervalMillis;
 ```
-Sets the interval in milliseconds that twe will poll for flag updates when your app is in the background.
+Sets the interval in milliseconds between polls for flag updates when your app is in the background.
 
 ```C
     char *appURI;
@@ -88,75 +88,112 @@ Determines whether the `REPORT` or `GET` verb is used for calls to LaunchDarkly.
 ## Users
 
 ```C
-LDUser *LDUserNew(const char *key)
+LDUser *LDUserNew(const char *key);
 ```
-Allocate a new user. The user may be modified *until* it is passed to the `LdClientIdentify` or `LDClientInit`. The `key` argument is required. Use `LDSetString` to modify string fields.
+Allocate a new user. The user may be modified *until* it is passed to the `LdClientIdentify` or `LDClientInit`. The `key` argument is required.
 
 ```C
-bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring)
+void LDUserSetIP(LDUser *user, const char *str);
+```
+Set the user's IP.
+
+```C
+void LDUserSetFirstName(LDUser *user, const char *str);
+```
+Set the user's first name.
+
+```C
+void LDUserSetLastName(LDUser *user, const char *str);
+```
+Set the user's last name.
+
+```C
+void LDUserSetEmail(LDUser *user, const char *str);
+```
+Set the user's email.
+
+```C
+void LDUserSetName(LDUser *user, const char *str);
+```
+Set the user's name.
+
+```C
+void LDUserSetAvatar(LDUser *user, const char *str);
+```
+Set the user's avatar.
+
+```C
+bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
+void LDUSerSetCustomAttributes(LDUser *user, LDNode *custom);
 ```
 Helper function to set custom attributes for the user. The custom field
-may be build programmatically using the LDMap functions (see below), or
+may be built programmatically using the LDNode functions (see below), or
 may be set all at once with a json string.
 
 ```C
-void LDClientIdentify(LDClient *, LDUser *)
+void LDUserAddPrivateAttribute(LDUser *, const char *name);
+```
+Add an attribute name to the private list which will not be recorded.
+
+
+```C
+void LDClientIdentify(LDClient *, LDUser *);
 ```
 Update the client with a new user. The old user is freed. This will re-fetch feature flag settings from LaunchDarkly-- for performance reasons, user contexts should not be changed frequently.
 
 ## Client lifecycle management
 
 ```C
-LDClient *LDClientInit(LDConfig *config, LDUser *user)
+LDClient *LDClientInit(LDConfig *config, LDUser *user);
 ```
 Initialize the client with the config and user. After this call, the `config`
 and `user` must not be modified. May be called more than once to change
 `config`, in which case the previous `config` is freed. There is only ever one `LDClient`.
 
 ```C
-LDClient *LDClientGet(void)
+LDClient *LDClientGet(void);
 ```
 Get a reference to the (single, global) client.
 
 ```C
-void LDClientClose(LDClient *)
+void LDClientClose(LDClient *);
 ```
 Close the client, free resources, and generally shut down.
 
 ```C
-bool LDClientIsInitialized(LDClient *)
+bool LDClientIsInitialized(LDClient *);
 ```
 Returns true if the client has been initialized.
 
 ```C
-void LDClientFlush(LDClient *client)
+void LDClientFlush(LDClient *client);
 ```
 Send any pending events to the server. They will normally be flushed after a
 timeout, but may also be flushed manually.
 
 ```C
-void LDClientSetOffline(LDClient *)
+void LDClientSetOffline(LDClient *);
 ```
 Make the client operate in offline mode. No network traffic.
 
 ```C
-void LDClientSetOnline(LDClient *)
+void LDClientSetOnline(LDClient *);
 ```
 Return the client to online mode.
 
 ```C
-bool LDClientIsOffline(void)
+bool LDClientIsOffline(void);
 ```
 Returns the offline status of the client.
 
 ```C
-void LDSetClientStatusCallback(void (callback)(int status))
+void LDSetClientStatusCallback(void (callback)(int status));
 ```
 Set a callback function for client status changes. These are major
-status changes only, not updates to the feature map.
+status changes only, not updates to the feature Node.
 Current status code:
 0 - Offline. The client has been shut down, likely due to a permission failure.
-1 - Ready. The client has received an initial feature map from the server
+1 - Ready. The client has received an initial feature Node from the server
     and is ready to proceed.
 
 
@@ -164,17 +201,17 @@ Current status code:
 
 
 ```C
-bool LDBoolVariation(LDClient *, const char *name , bool default)
-int LDIntVariation(LDClient *, const char *name, int default)
-double LDDoubleVariation(LDClient *, const char *name, double default)
+bool LDBoolVariation(LDClient *, const char *name , bool default);
+int LDIntVariation(LDClient *, const char *name, int default);
+double LDDoubleVariation(LDClient *, const char *name, double default);
 ```
 Ask for a bool, int, or double flag, respectively. Return the default if not
 found.
 
 ```C
-char *LDStringVariationAlloc(LDClient *, const char *name, const char *def)
+char *LDStringVariationAlloc(LDClient *, const char *name, const char *def);
 char *LDStringVariation(LDClient *, const char *name, const char *default,
-    char *buffer, size_t size)
+    char *buffer, size_t size);
 ```
 Ask for a string flag. The first version allocates memory on every call. This
 must then be freed with LDFree.
@@ -183,81 +220,81 @@ size bytes will be copied into buffer, truncating if necessary.
 Both functions return a pointer.
 
 ```C
-LDMapNode *LDJSONVariation(LDClient *client, const char *name, LDMapNode *default)
+LDNode *LDJSONVariation(LDClient *client, const char *name, LDNode *default);
 ```
-Ask for a JSON variation, returned as a parsed tree of LDMapNodes.
+Ask for a JSON variation, returned as a parsed tree of LDNodes.
 The node returned is an internal data structure of the client. After examination,
 it must be released by calling `LDJSONRelease()` which will unlock the client.
-See also `LDMapLookup`.
+See also `LDNodeLookup`.
 
 
 ```C
 typedef void (*LDlistenerfn)(const char *name, int update);
-bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn)
-bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn)
+bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn);
+bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn);
 ```
 Register and unregister callbacks when features change.
 The name argument indicates the changed value.
 The update argument is 0 for new or updated and 1 for deleted.
 
-## Map interface
+## Node interface
 
 
-The LD client uses JSON to communicate. In places where it is exposed to
-the application, it is represented as a hash table of LDMapNode structures.
+The LD client uses JSON to communicate, which is represented as LDNode
+structures. Both arrays and hashes (objects) are supported.
 
 ```C
-LDMapNode *LDMapCreate(void);
+LDNode *LDNodeCreateHash(void);
 ```
 Create a new empty hash.
 (Implementation note: empty hash is a NULL pointer, not indicative of failure).
 
 ```C
-void LDMapAddBool(LDMapNode **hash, const char *key, bool b);
-void LDMapAddNumber(LDMapNode **hash, const char *key, double n);
-void LDMapAddString(LDMapNode **hash, const char *key, const char *s);
-void LDMapAddMap(LDMapNode **hash, const char *key, LDMapNode *m);
+void LDNodeAddBool(LDNode **hash, const char *key, bool b);
+void LDNodeAddNumber(LDNode **hash, const char *key, double n);
+void LDNodeAddString(LDNode **hash, const char *key, const char *s);
+void LDNodeAddNode(LDNode **hash, const char *key, LDNode *m);
 ```
 Add a new node to the hash table.
-Memory ownership: The string `s` will be duplicated internally. The map m
-is _not_ duplicated. It will be owned by the contianing hash.
+Memory ownership: The string `s` will be duplicated internally. The Node m
+is _not_ duplicated. It will be owned by the containing hash.
 
 ```C
-LDMapNode *LDMapLookup(LDMapNode *hash, const char *key);
+LDNode *LDNodeLookup(LDNode *hash, const char *key);
 ```
 Find a node in a hash. See below for structure.
 
 ```C
-void LDMapFree(LDMapNode **hash);
+void LDNodeFree(LDNode **hash);
 ```
-Free a map and all internal memory.
+Free a hash and all internal memory.
 
-Maps also serve as arrays.
+In addition to hash tables, arrays are also supported.
 
 ```C
-LDMapNode *LDMapArray();
+LDNode *LDNodeArray();
 ```
 Create an empty array.
 
 ```C
-void LDMapAppendBool(LDMapNode **array, bool b);
-void LDMapAppendNumber(LDMapNode **array, double n);
-void LDMapAppendString(LDMapNode **array, const char *s);
+void LDNodeAppendBool(LDNode **array, bool b);
+void LDNodeAppendNumber(LDNode **array, double n);
+void LDNodeAppendString(LDNode **array, const char *s);
 ```
 Add a bool, number, or string to an array.
 
 ```C
-LDMapNode *LDMapIndex(LDMapNode *array, unsigned int idx);
+LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
 ```
 Retrieve the element at index idx.
 
 ```C
-unsigned int LDMapCount(LDMapNode *hash)
+unsigned int LDNodeCount(LDNode *hash);
 ```
-Return the number of elements in a map or array.
+Return the number of elements in a hash or array.
 
-A map node will have a type, one of string, number, bool, map, or array.
-The corresponding union field, s, n, b, m, or a will be set.
+A Node node will have a type, one of string, number, bool, hash, or array.
+The corresponding union field, s, n, b, h, or a will be set.
 
 ```C
 typedef enum {
@@ -265,7 +302,7 @@ typedef enum {
     LDNodeString,
     LDNodeNumber,
     LDNodeBool,
-    LDNodeMap,
+    LDNodeHash,
     LDNodeArray,
 } LDNodeType;
 
@@ -276,10 +313,10 @@ typedef struct {
         bool b;
         char *s;
         double n;
-        LDMapNode *m;
-        LDMapNode *a;
+        LDNode *h;
+        LDNode *a;
     };
-} LDMapNode;
+} LDNode;
 ```
 
 
@@ -354,3 +391,75 @@ memory as needed.
 void LDFree(void *)
 ```
 Frees a string.
+
+## C++ interface
+
+
+A C++ interface to LDClient is also available. Other C functions remain available.
+
+```C++
+class LDClient {
+```
+
+```C++
+        static LDClient *Get(void);
+```
+        Return the LDClient singleton.
+
+```C++
+        static LDClient *Init(LDConfig *, LDUser *);
+```
+        Initialize the client.
+
+```C++
+        bool boolVariation(const std::string &, bool);
+        int intVariation(const std::string &, int);
+        std::string stringVariation(const std::string &, const std::string &);
+        char *stringVariation(const std::string &, const std::string &, char *, size_t);
+```
+        Functions to ask for variations.
+
+```C++
+        LDNode *JSONVariation(const std::string &, LDNode *);
+```
+        Request a JSON variation. It must be released.
+
+```C++
+        void setOffline();
+        void setOnline();
+        bool isOffline();
+```
+
+```C++      
+        std::string saveFlags();
+        void restoreFlags(const std::string &);
+```
+
+```C++
+        void flush(void);
+        void close(void);
+```
+
+```C++
+}
+```
+
+In C++, LDNode has the following member functions.
+
+```C++
+class LDNode {
+```
+
+```C++
+    LDNode *lookup(const std::string &key);
+```
+    Find a subnode.
+
+```C++
+    void release(void);
+```
+    Release a node, as returned from LDClient::JSONVariation.
+
+```C++
+}
+```

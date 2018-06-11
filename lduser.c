@@ -97,6 +97,12 @@ LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring)
 }
 
 void
+LDUSerSetCustomAttributes(LDUser *user, LDNode *custom)
+{
+    user->custom = custom;
+}
+
+void
 LDUserSetIP(LDUser *user, const char *str)
 {
     LDSetString(&user->ip, str);

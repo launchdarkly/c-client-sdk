@@ -83,7 +83,6 @@ void LDSetString(char **, const char *);
 
 LDConfig *LDConfigNew(const char *);
 LDUser *LDUserNew(const char *);
-bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
 
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
 struct LDClient_i *LDClientGet(void);
@@ -99,6 +98,8 @@ void LDUserSetEmail(LDUser *user, const char *str);
 void LDUserSetName(LDUser *user, const char *str);
 void LDUserSetAvatar(LDUser *user, const char *str);
 
+bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
+void LDUSerSetCustomAttributes(LDUser *user, LDNode *custom);
 
 char *LDClientSaveFlags(struct LDClient_i *client);
 void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
