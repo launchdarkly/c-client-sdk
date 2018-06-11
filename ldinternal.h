@@ -18,6 +18,38 @@ struct LDClient_i {
     struct listener *listeners;
 };
 
+struct LDConfig_i {
+    bool allAttributesPrivate;
+    int backgroundPollingIntervalMillis;
+    char *appURI;
+    int connectionTimeoutMillis;
+    bool disableBackgroundUpdating;
+    int eventsCapacity;
+    int eventsFlushIntervalMillis;
+    char *eventsURI;
+    char *mobileKey;
+    bool offline;
+    int pollingIntervalMillis;
+    LDNode *privateAttributeNames;
+    bool streaming;
+    char *streamURI;
+    bool useReport;
+};
+
+struct LDUser_i {
+    char *key;
+    bool anonymous;
+    char *secondary;
+    char *ip;
+    char *firstName;
+    char *lastName;
+    char *email;
+    char *name;
+    char *avatar;
+    LDNode *custom;
+    LDNode *privateAttributeNames;
+};
+
 struct IdentifyEvent {
     char *kind;
     char *key;

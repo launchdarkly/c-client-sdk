@@ -29,7 +29,7 @@ main(int argc, char **argv)
     LDSetClientStatusCallback(statusupdate);
 
     LDConfig *config = LDConfigNew("authkey");
-    config->offline = true;
+    LDConfigSetOffline(config, true);
 
     LDUser *user = LDUserNew("user200");
 

@@ -48,6 +48,63 @@ LDConfigNew(const char *mobileKey)
     return config;
 }
 
+void LDConfigSetAllAttributesPrivate(LDConfig *config, bool private)
+{
+    config->allAttributesPrivate = private;
+}
+void LDConfigSetBackgroundPollingIntervalMillis(LDConfig *config, int millis)
+{
+    config->backgroundPollingIntervalMillis = millis;
+}
+void LDConfigSetAppURI(LDConfig *config, const char *uri)
+{
+    LDSetString(&config->appURI, uri);
+}
+void LDConfigSetConnectionTimeoutMillies(LDConfig *config, int millis)
+{
+    config->connectionTimeoutMillis = millis;
+}
+void LDConfigSetDisableBackgroundUpdating(LDConfig *config, bool disable)
+{
+    config->disableBackgroundUpdating = disable;
+}
+void LDConfigSetEventsCapacity(LDConfig *config, int capacity)
+{
+    config->eventsCapacity = capacity;
+}
+void LDConfigSetEventsFlushIntervalMillis(LDConfig *config, int millis)
+{
+    config->eventsFlushIntervalMillis = millis;
+}
+void LDConfigSetEventsURI(LDConfig *config, const char *uri)
+{
+    LDSetString(&config->eventsURI, uri);
+}
+void LDConfigSetMobileKey(LDConfig *config, const char *key)
+{
+    LDSetString(&config->mobileKey, key);
+}
+void LDConfigSetOffline(LDConfig *config, bool offline)
+{
+    config->offline = offline;
+}
+void LDConfigSetStreaming(LDConfig *config, bool streaming)
+{
+    config->streaming = streaming;
+}
+void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis)
+{
+    config->pollingIntervalMillis = millis;
+}
+void LDConfigSetStreamURI(LDConfig *config, const char *uri)
+{
+    LDSetString(&config->streamURI, uri);
+}
+void LDConfigSetUseReport(LDConfig *config, bool report)
+{
+    config->useReport = report;
+}
+
 static void
 freeconfig(LDConfig *config)
 {

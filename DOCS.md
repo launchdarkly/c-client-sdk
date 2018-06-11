@@ -9,78 +9,78 @@ This document serves as a reference guide for the LaunchDarkly C SDK API. It doc
 ```C
 LDConfig *LDConfigNew(const char *authkey)
 ```
-Creates a new default configuration. `authkey` is required. Use `LDSetString` to modify string fields. 
+Creates a new default configuration. `authkey` is required.
 
 The configuration object is intended to be modified until it is passed to `LDClientInit`, at which point it should no longer be modified. Here are the modifiable attributes defined in `LDConfig`:
 
 ```C
-    bool allAttributesPrivate;
+void LDConfigSetAllAttributesPrivate(LDConfig *config, bool allprivate);
 ```
 Marks all user attributes private.
 
 ```C
-    int backgroundPollingIntervalMillis;
+void LDConfigSetBackgroundPollingIntervalMillis(LDConfig *config, int millis);
 ```
 Sets the interval in milliseconds between polls for flag updates when your app is in the background.
 
 ```C
-    char *appURI;
+void LDConfigSetAppURI(LDConfig *config, const char *uri);
 ```
 Set the URI for connecting to LaunchDarkly. You probably don't need to set this unless instructed by LaunchDarkly.
 
 ```C
-    int connectionTimeoutMillis;
+void LDConfigSetConnectionTimeoutMillies(LDConfig *config, int millis);
 ```
 Sets the timeout in milliseconds when connecting to LaunchDarkly.
 
 ```C
-    bool disableBackgroundUpdating;
+void LDConfigSetDisableBackgroundUpdating(LDConfig *config, bool disable);
 ```
 Disables feature flag updates when your app is in the background.
 
 ```C
-    int eventsCapacity;
+void LDConfigSetEventsCapacity(LDConfig *config, int capacity);
 ```
 Sets the max number of events to queue before sending them to LaunchDarkly.
 
 ```C
-    int eventsFlushIntervalMillis;
+void LDConfigSetEventsFlushIntervalMillis(LDConfig *config, int millis);
 ```
  Sets the maximum amount of time in milliseconds to wait in between sending analytics events to LaunchDarkly.
 
 ```C
-    char *eventsURI;
+void LDConfigSetEventsURI(LDConfig *config, const char *uri);
 ```
 Set the events uri for sending analytics to LaunchDarkly. You probably don't need to set this unless instructed by LaunchDarkly.
 
 ```C
-    char *mobileKey;
+void LDConfigSetMobileKey(LDConfig *config, const char *key);
 ```
 Sets the key for authenticating with LaunchDarkly. This is required unless you're using the client in offline mode.
 
 ```C
-    bool offline;
+void LDConfigSetOffline(LDConfig *config, bool offline);
 ```
 Configures the client for offline mode. In offline mode, no external network connections are made. 
 
 ```C
-    bool streaming;
+void LDConfigSetStreaming(LDConfig *config, bool streaming);
 ```
 Enables or disables real-time streaming flag updates. Default: `true`. When set to `false`, an efficient caching polling mechanism is used. We do not recommend disabling `streaming` unless you have been instructed to do so by LaunchDarkly support.
 
 ```C
-    int pollingIntervalMillis;
+void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 ```
 Only relevant when `streaming` is disabled (set to `false`). Sets the interval between feature flag updates. 
 
 
 ```C
-    char *streamURI;
+void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 ```
 Set the stream uri for connecting to the flag update stream. You probably don't need to set this unless instructed by LaunchDarkly.
 
 ```C
-    bool useReport;
+void LDConfigSetUseReport(LDConfig *config, bool report);
 ```
 Determines whether the `REPORT` or `GET` verb is used for calls to LaunchDarkly. Do not use unless advised by LaunchDarkly.
 
@@ -380,12 +380,6 @@ Set the log function and log level. Increasing log levels result in increasing o
 
 
 ## Other utilities
-
-```C
-void LDSetString(char **field, const char *value)
-```
-A helper function to set string fields, allocating, freeing, and copying
-memory as needed.
 
 ```C
 void LDFree(void *)

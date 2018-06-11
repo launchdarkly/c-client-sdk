@@ -19,7 +19,7 @@ main(int argc, char **argv)
     LDSetLogFunction(5, logger);
 
     LDConfig *config = LDConfigNew("authkey");
-    config->offline = true;
+    LDConfigSetOffline(config, true);
 
     LDUser *user = LDUserNew("user200");
 

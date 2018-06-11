@@ -40,37 +40,9 @@ typedef struct LDNode_i {
 #endif
 } LDNode;
 
-typedef struct LDConfig_i {
-    bool allAttributesPrivate;
-    int backgroundPollingIntervalMillis;
-    char *appURI;
-    int connectionTimeoutMillis;
-    bool disableBackgroundUpdating;
-    int eventsCapacity;
-    int eventsFlushIntervalMillis;
-    char *eventsURI;
-    char *mobileKey;
-    bool offline;
-    int pollingIntervalMillis;
-    LDNode *privateAttributeNames;
-    bool streaming;
-    char *streamURI;
-    bool useReport;
-} LDConfig;
+typedef struct LDConfig_i LDConfig;
 
-typedef struct LDUser_i {
-    char *key;
-    bool anonymous;
-    char *secondary;
-    char *ip;
-    char *firstName;
-    char *lastName;
-    char *email;
-    char *name;
-    char *avatar;
-    LDNode *custom;
-    LDNode *privateAttributeNames;
-} LDUser;
+typedef struct LDUser_i LDUser;
 
 struct LDClient_i;
 
@@ -82,14 +54,28 @@ typedef struct LDClient_i LDClient;
 void LDSetString(char **, const char *);
 
 LDConfig *LDConfigNew(const char *);
-LDUser *LDUserNew(const char *);
+void LDConfigSetAllAttributesPrivate(LDConfig *config, bool allprivate);
+void LDConfigSetBackgroundPollingIntervalMillis(LDConfig *config, int millis);
+void LDConfigSetAppURI(LDConfig *config, const char *uri);
+void LDConfigSetConnectionTimeoutMillies(LDConfig *config, int millis);
+void LDConfigSetDisableBackgroundUpdating(LDConfig *config, bool disable);
+void LDConfigSetEventsCapacity(LDConfig *config, int capacity);
+void LDConfigSetEventsFlushIntervalMillis(LDConfig *config, int millis);
+void LDConfigSetEventsURI(LDConfig *config, const char *uri);
+void LDConfigSetMobileKey(LDConfig *config, const char *key);
+void LDConfigSetOffline(LDConfig *config, bool offline);
+void LDConfigSetStreaming(LDConfig *config, bool streaming);
+void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
+void LDConfigSetStreamURI(LDConfig *config, const char *uri);
+void LDConfigSetUseReport(LDConfig *config, bool report);
+void LDConfigAddPrivateAttribute(LDConfig *, const char *name);
+
 
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
 struct LDClient_i *LDClientGet(void);
 
-void LDConfigAddPrivateAttribute(LDConfig *, const char *name);
-void LDUserAddPrivateAttribute(LDUser *, const char *name);
 
+LDUser *LDUserNew(const char *);
 
 void LDUserSetIP(LDUser *user, const char *str);
 void LDUserSetFirstName(LDUser *user, const char *str);
@@ -100,6 +86,7 @@ void LDUserSetAvatar(LDUser *user, const char *str);
 
 bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
 void LDUSerSetCustomAttributes(LDUser *user, LDNode *custom);
+void LDUserAddPrivateAttribute(LDUser *, const char *name);
 
 char *LDClientSaveFlags(struct LDClient_i *client);
 void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
