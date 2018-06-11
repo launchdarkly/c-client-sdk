@@ -108,6 +108,7 @@ Allocate a new user. The user may be modified *until* it is passed to the `LdCli
 ```C
 void LDUserSetAnonymous(LDUser *user, bool anon);
 ```
+
 Mark the user as anonymous.
 
 ```C
