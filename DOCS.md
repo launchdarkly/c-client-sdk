@@ -106,6 +106,12 @@ LDUser *LDUserNew(const char *key);
 Allocate a new user. The user may be modified *until* it is passed to the `LdClientIdentify` or `LDClientInit`. The `key` argument is required.
 
 ```C
+void LDUserSetAnonymous(LDUser *user, bool anon);
+```
+
+Mark the user as anonymous.
+
+```C
 void LDUserSetIP(LDUser *user, const char *str);
 ```
 
