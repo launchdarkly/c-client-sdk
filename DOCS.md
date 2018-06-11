@@ -71,7 +71,7 @@ Sets the key for authenticating with LaunchDarkly. This is required unless you'r
 void LDConfigSetOffline(LDConfig *config, bool offline);
 ```
 
-Configures the client for offline mode. In offline mode, no external network connections are made. 
+Configures the client for offline mode. In offline mode, no external network connections are made.
 
 ```C
 void LDConfigSetStreaming(LDConfig *config, bool streaming);
@@ -83,7 +83,7 @@ Enables or disables real-time streaming flag updates. Default: `true`. When set 
 void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 ```
 
-Only relevant when `streaming` is disabled (set to `false`). Sets the interval between feature flag updates. 
+Only relevant when `streaming` is disabled (set to `false`). Sets the interval between feature flag updates.
 
 ```C
 void LDConfigSetStreamURI(LDConfig *config, const char *uri);
@@ -265,7 +265,6 @@ bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *name, L
 Register and unregister callbacks when features change. The name argument indicates the changed value. The update argument is 0 for new or updated and 1 for deleted.
 
 ## LDNode JSON interface
-
 
 The LD client uses JSON to communicate, which is represented as LDNode
 structures. Both arrays and hashes (objects) are supported.
