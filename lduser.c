@@ -103,6 +103,13 @@ LDUSerSetCustomAttributes(LDUser *user, LDNode *custom)
 }
 
 void
+LDUserSetAnonymous(LDUser *user, bool anon)
+{
+    user->anonymous = anon;
+}
+
+
+void
 LDUserSetIP(LDUser *user, const char *str)
 {
     LDSetString(&user->ip, str);

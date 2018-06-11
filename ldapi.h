@@ -77,6 +77,7 @@ struct LDClient_i *LDClientGet(void);
 
 LDUser *LDUserNew(const char *);
 
+void LDUserSetAnonymous(LDUser *user, bool anon);
 void LDUserSetIP(LDUser *user, const char *str);
 void LDUserSetFirstName(LDUser *user, const char *str);
 void LDUserSetLastName(LDUser *user, const char *str);
