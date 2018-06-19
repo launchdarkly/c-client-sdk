@@ -15,7 +15,7 @@
 pthread_t LDi_eventthread;
 pthread_t LDi_pollingthread;
 pthread_t LDi_streamingthread;
-pthread_cond_t LDi_bgeventcond = PTHREAD_COND_INITIALIZER;
+ld_cond_t LDi_bgeventcond = LD_COND_INIT;
 
 
 static void *

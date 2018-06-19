@@ -109,11 +109,7 @@ void LDi_startthreads(LDClient *client);
 void LDi_savedata(const char *dataname, const char *username, const char *data);
 char *LDi_loaddata(const char *dataname, const char *username);
 
-#if 0
-#define LDi_rdlock(lk) do { *(lk) = 1; } while (0)
-#define LDi_wrlock(lk) do { *(lk) = 1; } while (0)
-#define LDi_unlock(lk) do { *(lk) = 0; } while (0)
-#else
+#ifndef LDWIN
 #define ld_rwlock_t pthread_rwlock_t
 #define LD_RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
 #define LDi_rdlock(lk) pthread_rwlock_rdlock(lk)
@@ -124,9 +120,27 @@ char *LDi_loaddata(const char *dataname, const char *username);
 #define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
 #define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
 
+#define ld_cond_t pthread_cond_t
+#define LD_COND_INIT PTHREAD_COND_INITIALIZER
 void LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms);
 void LDi_condsignal(pthread_cond_t *cond);
+
+#define ld_once_t pthread_once_t
+#define LD_ONCE_INIT PTHREAD_ONCE_INIT
+#else
+#define ld_rwlock_t SRWLOCK 
+#define LD_RWLOCK_INIT SRWLOCK_INIT
+#define LDi_rdlock(lk) AcquireSRWLockShared(lk)
+#define LDi_wrlock(lk) AcquireSRWLockExclusive(lk)
+#define LDi_rdunlock(lk) ReleaseSRWLockShared(lk)
+#define LDi_wrunlock(lk) ReleaseSRWLockExclusive(lk)
+
+#define ld_cond_t CONDITION_VARIABLE
+#define LD_COND_INIT CONDITION_VARIABLE_INIT
+
+#define ld_once_t INIT_ONCE
+#define LD_ONCE_INIT INIT_ONCE_STATIC_INIT
 #endif
 
 extern ld_rwlock_t LDi_clientlock;
-extern pthread_cond_t LDi_bgeventcond;
+extern ld_cond_t LDi_bgeventcond;

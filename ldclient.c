@@ -12,7 +12,7 @@
 #include "ldinternal.h"
 
 
-static pthread_once_t clientonce = PTHREAD_ONCE_INIT;
+static ld_once_t clientonce = LD_ONCE_INIT;
 
 
 static LDClient *theClient;
