@@ -1,6 +1,8 @@
 
 #include "cJSON.h"
+#ifndef LDWIN
 #include <pthread.h>
+#endif
 
 struct listener {
     LDlistenerfn fn;
@@ -112,15 +114,19 @@ char *LDi_loaddata(const char *dataname, const char *username);
 #define LDi_wrlock(lk) do { *(lk) = 1; } while (0)
 #define LDi_unlock(lk) do { *(lk) = 0; } while (0)
 #else
+#define ld_rwlock_t pthread_rwlock_t
+#define LD_RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
 #define LDi_rdlock(lk) pthread_rwlock_rdlock(lk)
 #define LDi_wrlock(lk) pthread_rwlock_wrlock(lk)
-#define LDi_unlock(lk) pthread_rwlock_unlock(lk)
-void LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms);
-void LDi_condsignal(pthread_cond_t *cond);
-#endif
+#define LDi_rdunlock(lk) pthread_rwlock_unlock(lk)
+#define LDi_wrunlock(lk) pthread_rwlock_unlock(lk)
 
 #define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
 #define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
 
-extern pthread_rwlock_t LDi_clientlock;
+void LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms);
+void LDi_condsignal(pthread_cond_t *cond);
+#endif
+
+extern ld_rwlock_t LDi_clientlock;
 extern pthread_cond_t LDi_bgeventcond;

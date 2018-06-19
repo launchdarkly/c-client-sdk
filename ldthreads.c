@@ -29,7 +29,7 @@ bgeventsender(void *v)
         int ms = 30000;
         if (client->config)
             ms = client->config->eventsFlushIntervalMillis;
-        LDi_unlock(&LDi_clientlock);
+        LDi_rdunlock(&LDi_clientlock);
 
         LDi_log(20, "bg sender sleeping\n");
         LDi_mtxenter(&dummymtx);
@@ -45,7 +45,7 @@ bgeventsender(void *v)
 
         LDi_rdlock(&LDi_clientlock);
         if (client->dead || client->offline) {
-            LDi_unlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock);
             continue;
         }
         
@@ -56,7 +56,7 @@ bgeventsender(void *v)
             snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI);
             char authkey[256];
             snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
-            LDi_unlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock);
             /* unlocked while sending; will relock if retry needed */
             int response = 0;
             LDi_sendevents(url, authkey, eventdata, &response);
@@ -104,7 +104,7 @@ bgfeaturepoller(void *v)
         bool skippolling = client->dead || client->config->streaming || client->offline;
         if (!skippolling && !client->isinit)
             ms = 0;
-        LDi_unlock(&LDi_clientlock);
+        LDi_rdunlock(&LDi_clientlock);
 
         LDi_log(20, "bg poller sleeping\n");
         if (ms > 0)
@@ -116,7 +116,7 @@ bgfeaturepoller(void *v)
 
         LDi_rdlock(&LDi_clientlock);
         if (client->dead) {
-            LDi_unlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock);
             continue;
         }
         
@@ -127,7 +127,7 @@ bgfeaturepoller(void *v)
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
 
-        LDi_unlock(&LDi_clientlock);
+        LDi_rdunlock(&LDi_clientlock);
         
         int response = 0;
         char *data = LDi_fetchfeaturemap(url, authkey, &response);
@@ -192,7 +192,7 @@ applypatch(cJSON *payload, bool isdelete)
     }
 
     client->allFlags = hash;
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
 
     LDi_freehash(patch);
 }
@@ -230,7 +230,7 @@ onstreameventping(void)
 
     LDi_rdlock(&LDi_clientlock);
     if (client->dead) {
-        LDi_unlock(&LDi_clientlock);
+        LDi_rdunlock(&LDi_clientlock);
         return;
     }
     char *userurl = LDi_usertourl(client->user);
@@ -240,7 +240,7 @@ onstreameventping(void)
     char authkey[256];
     snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
 
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
 
     int response = 0;
     char *data = LDi_fetchfeaturemap(url, authkey, &response);
@@ -318,7 +318,7 @@ bgfeaturestreamer(void *v)
     while (true) {
         LDi_rdlock(&LDi_clientlock);
         if (client->dead || !client->config->streaming || client->offline) {
-            LDi_unlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock);
             LDi_millisleep(30000);
             continue;
         }
@@ -331,7 +331,7 @@ bgfeaturestreamer(void *v)
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
 
-        LDi_unlock(&LDi_clientlock);
+        LDi_rdunlock(&LDi_clientlock);
 
         int response;
         /* this won't return until it disconnects */

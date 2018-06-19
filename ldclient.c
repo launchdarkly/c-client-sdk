@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef LDWIN
 #include <unistd.h>
 #include <pthread.h>
+#endif
 #include <math.h>
 
 #include <curl/curl.h>
@@ -14,7 +16,7 @@ static pthread_once_t clientonce = PTHREAD_ONCE_INIT;
 
 
 static LDClient *theClient;
-pthread_rwlock_t LDi_clientlock = PTHREAD_RWLOCK_INITIALIZER;
+ld_rwlock_t LDi_clientlock = LD_RWLOCK_INIT;
 
 void (*LDi_statuscallback)(int);
 
@@ -181,7 +183,7 @@ LDClientInit(LDConfig *config, LDUser *user)
         LDFree(flags);
     }
     
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
 
     LDi_recordidentify(user);
 
@@ -200,7 +202,7 @@ LDClientSetOffline(LDClient *client)
 {
     LDi_wrlock(&LDi_clientlock);
     client->offline = true;
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
 }
 
 void
@@ -209,7 +211,7 @@ LDClientSetOnline(LDClient *client)
     LDi_wrlock(&LDi_clientlock);
     client->offline = false;
     client->isinit = false;
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
 }
 
 bool
@@ -217,7 +219,7 @@ LDClientIsOffline(LDClient *client)
 {
     LDi_rdlock(&LDi_clientlock);
     bool offline = client->offline;
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return offline;
 }
 
@@ -229,7 +231,7 @@ LDClientIdentify(LDClient *client, LDUser *user)
         LDi_freeuser(client->user);
     }
     client->user = user;
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
     LDi_recordidentify(user);
 }
 
@@ -246,7 +248,7 @@ LDClientClose(LDClient *client)
     client->config = NULL;
     LDi_freeuser(client->user);
     client->user = NULL;
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
 
     LDi_freehash(oldhash);
 
@@ -258,7 +260,7 @@ LDClientIsInitialized(LDClient *client)
 {
     LDi_rdlock(&LDi_clientlock);
     bool isinit = client->isinit;
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return isinit;
 }
 
@@ -276,7 +278,7 @@ LDClientSaveFlags(LDClient *client)
 {
     LDi_rdlock(&LDi_clientlock);
     char *s = LDi_hashtostring(client->allFlags, true);
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return s;
 }
 
@@ -310,7 +312,7 @@ LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor
     client->allFlags = hash;
     client->isinit = true;
     if (needlock)
-        LDi_unlock(&LDi_clientlock);
+        LDi_wrunlock(&LDi_clientlock);
 
     /* tell application we are ready to go */
     if (statuschange && LDi_statuscallback)
@@ -327,7 +329,7 @@ LDi_savehash(LDClient *client)
     LDi_rdlock(&LDi_clientlock);
     char *s = LDi_hashtostring(client->allFlags, true);
     LDi_savedata("features", client->user->key, s);
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     LDFree(s);
 }
 
@@ -360,7 +362,7 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
     if (!isPrivateAttr(client, key))
         LDi_recordfeature(client->user, key, LDNodeBool,
             (double)b, NULL, NULL, (double)fallback, NULL, NULL);
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return b;
 }
 
@@ -379,7 +381,7 @@ LDIntVariation(LDClient *client, const char *key, int fallback)
     if (!isPrivateAttr(client, key))
         LDi_recordfeature(client->user, key, LDNodeNumber,
             (double)i, NULL, NULL, (double)fallback, NULL, NULL);
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return i;
 }
 
@@ -398,7 +400,7 @@ LDDoubleVariation(LDClient *client, const char *key, double fallback)
     if (!isPrivateAttr(client, key))
         LDi_recordfeature(client->user, key, LDNodeNumber,
             d, NULL, NULL, fallback, NULL, NULL);
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return d;
 }
 
@@ -425,7 +427,7 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
     if (!isPrivateAttr(client, key))
         LDi_recordfeature(client->user, key, LDNodeString,
             0.0, buffer, NULL, 0.0, fallback, NULL);
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return buffer;
 }
 
@@ -447,7 +449,7 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     if (!isPrivateAttr(client, key))
         LDi_recordfeature(client->user, key, LDNodeString,
             0.0, news, NULL, 0.0, fallback, NULL);
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
     return news;
 }
 
@@ -473,7 +475,7 @@ LDJSONVariation(LDClient *client, const char *key, LDNode *fallback)
 void
 LDJSONRelease(LDNode *m)
 {
-    LDi_unlock(&LDi_clientlock);
+    LDi_rdunlock(&LDi_clientlock);
 }
 
 void
@@ -500,7 +502,7 @@ LDClientRegisterFeatureFlagListener(LDClient *client, const char *key, LDlistene
     LDi_wrlock(&LDi_clientlock);
     list->next = client->listeners;
     client->listeners = list;
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
 
     return true;
 }
@@ -524,7 +526,7 @@ LDClientUnregisterFeatureFlagListener(LDClient *client, const char *key, LDliste
             break;
         }
     }
-    LDi_unlock(&LDi_clientlock);
+    LDi_wrunlock(&LDi_clientlock);
     return list != NULL;
 }
 

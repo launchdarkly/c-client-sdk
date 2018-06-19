@@ -19,7 +19,7 @@ milliTimestamp(void)
 static cJSON *eventarray;
 static int numevents;
 static int eventscapacity;
-static pthread_rwlock_t eventlock = PTHREAD_RWLOCK_INITIALIZER;
+static ld_rwlock_t eventlock = LD_RWLOCK_INIT;
 
 static void
 initevents(int capacity)
@@ -34,7 +34,7 @@ LDi_initevents(int capacity)
 {
     LDi_wrlock(&eventlock);
     initevents(capacity);
-    LDi_unlock(&eventlock);
+    LDi_wrunlock(&eventlock);
 }
 
 void
@@ -56,7 +56,7 @@ LDi_recordidentify(LDUser *lduser)
     LDi_wrlock(&eventlock);
     cJSON_AddItemToArray(eventarray, json);
     numevents++;
-    LDi_unlock(&eventlock);
+    LDi_wrunlock(&eventlock);
 }
 
 void
@@ -91,7 +91,7 @@ LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const
     LDi_wrlock(&eventlock);
     cJSON_AddItemToArray(eventarray, json);
     numevents++;
-    LDi_unlock(&eventlock);
+    LDi_wrunlock(&eventlock);
 }
 
 char *
@@ -106,7 +106,7 @@ LDi_geteventdata(void)
     hadevents = numevents;
     numevents = 0;
     initevents(eventscapacity);
-    LDi_unlock(&eventlock);
+    LDi_wrunlock(&eventlock);
 
     char *data = NULL;
     if (hadevents) {
