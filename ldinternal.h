@@ -2,6 +2,8 @@
 #include "cJSON.h"
 #ifndef LDWIN
 #include <pthread.h>
+#else
+#include <windows.h>
 #endif
 
 struct listener {
@@ -117,6 +119,8 @@ char *LDi_loaddata(const char *dataname, const char *username);
 #define LDi_rdunlock(lk) pthread_rwlock_unlock(lk)
 #define LDi_wrunlock(lk) pthread_rwlock_unlock(lk)
 
+#define ld_mutex_t pthread_mutex_t
+#define LDi_mtxinit(mtx) pthread_mutex_init(mtx, NULL)
 #define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
 #define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
 
@@ -127,6 +131,8 @@ void LDi_condsignal(pthread_cond_t *cond);
 
 #define ld_once_t pthread_once_t
 #define LD_ONCE_INIT PTHREAD_ONCE_INIT
+#define LDi_once(once, fn) pthread_once(once, fn)
+/* windows */
 #else
 #define ld_rwlock_t SRWLOCK 
 #define LD_RWLOCK_INIT SRWLOCK_INIT
@@ -134,6 +140,11 @@ void LDi_condsignal(pthread_cond_t *cond);
 #define LDi_wrlock(lk) AcquireSRWLockExclusive(lk)
 #define LDi_rdunlock(lk) ReleaseSRWLockShared(lk)
 #define LDi_wrunlock(lk) ReleaseSRWLockExclusive(lk)
+
+#define ld_mutex_t CRITICAL_SECTION
+#define LDi_mtxinit(mtx) InitializeCriticalSection(mtx)
+#define LDi_mtxenter(mtx) EnterCriticalSection(mtx)
+#define LDi_mtxleave(mtx) ExitCriticalSection(mtx)
 
 #define ld_cond_t CONDITION_VARIABLE
 #define LD_COND_INIT CONDITION_VARIABLE_INIT
@@ -144,3 +155,6 @@ void LDi_condsignal(pthread_cond_t *cond);
 
 extern ld_rwlock_t LDi_clientlock;
 extern ld_cond_t LDi_bgeventcond;
+extern ld_mutex_t LDi_allocmtx;
+extern ld_once_t LDi_earlyonce;
+void LDi_earlyinit(void);

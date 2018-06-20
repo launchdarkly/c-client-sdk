@@ -24,7 +24,7 @@ main(int argc, char **argv)
 {
     printf("Beginning tests\n");
 
-    LDSetLogFunction(20, logger);
+    LDSetLogFunction(200, logger);
 
     LDSetClientStatusCallback(statusupdate);
 

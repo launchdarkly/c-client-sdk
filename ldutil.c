@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef LDWIN
 #include <unistd.h>
-#include <pthread.h>
+#endif
 #include <math.h>
 
 #include "ldapi.h"
@@ -28,7 +29,7 @@ LDi_millisleep(int ms)
     sleep(ms / 1000);
 }
 
-static pthread_mutex_t allocmtx = PTHREAD_MUTEX_INITIALIZER;
+ld_mutex_t LDi_allocmtx;
 unsigned long long LD_allocations;
 unsigned long long LD_frees;
 
@@ -37,9 +38,9 @@ LDAlloc(size_t amt)
 {
     void *v = malloc(amt);
     if (v) {
-        LDi_mtxenter(&allocmtx);
+        LDi_mtxenter(&LDi_allocmtx);
         LD_allocations++;
-        LDi_mtxleave(&allocmtx);
+        LDi_mtxleave(&LDi_allocmtx);
     }
     return v;
 }
@@ -48,9 +49,9 @@ void
 LDFree(void *v)
 {
     if (v) {
-        LDi_mtxenter(&allocmtx);
+        LDi_mtxenter(&LDi_allocmtx);
         LD_frees++;
-        LDi_mtxleave(&allocmtx);
+        LDi_mtxleave(&LDi_allocmtx);
         free(v);
     }
 }
@@ -61,9 +62,9 @@ LDi_strdup(const char *src)
 {
     char *cp = strdup(src);
     if (cp) {
-        LDi_mtxenter(&allocmtx);
+        LDi_mtxenter(&LDi_allocmtx);
         LD_allocations++;
-        LDi_mtxleave(&allocmtx);
+        LDi_mtxleave(&LDi_allocmtx);
     }
     return cp;
 }
@@ -71,8 +72,8 @@ LDi_strdup(const char *src)
 
 /*
  * some functions to help with threads.
- * we're not really pthreads independent, but could be with some effort.
  */
+#ifndef LDWIN
 void
 LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
 {
@@ -95,6 +96,30 @@ LDi_condsignal(pthread_cond_t *cond)
 {
     pthread_cond_signal(cond);
 }
+#else
+void
+LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
+{
+    struct timespec ts;
+
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_sec += ms / 1000;
+    ts.tv_nsec += (ms % 1000) * 1000 * 1000;
+    if (ts.tv_nsec > 1000 * 1000 * 1000) {
+        ts.tv_sec += 1;
+        ts.tv_nsec -= 1000 * 1000 * 1000;
+    }
+
+    int rv = pthread_cond_timedwait(cond, mtx, &ts);
+
+}
+
+void
+LDi_condsignal(pthread_cond_t *cond)
+{
+    pthread_cond_signal(cond);
+}
+#endif
 
 char *
 LDi_usertourl(LDUser *user)

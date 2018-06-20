@@ -5,6 +5,8 @@
 LDUser *
 LDUserNew(const char *key)
 {
+    LDi_once(&LDi_earlyonce, LDi_earlyinit);
+
     LDUser *user;
 
     user = LDAlloc(sizeof(*user));

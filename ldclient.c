@@ -2,7 +2,6 @@
 #include <stdio.h>
 #ifndef LDWIN
 #include <unistd.h>
-#include <pthread.h>
 #endif
 #include <math.h>
 
@@ -12,7 +11,8 @@
 #include "ldinternal.h"
 
 
-static ld_once_t clientonce = LD_ONCE_INIT;
+ld_once_t LDi_earlyonce = LD_ONCE_INIT;
+ld_once_t LDi_threadsonce = LD_ONCE_INIT;
 
 
 static LDClient *theClient;
@@ -20,9 +20,33 @@ ld_rwlock_t LDi_clientlock = LD_RWLOCK_INIT;
 
 void (*LDi_statuscallback)(int);
 
+
+void
+LDi_earlyinit(void)
+{
+    LDi_mtxinit(&LDi_allocmtx);
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    theClient = LDAlloc(sizeof(*theClient));
+    if (!theClient) {
+        LDi_log(2, "no memory for the client\n");
+        return;
+    }
+    memset(theClient, 0, sizeof(*theClient));
+}
+
+static void
+threadsinit(void)
+{
+    LDi_startthreads(theClient);
+}
+
 LDConfig *
 LDConfigNew(const char *mobileKey)
 {
+    LDi_once(&LDi_earlyonce, LDi_earlyinit);
+
     LDConfig *config;
 
     config = LDAlloc(sizeof(*config));
@@ -120,24 +144,6 @@ freeconfig(LDConfig *config)
     LDFree(config);
 }
 
-
-static void
-starteverything(void)
-{
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
-    theClient = LDAlloc(sizeof(*theClient));
-    if (!theClient) {
-        LDi_log(2, "no memory for the client\n");
-        return;
-    }
-    memset(theClient, 0, sizeof(*theClient));
-
-    LDi_startthreads(theClient);
-}
-
-
 static void
 checkconfig(LDConfig *config)
 {
@@ -149,6 +155,8 @@ checkconfig(LDConfig *config)
 LDClient *
 LDClientInit(LDConfig *config, LDUser *user)
 {
+    LDi_once(&LDi_earlyonce, LDi_earlyinit);
+
     LDi_log(10, "LDClientInit called\n");
 
     checkconfig(config);
@@ -157,7 +165,6 @@ LDClientInit(LDConfig *config, LDUser *user)
 
     LDi_wrlock(&LDi_clientlock);
 
-    pthread_once(&clientonce, starteverything);
     if (!theClient) {
         return NULL;
     }
@@ -188,6 +195,8 @@ LDClientInit(LDConfig *config, LDUser *user)
     LDi_recordidentify(user);
 
     LDi_log(10, "Client init done\n");
+    LDi_once(&LDi_threadsonce, threadsinit);
+
     return client;
 }
 
@@ -481,7 +490,7 @@ LDJSONRelease(LDNode *m)
 void
 LDClientFlush(LDClient *client)
 {
-    pthread_cond_signal(&LDi_bgeventcond);
+    LDi_condsignal(&LDi_bgeventcond);
 }
 
 bool
