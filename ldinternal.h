@@ -112,6 +112,9 @@ void LDi_savedata(const char *dataname, const char *username, const char *data);
 char *LDi_loaddata(const char *dataname, const char *username);
 
 #ifndef LDWIN
+#define ld_thread_t pthread_t
+#define LDi_createthread(thread, fn, arg) pthread_create(thread, NULL, fn, arg)
+
 #define ld_rwlock_t pthread_rwlock_t
 #define LD_RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
 #define LDi_rdlock(lk) pthread_rwlock_rdlock(lk)
@@ -133,6 +136,8 @@ char *LDi_loaddata(const char *dataname, const char *username);
 #define LDi_once(once, fn) pthread_once(once, fn)
 /* windows */
 #else
+#define ld_thread_t HANDLE
+void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
 #define ld_rwlock_t SRWLOCK 
 #define LD_RWLOCK_INIT SRWLOCK_INIT
 #define LDi_rdlock(lk) AcquireSRWLockShared(lk)

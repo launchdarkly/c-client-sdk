@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef LDWIN
 #include <unistd.h>
-#include <pthread.h>
+#else
+#endif
 #include <math.h>
 
 #include "ldapi.h"
@@ -12,9 +14,9 @@
  * plus the server event parser and streaming update handler.
  */
 
-pthread_t LDi_eventthread;
-pthread_t LDi_pollingthread;
-pthread_t LDi_streamingthread;
+ld_thread_t LDi_eventthread;
+ld_thread_t LDi_pollingthread;
+ld_thread_t LDi_streamingthread;
 ld_cond_t LDi_bgeventcond = LD_COND_INIT;
 
 
@@ -22,7 +24,9 @@ static void *
 bgeventsender(void *v)
 {
     LDClient *client = v;
-    pthread_mutex_t dummymtx = PTHREAD_MUTEX_INITIALIZER;
+    ld_mutex_t dummymtx;
+
+    LDi_mtxinit(&dummymtx);
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
@@ -362,7 +366,7 @@ bgfeaturestreamer(void *v)
 void
 LDi_startthreads(LDClient *client)
 {
-    pthread_create(&LDi_eventthread, NULL, bgeventsender, client);
-    pthread_create(&LDi_pollingthread, NULL, bgfeaturepoller, client);
-    pthread_create(&LDi_streamingthread, NULL, bgfeaturestreamer, client);
+    LDi_createthread(&LDi_eventthread, bgeventsender, client);
+    LDi_createthread(&LDi_pollingthread, bgfeaturepoller, client);
+    LDi_createthread(&LDi_streamingthread, bgfeaturestreamer, client);
 }

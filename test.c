@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef LDWIN
 #include <unistd.h>
+#endif
 #include <time.h>
 
 #include "ldapi.h"

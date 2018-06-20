@@ -110,6 +110,13 @@ LDi_condsignal(CONDITION_VARIABLE *cond)
 {
     WakeAllConditionVariable(cond);
 }
+
+void
+LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg)
+{
+    DWORD id;
+    *thread = CreateThread(NULL, 0, fn, arg, 0, &id);
+}
 #endif
 
 char *
