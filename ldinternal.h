@@ -126,8 +126,7 @@ char *LDi_loaddata(const char *dataname, const char *username);
 
 #define ld_cond_t pthread_cond_t
 #define LD_COND_INIT PTHREAD_COND_INITIALIZER
-void LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms);
-void LDi_condsignal(pthread_cond_t *cond);
+
 
 #define ld_once_t pthread_once_t
 #define LD_ONCE_INIT PTHREAD_ONCE_INIT
@@ -152,6 +151,9 @@ void LDi_condsignal(pthread_cond_t *cond);
 #define ld_once_t INIT_ONCE
 #define LD_ONCE_INIT INIT_ONCE_STATIC_INIT
 #endif
+
+void LDi_condwait(ld_cond_t *cond, ld_mutex_t *mtx, int ms);
+void LDi_condsignal(ld_cond_t *cond);
 
 extern ld_rwlock_t LDi_clientlock;
 extern ld_cond_t LDi_bgeventcond;

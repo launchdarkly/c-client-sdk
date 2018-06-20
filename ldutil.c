@@ -74,6 +74,7 @@ LDi_strdup(const char *src)
  * some functions to help with threads.
  */
 #ifndef LDWIN
+/* posix */
 void
 LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
 {
@@ -88,36 +89,26 @@ LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
     }
 
     int rv = pthread_cond_timedwait(cond, mtx, &ts);
-
 }
 
 void
 LDi_condsignal(pthread_cond_t *cond)
 {
-    pthread_cond_signal(cond);
+    pthread_cond_broadcast(cond);
 }
 #else
+/* windows */
 void
-LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
+LDi_condwait(CONDITION_VARIABLE *cond, CRITICAL_SECTION *mtx, int ms)
 {
-    struct timespec ts;
-
-    clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += ms / 1000;
-    ts.tv_nsec += (ms % 1000) * 1000 * 1000;
-    if (ts.tv_nsec > 1000 * 1000 * 1000) {
-        ts.tv_sec += 1;
-        ts.tv_nsec -= 1000 * 1000 * 1000;
-    }
-
-    int rv = pthread_cond_timedwait(cond, mtx, &ts);
+    SleepConditionVariableCS(cond, mtx, ms);
 
 }
 
 void
-LDi_condsignal(pthread_cond_t *cond)
+LDi_condsignal(CONDITION_VARIABLE *cond)
 {
-    pthread_cond_signal(cond);
+    WakeAllConditionVariable(cond);
 }
 #endif
 
