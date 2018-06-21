@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
-#ifndef LDWIN
+#ifndef _WINDOWS
 #include <unistd.h>
 #endif
 #include <math.h>
 
-#include <curl/curl.h>
+#include "curl/curl.h"
 
 #include "ldapi.h"
 #include "ldinternal.h"

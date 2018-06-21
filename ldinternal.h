@@ -1,6 +1,6 @@
 
 #include "cJSON.h"
-#ifndef LDWIN
+#ifndef _WINDOWS
 #include <pthread.h>
 #else
 #include <windows.h>
@@ -112,7 +112,7 @@ void LDi_startthreads(LDClient *client);
 void LDi_savedata(const char *dataname, const char *username, const char *data);
 char *LDi_loaddata(const char *dataname, const char *username);
 
-#ifndef LDWIN
+#ifndef _WINDOWS
 #define ld_thread_t pthread_t
 #define LDi_createthread(thread, fn, arg) pthread_create(thread, NULL, fn, arg)
 

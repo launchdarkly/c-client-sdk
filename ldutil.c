@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#ifndef LDWIN
+#ifndef _WINDOWS
 #include <unistd.h>
 #endif
 #include <math.h>
@@ -25,7 +25,7 @@ LDSetString(char **target, const char *value)
 void
 LDi_millisleep(int ms)
 {
-#ifndef LDWIN
+#ifndef _WINDOWS
     ms += 500;
     sleep(ms / 1000);
 #else
@@ -36,7 +36,7 @@ LDi_millisleep(int ms)
 unsigned int
 LDi_random(void)
 {
-#ifndef LDWIN
+#ifndef _WINDOWS
     return random();
 #else
     return rand();
@@ -87,7 +87,7 @@ LDi_strdup(const char *src)
 /*
  * some functions to help with threads.
  */
-#ifndef LDWIN
+#ifndef _WINDOWS
 /* posix */
 void
 LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)

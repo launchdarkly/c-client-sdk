@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef LDWIN
+#ifndef _WINDOWS
 #include <unistd.h>
 #endif
 #include <time.h>

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#ifndef LDWIN
+#ifndef _WINDOWS
 #include <unistd.h>
 #else
 #endif
@@ -19,8 +19,14 @@ ld_thread_t LDi_pollingthread;
 ld_thread_t LDi_streamingthread;
 ld_cond_t LDi_bgeventcond = LD_COND_INIT;
 
+#ifdef _WINDOWS
+#define THREAD_RETURN DWORD WINAPI
+#else
+#define THREAD_RETURN void *
+#endif
 
-static void *
+
+static THREAD_RETURN
 bgeventsender(void *v)
 {
     LDClient *client = v;
@@ -94,7 +100,7 @@ bgeventsender(void *v)
 /*
  * this thread always runs, even when using streaming, but then it just sleeps
  */
-static void *
+static THREAD_RETURN
 bgfeaturepoller(void *v)
 {
     LDClient *client = v;
@@ -313,7 +319,7 @@ streamcallback(const char *line)
     return 0;
 }
 
-static void *
+static THREAD_RETURN
 bgfeaturestreamer(void *v)
 {
     LDClient *client = v;
