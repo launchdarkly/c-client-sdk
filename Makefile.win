@@ -8,14 +8,14 @@ COBJS=$(CSRCS:.c=.obj)
 all: test.exe
 
 clean:
-	del test.exe
+	del test.exe *.obj
 
 curl: $(CURL)/lib/libcurl_a.lib
 
 #test.exe: test.c ldapi.h ldnet.c
 #	$(CC) /MD /Fe: test.exe test.c ldnet.c
 
-test.exe: ldapi.h test.o $(COBJS)
+test.exe: ldapi.h test.obj $(COBJS)
 	$(CC) /MD /Fe: test.exe test.obj $(COBJS)
 
 $(CURL)/lib/libcurl_a.lib:

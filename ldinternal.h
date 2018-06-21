@@ -105,6 +105,7 @@ void LDi_log(int level, const char *fmt, ...);
 void (*LDi_statuscallback)(int);
 
 void LDi_millisleep(int ms);
+unsigned int LDi_random(void);
 void LDi_startthreads(LDClient *client);
 
 /* calls into the store interface */
@@ -148,13 +149,14 @@ void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
 #define ld_mutex_t CRITICAL_SECTION
 #define LDi_mtxinit(mtx) InitializeCriticalSection(mtx)
 #define LDi_mtxenter(mtx) EnterCriticalSection(mtx)
-#define LDi_mtxleave(mtx) ExitCriticalSection(mtx)
+#define LDi_mtxleave(mtx) LeaveCriticalSection(mtx)
 
 #define ld_cond_t CONDITION_VARIABLE
 #define LD_COND_INIT CONDITION_VARIABLE_INIT
 
 #define ld_once_t INIT_ONCE
 #define LD_ONCE_INIT INIT_ONCE_STATIC_INIT
+void LDi_once(ld_once_t *once, void (*fn)(void));
 #endif
 
 void LDi_condwait(ld_cond_t *cond, ld_mutex_t *mtx, int ms);

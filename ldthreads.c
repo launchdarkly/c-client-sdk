@@ -78,7 +78,7 @@ bgeventsender(void *v)
             }
             if (retries) {
                 int backoff = 1000 * pow(2, retries - 2);
-                backoff += random() % backoff;
+                backoff += LDi_random() % backoff;
                 if (backoff > 3600 * 1000) {
                     backoff = 3600 * 1000;
                     retries--; /* avoid excessive incrementing */
@@ -352,7 +352,7 @@ bgfeaturestreamer(void *v)
         }
         if (retries) {
             int backoff = 1000 * pow(2, retries - 2);
-            backoff += random() % backoff;
+            backoff += LDi_random() % backoff;
             if (backoff > 3600 * 1000) {
                 backoff = 3600 * 1000;
                 retries--; /* avoid excessive incrementing */

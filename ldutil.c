@@ -25,8 +25,22 @@ LDSetString(char **target, const char *value)
 void
 LDi_millisleep(int ms)
 {
+#ifndef LDWIN
     ms += 500;
     sleep(ms / 1000);
+#else
+    Sleep(ms);
+#endif
+}
+
+unsigned int
+LDi_random(void)
+{
+#ifndef LDWIN
+    return random();
+#else
+    return rand();
+#endif
 }
 
 ld_mutex_t LDi_allocmtx;
@@ -116,6 +130,20 @@ LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg)
 {
     DWORD id;
     *thread = CreateThread(NULL, 0, fn, arg, 0, &id);
+}
+
+static BOOL CALLBACK
+OneTimeCaller(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *lpContext)
+{
+    void (*fn)(void) = Parameter;
+
+    fn();
+    return TRUE;
+}
+
+void LDi_once(ld_once_t *once, void (*fn)(void))
+{
+    InitOnceExecuteOnce(once, OneTimeCaller, fn, NULL);
 }
 #endif
 
