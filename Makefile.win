@@ -1,6 +1,6 @@
 #CURL=curl-7.59.0/builds/libcurl-vc-x86-release-static-ipv6-sspi-winssl
 CURL=curl-7.59.0/builds/libcurl-vc-x64-release-static-ipv6-sspi-winssl
-CFLAGS=/I $(CURL)/include /DCURL_STATICLIB /D_WINDOWS
+CFLAGS=/I $(CURL)/include /DCURL_STATICLIB /D_WINDOWS /MD
 CC=cl $(CFLAGS)
 CSRCS=ldclient.c ldutil.c lduser.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c ldstore.c base64.c cJSON.c
 COBJS=$(CSRCS:.c=.obj)
@@ -8,15 +8,15 @@ COBJS=$(CSRCS:.c=.obj)
 all: test.exe
 
 clean:
-	del test.exe *.obj
+	del test.exe *.obj *.dll *.lib
 
 curl: $(CURL)/lib/libcurl_a.lib
 
-#test.exe: test.c ldapi.h ldnet.c
-#	$(CC) /MD /Fe: test.exe test.c ldnet.c
+test.exe: ldapi.h test.obj ldapi.dll
+	$(CC) /Fe: test.exe test.obj /link ldapi.lib
 
-test.exe: ldapi.h test.obj $(COBJS)
-	$(CC) /MD /Fe: test.exe test.obj $(COBJS)
+ldapi.dll: ldapi.def ldapi.h $(COBJS) $(CURL)/lib/libcurl_a.lib
+	link /OUT:ldapi.dll /DLL /DEF:ldapi.def $(COBJS) $(CURL)/lib/libcurl_a.lib
 
 $(CURL)/lib/libcurl_a.lib:
 	cd curl-7.59.0/winbuild

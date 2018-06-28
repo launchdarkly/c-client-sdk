@@ -1,0 +1,70 @@
+LIBRARY   ldapi
+EXPORTS
+   LDConfigNew
+   LDConfigSetAllAttributesPrivate
+   LDConfigSetBackgroundPollingIntervalMillis
+   LDConfigSetAppURI
+   LDConfigSetConnectionTimeoutMillies
+   LDConfigSetDisableBackgroundUpdating
+   LDConfigSetEventsCapacity
+   LDConfigSetEventsFlushIntervalMillis
+   LDConfigSetEventsURI
+   LDConfigSetMobileKey
+   LDConfigSetOffline
+   LDConfigSetStreaming
+   LDConfigSetPollingIntervalMillis
+   LDConfigSetStreamURI
+   LDConfigSetUseReport
+   LDConfigAddPrivateAttribute
+
+   LDClientInit
+   LDClientGet
+   LDUserNew
+   LDUserSetAnonymous
+   LDUserSetIP
+   LDUserSetFirstName
+   LDUserSetLastName
+   LDUserSetEmail
+   LDUserSetName
+   LDUserSetAvatar
+
+   LDUserSetCustomAttributesJSON
+   LDUSerSetCustomAttributes
+   LDUserAddPrivateAttribute
+
+   LDClientSaveFlags
+   LDClientRestoreFlags
+
+   LDClientIdentify
+   LDClientFlush
+   LDClientIsInitialized
+   LDClientIsOffline
+   LDClientSetOffline
+   LDClientSetOnline
+   LDClientClose
+
+   LDSetClientStatusCallback
+
+   LDBoolVariation
+   LDIntVariation
+   LDDoubleVariation
+   LDStringVariationAlloc
+   LDStringVariation
+   LDJSONVariation
+   LDJSONRelease
+
+   LDFree
+   LDAlloc
+   LD_allocations
+   LD_frees
+   LDNodeCreateHash
+   LDNodeAddBool
+   LDNodeAddNumber
+   LDNodeAddString
+   LDNodeAddHash
+   LDNodeAddArray
+   LDNodeLookup
+   LDNodeFree
+   LDNodeCount
+
+   LDSetLogFunction
