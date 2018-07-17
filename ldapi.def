@@ -45,6 +45,9 @@ EXPORTS
 
    LDSetClientStatusCallback
 
+   LDClientGetLockedFlags
+   LDClientPutLockedFlags
+
    LDBoolVariation
    LDIntVariation
    LDDoubleVariation

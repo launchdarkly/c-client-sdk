@@ -264,6 +264,19 @@ LDClientClose(LDClient *client)
     /* stop the threads */
 }
 
+LDNode *
+LDClientGetLockedFlags(LDClient *client)
+{
+    LDi_rdlock(&LDi_clientlock);
+    return client->allFlags;
+}
+
+void
+LDClientPutLockedFlags(LDClient *client, LDNode *flags)
+{
+    LDi_rdunlock(&LDi_clientlock);
+}
+
 bool
 LDClientIsInitialized(LDClient *client)
 {

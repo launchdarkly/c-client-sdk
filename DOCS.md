@@ -270,6 +270,13 @@ bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *name, L
 
 Register and unregister callbacks when features change. The name argument indicates the changed value. The update argument is 0 for new or updated and 1 for deleted.
 
+```C
+LDNode *LDClientGetLockedFlags(LDClient *client);
+void LDClientPutLockedFlags(LDClient *client, LDNode *flags);
+```
+
+Directly access all flags. This locks the client until the flags are put back.
+
 ## LDNode JSON interface
 
 The LD client uses JSON to communicate, which is represented as LDNode
