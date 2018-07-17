@@ -3,13 +3,26 @@ LaunchDarkly SDK for C / C++
 
 The LaunchDarkly C / C++ SDK is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
 
-Quick setup
------------
+Quick setup (POSIX)
+-------------------
 
 The C / C++ SDK requires a POSIX environment, and assumes that both `libcurl` and `libpthread` are installed.
 
-Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application. Once integrated, you can follow these steps to initialize a client instance:
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
 
+Quick setup (Windows)
+---------------------
+
+Building the SDK requires that the Visual Studio C compiler be installed. The SDK also requires libcurl.
+
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page.
+
+Open a Visual Studio command prompt, navigate to the c-sdk directory, and run nmake /f Makefile.win to build the SDK libraries.
+
+Getting started
+---------------
+
+Once integrated, you can follow these steps to initialize a client instance:
 
 1. Include the LaunchDarkly SDK headers:
 
