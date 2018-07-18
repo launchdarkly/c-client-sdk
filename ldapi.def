@@ -48,6 +48,9 @@ EXPORTS
    LDClientGetLockedFlags
    LDClientPutLockedFlags
 
+   LDClientTrack
+   LDClientTrackData
+
    LDBoolVariation
    LDIntVariation
    LDDoubleVariation
