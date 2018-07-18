@@ -29,14 +29,16 @@ test1()
     char buffer[256];
     LDStringVariation(client, "bgcolor", "green", buffer, sizeof(buffer));
     LDStringVariation(client, "password", "uhoh", buffer, sizeof(buffer));
+    LDNode *mydata = LDNodeCreateHash();
+    LDNodeAddString(&mydata, "banana", "republic");
     LDClientTrack(client, "tracked");
 
     char *data = LDi_geteventdata();
     if (strstr(data, "bgcolor") == NULL) {
         printf("ERROR: Where did bgcolor go?\n");
     }
-    if (strstr(data, "tracked") == NULL) {
-        printf("ERROR: Where did tracked go?\n");
+    if (strstr(data, "republic") == NULL) {
+        printf("ERROR: Where did tracked data go?\n");
     }
     if (strstr(data, "password") != NULL) {
         printf("ERROR: How did password get in the data?\n");
