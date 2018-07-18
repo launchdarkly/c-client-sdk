@@ -17,6 +17,7 @@ struct LDClient_i {
     LDUser *user;
     LDNode *allFlags;
     bool offline;
+    bool background;
     bool dead;
     bool isinit;
     struct listener *listeners;

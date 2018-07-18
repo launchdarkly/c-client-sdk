@@ -41,6 +41,7 @@ EXPORTS
    LDClientIsOffline
    LDClientSetOffline
    LDClientSetOnline
+   LDClientSetBackground
    LDClientClose
 
    LDSetClientStatusCallback

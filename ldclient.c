@@ -181,6 +181,7 @@ LDClientInit(LDConfig *config, LDUser *user)
     client->user = user;
     client->dead = false;
     client->offline = config->offline;
+    client->background = false;
 
     client->isinit = false;
     client->allFlags = NULL;
@@ -230,6 +231,14 @@ LDClientIsOffline(LDClient *client)
     bool offline = client->offline;
     LDi_rdunlock(&LDi_clientlock);
     return offline;
+}
+
+void
+LDClientSetBackground(LDClient *client, bool background)
+{
+    LDi_wrlock(&LDi_clientlock);
+    client->background = background;
+    LDi_wrunlock(&LDi_clientlock);
 }
 
 void

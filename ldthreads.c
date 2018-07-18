@@ -37,8 +37,9 @@ bgeventsender(void *v)
     while (true) {
         LDi_rdlock(&LDi_clientlock);
         int ms = 30000;
-        if (client->config)
+        if (client->config) {
             ms = client->config->eventsFlushIntervalMillis;
+        }
         LDi_rdunlock(&LDi_clientlock);
 
         LDi_log(20, "bg sender sleeping\n");
@@ -108,10 +109,22 @@ bgfeaturepoller(void *v)
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
+        /*
+         * the logic here is a bit tangled. we start with a default ms poll interval.
+         * we skip polling if the client is dead or offline.
+         * if we have a config, we revise those values.
+         */
         int ms = 3000000;
-        if (client->config)
+        bool skippolling = client->dead || client->offline;
+        if (client->config) {
             ms = client->config->pollingIntervalMillis;
-        bool skippolling = client->dead || client->config->streaming || client->offline;
+            if (client->background) {
+                ms = client->config->backgroundPollingIntervalMillis;
+                skippolling = skippolling || client->config->disableBackgroundUpdating;
+            }
+            skippolling = skippolling || client->config->streaming;
+        }
+        /* this triggers the first time the thread runs, so we don't have to wait */
         if (!skippolling && !client->isinit)
             ms = 0;
         LDi_rdunlock(&LDi_clientlock);

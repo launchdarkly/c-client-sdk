@@ -99,6 +99,7 @@ bool LDClientIsInitialized(struct LDClient_i *);
 bool LDClientIsOffline(struct LDClient_i *);
 void LDClientSetOffline(struct LDClient_i *);
 void LDClientSetOnline(struct LDClient_i *);
+void LDClientSetBackground(LDClient *client, bool background);
 void LDClientClose(struct LDClient_i *);
 
 void LDSetClientStatusCallback(void (callback)(int));
