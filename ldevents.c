@@ -109,7 +109,7 @@ LDi_recordtrack(LDUser *user, const char *name, LDNode *data)
     cJSON *juser = LDi_usertojson(user);
     cJSON_AddItemToObject(json, "user", juser);
     if (data != NULL) {
-        LDi_hashtojson(data);
+        cJSON_AddItemToObject(json, "data", LDi_hashtojson(data));
     }
 
     LDi_wrlock(&eventlock);
