@@ -92,6 +92,7 @@ void LDi_readstream(const char *url, const char *authkey, int *response, int cal
 void LDi_recordidentify(LDUser *lduser);
 void LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,
     LDNode *, double defaultn, const char *defaults, LDNode *);
+void LDi_recordtrack(LDUser *user, const char *name, LDNode *data);
 char *LDi_geteventdata(void);
 void LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response);
 

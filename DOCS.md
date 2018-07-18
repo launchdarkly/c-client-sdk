@@ -277,6 +277,13 @@ void LDClientPutLockedFlags(LDClient *client, LDNode *flags);
 
 Directly access all flags. This locks the client until the flags are put back.
 
+```C
+void LDClientTrack(LDClient *client, const char *name);
+void LDClientTrackData(LDClient *client, const char *name, LDNode *data);
+```
+
+Record a custom event.
+
 ## LDNode JSON interface
 
 The LD client uses JSON to communicate, which is represented as LDNode

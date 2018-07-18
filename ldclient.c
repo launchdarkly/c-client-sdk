@@ -501,6 +501,22 @@ LDJSONRelease(LDNode *m)
 }
 
 void
+LDClientTrack(LDClient *client, const char *name)
+{
+    LDi_rdlock(&LDi_clientlock);
+    LDi_recordtrack(client->user, name, NULL);
+    LDi_rdunlock(&LDi_clientlock);
+}
+
+void
+LDClientTrackData(LDClient *client, const char *name, LDNode *data)
+{
+    LDi_rdlock(&LDi_clientlock);
+    LDi_recordtrack(client->user, name, data);
+    LDi_rdunlock(&LDi_clientlock);
+}
+
+void
 LDClientFlush(LDClient *client)
 {
     LDi_condsignal(&LDi_bgeventcond);

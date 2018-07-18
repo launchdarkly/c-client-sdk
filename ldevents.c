@@ -94,6 +94,30 @@ LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const
     LDi_wrunlock(&eventlock);
 }
 
+void
+LDi_recordtrack(LDUser *user, const char *name, LDNode *data)
+{
+    if (numevents >= eventscapacity) {
+        return;
+    }
+    cJSON *json;
+
+    json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "kind", "custom");
+    cJSON_AddStringToObject(json, "key", name);
+    cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
+    cJSON *juser = LDi_usertojson(user);
+    cJSON_AddItemToObject(json, "user", juser);
+    if (data != NULL) {
+        LDi_hashtojson(data);
+    }
+
+    LDi_wrlock(&eventlock);
+    cJSON_AddItemToArray(eventarray, json);
+    numevents++;
+    LDi_wrunlock(&eventlock);
+}
+
 char *
 LDi_geteventdata(void)
 {

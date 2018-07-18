@@ -106,6 +106,9 @@ void LDSetClientStatusCallback(void (callback)(int));
 LDNode *LDClientGetLockedFlags(LDClient *client);
 void LDClientPutLockedFlags(LDClient *client, LDNode *flags);
 
+void LDClientTrack(LDClient *client, const char *name);
+void LDClientTrackData(LDClient *client, const char *name, LDNode *data);
+
 bool LDBoolVariation(struct LDClient_i *, const char *, bool);
 int LDIntVariation(struct LDClient_i *, const char *, int);
 double LDDoubleVariation(struct LDClient_i *, const char *, double);
