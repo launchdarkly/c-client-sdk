@@ -392,7 +392,7 @@ LDBoolVariation(LDClient *client, const char *key, bool fallback)
         b = fallback;
     }
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeBool,
+        LDi_recordfeature(client->user, res, key, LDNodeBool,
             (double)b, NULL, NULL, (double)fallback, NULL, NULL);
     LDi_rdunlock(&LDi_clientlock);
     return b;
@@ -411,7 +411,7 @@ LDIntVariation(LDClient *client, const char *key, int fallback)
     else
         i = fallback;
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeNumber,
+        LDi_recordfeature(client->user, res, key, LDNodeNumber,
             (double)i, NULL, NULL, (double)fallback, NULL, NULL);
     LDi_rdunlock(&LDi_clientlock);
     return i;
@@ -430,7 +430,7 @@ LDDoubleVariation(LDClient *client, const char *key, double fallback)
     else
         d = fallback;
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeNumber,
+        LDi_recordfeature(client->user, res, key, LDNodeNumber,
             d, NULL, NULL, fallback, NULL, NULL);
     LDi_rdunlock(&LDi_clientlock);
     return d;
@@ -457,7 +457,7 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
     memcpy(buffer, s, len);
     buffer[len] = 0;
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeString,
+        LDi_recordfeature(client->user, res, key, LDNodeString,
             0.0, buffer, NULL, 0.0, fallback, NULL);
     LDi_rdunlock(&LDi_clientlock);
     return buffer;
@@ -479,7 +479,7 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
     
     news = LDi_strdup(s);
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeString,
+        LDi_recordfeature(client->user, res, key, LDNodeString,
             0.0, news, NULL, 0.0, fallback, NULL);
     LDi_rdunlock(&LDi_clientlock);
     return news;
@@ -499,7 +499,7 @@ LDJSONVariation(LDClient *client, const char *key, LDNode *fallback)
         j = fallback;
     }
     if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, key, LDNodeHash,
+        LDi_recordfeature(client->user, res, key, LDNodeHash,
             0.0, NULL, j, 0.0, NULL, fallback);
     return j;
 }

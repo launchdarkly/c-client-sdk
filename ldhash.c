@@ -158,7 +158,10 @@ LDi_hashtoversionedjson(LDNode *hash)
             cJSON_AddItemToObject(val, "value", LDi_arraytojson(node->a));
             break;
         }
-        cJSON_AddNumberToObject(val, "version", node->version);
+        if (node->version)
+            cJSON_AddNumberToObject(val, "version", node->version);
+        if (node->variation)
+            cJSON_AddNumberToObject(val, "variation", node->variation);
 
         cJSON_AddItemToObject(json, node->key, val);
 
@@ -285,6 +288,7 @@ LDi_jsontohash(cJSON *json, int flavor)
         }
         const char *key = item->string;
         int version = 0;
+        int variation = 0;
         
         cJSON *valueitem = item;
         switch (flavor) {
@@ -297,6 +301,12 @@ LDi_jsontohash(cJSON *json, int flavor)
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "version") == 0) {
                     version = (int)valueitem->valuedouble;
+                    break;
+                }
+            }
+            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
+                if (strcmp(valueitem->string, "variation") == 0) {
+                    variation = (int)valueitem->valuedouble;
                     break;
                 }
             }
@@ -321,6 +331,12 @@ LDi_jsontohash(cJSON *json, int flavor)
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "version") == 0) {
                     version = (int)valueitem->valuedouble;
+                    break;
+                }
+            }
+            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
+                if (strcmp(valueitem->string, "variation") == 0) {
+                    variation = (int)valueitem->valuedouble;
                     break;
                 }
             }
@@ -365,6 +381,9 @@ LDi_jsontohash(cJSON *json, int flavor)
         }
         if (version && node) {
             node->version = version;
+        }
+        if (variation && node) {
+            node->variation = variation;
         }
         
         if (flavor == 2) {

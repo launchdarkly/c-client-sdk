@@ -60,7 +60,7 @@ LDi_recordidentify(LDUser *lduser)
 }
 
 void
-LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,
+LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
     if (numevents >= eventscapacity) {
@@ -71,6 +71,11 @@ LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const
     json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "feature");
     cJSON_AddStringToObject(json, "key", feature);
+    cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
+    if (res) {
+        cJSON_AddNumberToObject(json, "version", res->version);
+        cJSON_AddNumberToObject(json, "variation", res->variation);
+    }
     if (type == LDNodeNumber) {
         cJSON_AddNumberToObject(json, "value", n);
         cJSON_AddNumberToObject(json, "default", defaultn);
@@ -84,7 +89,6 @@ LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const
         cJSON_AddItemToObject(json, "value", LDi_hashtojson(m));
         cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
-    cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
     cJSON *juser = LDi_usertojson(lduser);
     cJSON_AddItemToObject(json, "user", juser);
 

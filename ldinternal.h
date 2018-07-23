@@ -91,7 +91,7 @@ char *LDi_fetchfeaturemap(const char *url, const char *authkey, int *response);
 void LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *));
 
 void LDi_recordidentify(LDUser *lduser);
-void LDi_recordfeature(LDUser *lduser, const char *feature, int type, double n, const char *s,
+void LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *, double defaultn, const char *defaults, LDNode *);
 void LDi_recordtrack(LDUser *user, const char *name, LDNode *data);
 char *LDi_geteventdata(void);
