@@ -238,6 +238,7 @@ LDClientSetBackground(LDClient *client, bool background)
 {
     LDi_wrlock(&LDi_clientlock);
     client->background = background;
+    LDi_startstopstreaming(background);
     LDi_wrunlock(&LDi_clientlock);
 }
 

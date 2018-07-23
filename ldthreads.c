@@ -18,6 +18,9 @@ ld_thread_t LDi_eventthread;
 ld_thread_t LDi_pollingthread;
 ld_thread_t LDi_streamingthread;
 ld_cond_t LDi_bgeventcond = LD_COND_INIT;
+ld_cond_t LDi_bgpollcond = LD_COND_INIT;
+ld_cond_t LDi_bgstreamcond = LD_COND_INIT;
+ld_mutex_t LDi_condmtx;
 
 #ifdef _WINDOWS
 #define THREAD_RETURN DWORD WINAPI
@@ -30,9 +33,6 @@ static THREAD_RETURN
 bgeventsender(void *v)
 {
     LDClient *client = v;
-    ld_mutex_t dummymtx;
-
-    LDi_mtxinit(&dummymtx);
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
@@ -43,9 +43,9 @@ bgeventsender(void *v)
         LDi_rdunlock(&LDi_clientlock);
 
         LDi_log(20, "bg sender sleeping\n");
-        LDi_mtxenter(&dummymtx);
-        LDi_condwait(&LDi_bgeventcond, &dummymtx, ms);
-        LDi_mtxleave(&dummymtx);
+        LDi_mtxenter(&LDi_condmtx);
+        LDi_condwait(&LDi_bgeventcond, &LDi_condmtx, ms);
+        LDi_mtxleave(&LDi_condmtx);
         LDi_log(20, "bgsender running\n");
 
         char *eventdata = LDi_geteventdata();
@@ -121,8 +121,9 @@ bgfeaturepoller(void *v)
             if (client->background) {
                 ms = client->config->backgroundPollingIntervalMillis;
                 skippolling = skippolling || client->config->disableBackgroundUpdating;
+            } else {
+                skippolling = skippolling || client->config->streaming;
             }
-            skippolling = skippolling || client->config->streaming;
         }
         /* this triggers the first time the thread runs, so we don't have to wait */
         if (!skippolling && !client->isinit)
@@ -130,8 +131,11 @@ bgfeaturepoller(void *v)
         LDi_rdunlock(&LDi_clientlock);
 
         LDi_log(20, "bg poller sleeping\n");
-        if (ms > 0)
-            LDi_millisleep(ms);
+        if (ms > 0) {
+            LDi_mtxenter(&LDi_condmtx);
+            LDi_condwait(&LDi_bgpollcond, &LDi_condmtx, ms);
+            LDi_mtxleave(&LDi_condmtx);
+        }
         if (skippolling) {
             continue;
         }
@@ -280,6 +284,20 @@ onstreameventping(void)
     free(data);
 }
 
+static bool shouldstopstreaming;
+
+void
+LDi_startstopstreaming(bool stopstreaming)
+{
+    if (stopstreaming) {
+        shouldstopstreaming = true;
+    } else {
+        shouldstopstreaming = false;
+    }
+    LDi_condsignal(&LDi_bgpollcond);
+    LDi_condsignal(&LDi_bgstreamcond);
+}
+
 /*
  * as far as event stream parsers go, this is pretty basic.
  * assumes that there's only one line of data following an event identifier line.
@@ -329,6 +347,9 @@ streamcallback(const char *line)
         LDi_log(100, "here is data for the event %s\n", eventtypebuf);
         LDi_log(100, "the data: %s\n", line);
     }
+    if (shouldstopstreaming) {
+        return 1;
+    }
     return 0;
 }
 
@@ -340,9 +361,12 @@ bgfeaturestreamer(void *v)
     int retries = 0;
     while (true) {
         LDi_rdlock(&LDi_clientlock);
-        if (client->dead || !client->config->streaming || client->offline) {
+        if (client->dead || !client->config->streaming || client->offline || client->background) {
             LDi_rdunlock(&LDi_clientlock);
-            LDi_millisleep(30000);
+            int ms = 30000;
+            LDi_mtxenter(&LDi_condmtx);
+            LDi_condwait(&LDi_bgstreamcond, &LDi_condmtx, ms);
+            LDi_mtxleave(&LDi_condmtx);
             continue;
         }
         char *userurl = LDi_usertourl(client->user);
@@ -385,6 +409,7 @@ bgfeaturestreamer(void *v)
 void
 LDi_startthreads(LDClient *client)
 {
+    LDi_mtxinit(&LDi_condmtx);
     LDi_createthread(&LDi_eventthread, bgeventsender, client);
     LDi_createthread(&LDi_pollingthread, bgfeaturepoller, client);
     LDi_createthread(&LDi_streamingthread, bgfeaturestreamer, client);

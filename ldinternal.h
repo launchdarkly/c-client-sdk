@@ -97,6 +97,7 @@ void LDi_recordtrack(LDUser *user, const char *name, LDNode *data);
 char *LDi_geteventdata(void);
 void LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response);
 
+void LDi_startstopstreaming(bool stopstreaming);
 void LDi_onstreameventput(const char *data);
 void LDi_onstreameventpatch(const char *data);
 void LDi_onstreameventdelete(const char *data);
