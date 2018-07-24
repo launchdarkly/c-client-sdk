@@ -372,7 +372,8 @@ LDi_savehash(LDClient *client)
  bool
  isPrivateAttr(LDClient *client, const char *key)
  {
-     return (LDNodeLookup(client->config->privateAttributeNames, key) != NULL) ||
+     return client->config->allAttributesPrivate ||
+        (LDNodeLookup(client->config->privateAttributeNames, key) != NULL) ||
         (LDNodeLookup(client->user->privateAttributeNames, key) != NULL);
  }
 
