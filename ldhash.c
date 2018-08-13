@@ -289,6 +289,7 @@ LDi_jsontohash(cJSON *json, int flavor)
         const char *key = item->string;
         int version = 0;
         int variation = 0;
+        double track = 0;
         
         cJSON *valueitem = item;
         switch (flavor) {
@@ -301,13 +302,16 @@ LDi_jsontohash(cJSON *json, int flavor)
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "version") == 0) {
                     version = (int)valueitem->valuedouble;
-                    break;
                 }
-            }
-            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "variation") == 0) {
                     variation = (int)valueitem->valuedouble;
-                    break;
+                }
+                if (strcmp(valueitem->string, "debugEventsUntilDate") == 0) {
+                    track = valueitem->valuedouble;
+                }
+                if (strcmp(valueitem->string, "trackEvents") == 0) {
+                    if (valueitem->type == cJSON_True)
+                        track = 1;
                 }
             }
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
@@ -325,19 +329,19 @@ LDi_jsontohash(cJSON *json, int flavor)
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "key") == 0) {
                     key = valueitem->valuestring;
-                    break;
                 }
-            }
-            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "version") == 0) {
                     version = (int)valueitem->valuedouble;
-                    break;
                 }
-            }
-            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "variation") == 0) {
                     variation = (int)valueitem->valuedouble;
-                    break;
+                }
+                if (strcmp(valueitem->string, "debugEventsUntilDate") == 0) {
+                    track = valueitem->valuedouble;
+                }
+                if (strcmp(valueitem->string, "trackEvents") == 0) {
+                    if (valueitem->type == cJSON_True)
+                        track = 1;
                 }
             }
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
@@ -379,11 +383,10 @@ LDi_jsontohash(cJSON *json, int flavor)
         default:
             break;
         }
-        if (version && node) {
+        if (node) {
             node->version = version;
-        }
-        if (variation && node) {
             node->variation = variation;
+            node->track = track;
         }
         
         if (flavor == 2) {

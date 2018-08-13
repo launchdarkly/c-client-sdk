@@ -34,6 +34,7 @@ typedef struct LDNode_i {
     UT_hash_handle hh;
     int version;
     int variation;
+    double track;
 #ifdef __cplusplus
     struct LDNode_i *lookup(const std::string &key);
     struct LDNode_i *index(unsigned int idx);

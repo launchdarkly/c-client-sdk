@@ -445,6 +445,8 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
     const char *s;
     size_t len;
 
+    LDi_log(20, "string variation for %s\n", key);
+
     LDi_rdlock(&LDi_clientlock);
     res = LDNodeLookup(client->allFlags, key);
     if (res && res->type == LDNodeString)

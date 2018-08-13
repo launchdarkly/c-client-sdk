@@ -23,17 +23,21 @@ test1()
     LDConfigAddPrivateAttribute(config, "password");
     LDUser *user = LDUserNew("user200");
     LDClient *client = LDClientInit(config, user);
-    char *testflags = "{ \"bgcolor\": \"red\", \"password\": \"secret\" }";
+    char *testflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 2, \"variation\": 1 }, \"password\": { \"value\": \"secret\", \"version\":1 } }";
     LDClientRestoreFlags(client, testflags);
 
     char buffer[256];
     LDStringVariation(client, "bgcolor", "green", buffer, sizeof(buffer));
+    LDStringVariation(client, "bgcolor", "green", buffer, sizeof(buffer));
+    LDStringVariation(client, "bgcolor", "green", buffer, sizeof(buffer));
+
     LDStringVariation(client, "password", "uhoh", buffer, sizeof(buffer));
     LDNode *mydata = LDNodeCreateHash();
     LDNodeAddString(&mydata, "banana", "republic");
-    LDClientTrack(client, "tracked");
+    LDClientTrackData(client, "tracked", mydata);
 
     char *data = LDi_geteventdata();
+
     if (strstr(data, "bgcolor") == NULL) {
         printf("ERROR: Where did bgcolor go?\n");
     }
@@ -48,10 +52,18 @@ test1()
 
 }
 
+void
+logger(const char *s)
+{
+    printf("LD: %s", s);
+}
+
 int
 main(int argc, char **argv)
 {
     printf("Beginning tests\n");
+
+    LDSetLogFunction(1, logger);
 
     test1();
 
