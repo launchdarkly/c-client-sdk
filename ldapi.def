@@ -47,10 +47,12 @@ EXPORTS
    LDSetClientStatusCallback
 
    LDClientGetLockedFlags
-   LDClientPutLockedFlags
 
    LDClientTrack
    LDClientTrackData
+
+   LDClientRegisterFeatureFlagListener
+   LDClientUnregisterFeatureFlagListener
 
    LDBoolVariation
    LDIntVariation
