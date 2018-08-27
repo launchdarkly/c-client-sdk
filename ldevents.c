@@ -90,6 +90,9 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
         case LDNodeBool:
             LDNodeAddBool(&summary, "default", defaultn);
             break;
+        default:
+            LDNodeAddString(&summary, "default", "");
+            break;
         }
         summary = LDNodeAddHash(&summaryEvent, feature, summary);
     }
@@ -113,6 +116,9 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
                 break;
             case LDNodeBool:
                 counter = LDNodeAddBool(&summary->h, countername, n);
+                break;
+            default:
+                counter = LDNodeAddString(&summary->h, countername, "");
                 break;
             }
             counter->version = res->version;
