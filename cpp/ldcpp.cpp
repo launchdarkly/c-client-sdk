@@ -53,6 +53,13 @@ LDNode *LDClient::JSONVariation(const std::string &key, LDNode *def)
     return LDJSONVariation(this->client, key.c_str(), def);
 }
 
+
+LDNode *LDClient::getLockedFlags()
+{
+    return LDClientGetLockedFlags(this->client);
+}
+
+
 void LDClient::flush(void)
 {
     return LDClientFlush(this->client);
@@ -94,6 +101,21 @@ bool LDClient::isOffline(void)
     return LDClientIsOffline(this->client);
 }
 
+void LDClient::setBackground(bool background)
+{
+    LDClientSetBackground(this->client, background);
+}
+
+void LDClient::track(const std::string &name)
+{
+    LDClientTrack(this->client, name.c_str());
+}
+
+void LDClient::track(const std::string &name, LDNode *data)
+{
+    LDClientTrackData(this->client, name.c_str(), data);
+}
+
 std::string LDClient::saveFlags(void)
 {
     char *s = LDClientSaveFlags(this->client);
@@ -106,3 +128,14 @@ void LDClient::restoreFlags(const std::string &flags)
 {
     LDClientRestoreFlags(this->client, flags.c_str());
 }
+
+bool LDClient::registerFeatureFlagListener(const std::string &name, LDlistenerfn fn)
+{
+    return LDClientRegisterFeatureFlagListener(this->client, name.c_str(), fn);
+}
+bool LDClient::unregisterFeatureFlagListener(const std::string &name, LDlistenerfn fn)
+{
+    return LDClientUnregisterFeatureFlagListener(this->client, name.c_str(), fn);
+}
+
+

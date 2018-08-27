@@ -48,11 +48,6 @@ typedef struct LDUser_i LDUser;
 
 struct LDClient_i;
 
-#if !defined(__cplusplus) && !defined(LD_C_API)
-typedef struct LDClient_i LDClient;
-#endif
-
-
 void LDSetString(char **, const char *);
 
 LDConfig *LDConfigNew(const char *);
@@ -101,16 +96,16 @@ bool LDClientIsInitialized(struct LDClient_i *);
 bool LDClientIsOffline(struct LDClient_i *);
 void LDClientSetOffline(struct LDClient_i *);
 void LDClientSetOnline(struct LDClient_i *);
-void LDClientSetBackground(LDClient *client, bool background);
+void LDClientSetBackground(struct LDClient_i *client, bool background);
 void LDClientClose(struct LDClient_i *);
 
 void LDSetClientStatusCallback(void (callback)(int));
 
-LDNode *LDClientGetLockedFlags(LDClient *client);
-void LDClientPutLockedFlags(LDClient *client, LDNode *flags);
+/* must be released via LDJSONRelease */
+LDNode *LDClientGetLockedFlags(struct LDClient_i *client);
 
-void LDClientTrack(LDClient *client, const char *name);
-void LDClientTrackData(LDClient *client, const char *name, LDNode *data);
+void LDClientTrack(struct LDClient_i *client, const char *name);
+void LDClientTrackData(struct LDClient_i *client, const char *name, LDNode *data);
 
 bool LDBoolVariation(struct LDClient_i *, const char *, bool);
 int LDIntVariation(struct LDClient_i *, const char *, int);
@@ -171,6 +166,10 @@ typedef void (*LDlistenerfn)(const char *, int);
 bool LDClientRegisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
 bool LDClientUnregisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
 
+#if !defined(__cplusplus) && !defined(LD_C_API)
+typedef struct LDClient_i LDClient;
+#endif
+
 #ifdef __cplusplus
 }
 
@@ -190,15 +189,25 @@ class LDClient {
 
         LDNode *JSONVariation(const std::string &, LDNode *);
 
+        LDNode *getLockedFlags();
+
         void setOffline();
         void setOnline();
         bool isOffline();
+        void setBackground(bool background);
 
         std::string saveFlags();
         void restoreFlags(const std::string &);
 
+        void track(const std::string &name);
+        void track(const std::string &name, LDNode *data);
+
         void flush(void);
         void close(void);
+
+        bool registerFeatureFlagListener(const std::string &name, LDlistenerfn fn);
+        bool unregisterFeatureFlagListener(const std::string &name, LDlistenerfn fn);
+
     private:
         struct LDClient_i *client;
 };

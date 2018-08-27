@@ -281,12 +281,6 @@ LDClientGetLockedFlags(LDClient *client)
     return client->allFlags;
 }
 
-void
-LDClientPutLockedFlags(LDClient *client, LDNode *flags)
-{
-    LDi_rdunlock(&LDi_clientlock);
-}
-
 bool
 LDClientIsInitialized(LDClient *client)
 {
