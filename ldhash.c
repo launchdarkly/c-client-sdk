@@ -400,7 +400,7 @@ LDi_jsontohash(cJSON *json, int flavor)
 char *
 LDNodeToJSON(LDNode *node)
 {
-    cJSON* json = NULL;
+    cJSON *json = NULL;
     switch (node->type) {
     case LDNodeArray:
         json = LDi_arraytojson(node);
@@ -409,7 +409,7 @@ LDNodeToJSON(LDNode *node)
         json = LDi_hashtojson(node);
         break;
     }
-    if (!json) {
+    if (json) {
         char *text = cJSON_PrintUnformatted(json);
         cJSON_Delete(json);
         return text;
@@ -422,11 +422,11 @@ LDNodeToJSON(LDNode *node)
 LDNode *
 LDNodeFromJSON(const char *text)
 {
-    cJSON* json = cJSON_Parse(text);
+    cJSON *json = cJSON_Parse(text);
     if (!json) {
         return NULL;
     }
-    LDNode* output = NULL;
+    LDNode *output = NULL;
     switch (json->type) {
     case cJSON_Array:
         output = jsontoarray(json);
