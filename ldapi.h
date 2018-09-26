@@ -134,6 +134,9 @@ LDNode * LDNodeAppendBool(LDNode **array, bool b);
 LDNode * LDNodeAppendNumber(LDNode **array, double n);
 LDNode * LDNodeAppendString(LDNode **array, const char *s);
 LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
+/* functions for converting nodes to / from JSON */
+char *LDNodeToJSON(LDNode* node);
+LDNode *LDNodeFromJSON(const char *json);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 

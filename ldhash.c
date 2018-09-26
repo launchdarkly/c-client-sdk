@@ -226,7 +226,7 @@ LDi_arraytojson(LDNode *hash)
 /*
  * translation layer from json to hash. this does two things.
  * abstracts the cJSON interface from the user, allowing us to swap libraries.
- * also decodes and normalizes what I am calling "flavors" which are the 
+ * also decodes and normalizes what I am calling "flavors" which are the
  * different payload variations sent by the LD servers which vary by endpoint.
  */
 
@@ -290,7 +290,7 @@ LDi_jsontohash(cJSON *json, int flavor)
         int version = 0;
         int variation = 0;
         double track = 0;
-        
+
         cJSON *valueitem = item;
         switch (flavor) {
         case 0:
@@ -388,13 +388,55 @@ LDi_jsontohash(cJSON *json, int flavor)
             node->variation = variation;
             node->track = track;
         }
-        
+
         if (flavor == 2) {
             /* stop */
             break;
         }
     }
     return hash;
+}
+
+char *
+LDNodeToJSON(LDNode *node)
+{
+    cJSON *json = NULL;
+    switch (node->type) {
+    case LDNodeArray:
+        json = LDi_arraytojson(node);
+        break;
+    case LDNodeHash:
+        json = LDi_hashtojson(node);
+        break;
+    }
+    if (json) {
+        char *text = cJSON_PrintUnformatted(json);
+        cJSON_Delete(json);
+        return text;
+    }
+    else {
+        return NULL;
+    }
+}
+
+LDNode *
+LDNodeFromJSON(const char *text)
+{
+    cJSON *json = cJSON_Parse(text);
+    if (!json) {
+        return NULL;
+    }
+    LDNode *output = NULL;
+    switch (json->type) {
+    case cJSON_Array:
+        output = jsontoarray(json);
+        break;
+    case cJSON_Object:
+        output = LDi_jsontohash(json, 0);
+        break;
+    }
+    cJSON_Delete(json);
+    return output;
 }
 
 static void freehash(LDNode *node, bool);
