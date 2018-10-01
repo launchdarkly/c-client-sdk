@@ -174,7 +174,7 @@ collectSummary()
                 cJSON_AddStringToObject(jcounter, "value", counter->s);
                 break;
             }
-            cJSON_AddNumberToObject(jcounter, "version", counter->version);
+            cJSON_AddNumberToObject(jcounter, "version", counter->flagversion ? counter->flagversion : counter->version);
             cJSON_AddNumberToObject(jcounter, "count", counter->track);
             cJSON_AddNumberToObject(jcounter, "variation", counter->variation);
 
