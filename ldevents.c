@@ -123,6 +123,7 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
             }
             counter->version = res->version;
             counter->variation = res->variation;
+            counter->flagversion = res->flagversion;
         }
         counter->track++;
     }
@@ -213,7 +214,7 @@ LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, do
     cJSON_AddStringToObject(json, "key", feature);
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
     if (res) {
-        cJSON_AddNumberToObject(json, "version", res->version);
+        cJSON_AddNumberToObject(json, "version", res->flagversion ? res->flagversion : res->version);
         cJSON_AddNumberToObject(json, "variation", res->variation);
     }
     if (type == LDNodeNumber) {
@@ -269,7 +270,7 @@ LDi_geteventdata(void)
     cJSON *events;
 
     collectSummary();
-    
+
     LDi_wrlock(&eventlock);
     events = eventarray;
     eventarray = NULL;
