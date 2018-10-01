@@ -162,6 +162,8 @@ LDi_hashtoversionedjson(LDNode *hash)
             cJSON_AddNumberToObject(val, "version", node->version);
         if (node->variation)
             cJSON_AddNumberToObject(val, "variation", node->variation);
+        if (node->flagversion)
+            cJSON_AddNumberToObject(val, "flagVersion", node->flagversion);
 
         cJSON_AddItemToObject(json, node->key, val);
 
@@ -290,6 +292,7 @@ LDi_jsontohash(cJSON *json, int flavor)
         int version = 0;
         int variation = 0;
         double track = 0;
+        int flagversion = 0;
 
         cJSON *valueitem = item;
         switch (flavor) {
@@ -302,6 +305,9 @@ LDi_jsontohash(cJSON *json, int flavor)
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "version") == 0) {
                     version = (int)valueitem->valuedouble;
+                }
+                if (strcmp(valueitem->string, "flagVersion") == 0) {
+                    flagversion = (int)valueitem->valuedouble;
                 }
                 if (strcmp(valueitem->string, "variation") == 0) {
                     variation = (int)valueitem->valuedouble;
@@ -332,6 +338,9 @@ LDi_jsontohash(cJSON *json, int flavor)
                 }
                 if (strcmp(valueitem->string, "version") == 0) {
                     version = (int)valueitem->valuedouble;
+                }
+                if (strcmp(valueitem->string, "flagVersion") == 0) {
+                    flagversion = (int)valueitem->valuedouble;
                 }
                 if (strcmp(valueitem->string, "variation") == 0) {
                     variation = (int)valueitem->valuedouble;
@@ -387,6 +396,7 @@ LDi_jsontohash(cJSON *json, int flavor)
             node->version = version;
             node->variation = variation;
             node->track = track;
+            node->flagversion = flagversion;
         }
 
         if (flavor == 2) {
