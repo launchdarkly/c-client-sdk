@@ -25,18 +25,18 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
     struct MemoryStruct *mem = (struct MemoryStruct *)userp;
- 
+
     mem->memory = realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL) {
-        /* out of memory! */ 
+        /* out of memory! */
         LDi_log(2, "not enough memory (realloc returned NULL)\n");
         return 0;
     }
- 
+
     memcpy(&(mem->memory[mem->size]), contents, realsize);
     mem->size += realsize;
     mem->memory[mem->size] = 0;
- 
+
     return realsize;
 }
 
@@ -46,10 +46,10 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
     size_t realsize = size * nmemb;
     struct streamdata *streamdata = userp;
     struct MemoryStruct *mem = &streamdata->mem;
- 
+
     mem->memory = realloc(mem->memory, mem->size + realsize + 1);
     if (mem->memory == NULL) {
-        /* out of memory! */ 
+        /* out of memory! */
         LDi_log(2, "not enough memory (realloc returned NULL)\n");
         return 0;
     }
@@ -68,11 +68,23 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
             eaten = nl - mem->memory + 1;
             nl = memchr(mem->memory + eaten, '\n', mem->size - eaten);
         }
-        memmove(mem->memory, mem->memory + eaten, eaten);
         mem->size -= eaten;
+        memmove(mem->memory, mem->memory + eaten, mem->size);
     }
     return realsize;
 }
+
+static curl_socket_t
+SocketCallback(void cbhandle(int), curlsocktype type, struct curl_sockaddr *addr)
+{
+    curl_socket_t fd = socket(addr->family, addr->socktype, addr->protocol);
+    if (cbhandle) {
+        LDi_log(25, "about to call connection handle callback \n");
+        cbhandle(fd);
+        LDi_log(25, "finished calling connection handle callback\n");
+    }
+    return fd;
+};
 
 static char *
 fetch_url(const char *url, const char *authkey, int *response)
@@ -190,12 +202,18 @@ progressinspector(void *v, double dltotal, double dlnow, double ultotal, double 
     return 0;
 }
 
+void
+LDi_cancelread(int handle)
+{
+    shutdown(handle, SHUT_RDWR);
+}
+
 /*
  * this function reads data and passes it to the stream callback.
  * it doesn't return except after a disconnect. (or some other failure.)
  */
 void
-LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *))
+LDi_readstream(const char *url, const char *authkey, int *response, int cbdata(const char *), void cbhandle(int))
 {
     char auth[256];
     CURL *curl;
@@ -207,10 +225,13 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
 
     memset(&headers, 0, sizeof(headers));
     memset(&streamdata, 0, sizeof(streamdata));
-    streamdata.callback = callback;
+    streamdata.callback = cbdata;
     streamdata.lastdatatime = time(NULL);
-    
+
     curl = curl_easy_init();
+
+    curl_easy_setopt(curl, CURLOPT_OPENSOCKETFUNCTION, SocketCallback);
+    curl_easy_setopt(curl, CURLOPT_OPENSOCKETDATA, cbhandle);
 
     snprintf(auth, sizeof(auth), "Authorization: %s", authkey);
     chunk = curl_slist_append(chunk, auth);
@@ -237,7 +258,11 @@ LDi_readstream(const char *url, const char *authkey, int *response, int callback
         res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
         LDi_log(10, "curl response code %d\n", (int)response_code);
         *response = response_code;
-    } else {
+    }
+    else if (res == CURLE_PARTIAL_FILE) {
+        *response = -2;
+    }
+    else {
         *response = -1;
     }
 

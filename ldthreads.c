@@ -59,7 +59,7 @@ bgeventsender(void *v)
             LDi_rdunlock(&LDi_clientlock);
             continue;
         }
-        
+
         bool sent = false;
         int retries = 0;
         while (!sent) {
@@ -73,10 +73,11 @@ bgeventsender(void *v)
             LDi_sendevents(url, authkey, eventdata, &response);
             if (response == 401 || response == 403) {
                 sent = true; /* consider it done */
-                client->dead = true;
                 retries = 0;
-                if (LDi_statuscallback)
-                    LDi_statuscallback(0);
+                LDi_wrlock(&LDi_clientlock);
+                client->dead = true;
+                LDi_updatestatus(client, 0);
+                LDi_wrunlock(&LDi_clientlock);
             } else if (response == -1) {
                 retries++;
             } else {
@@ -146,7 +147,7 @@ bgfeaturepoller(void *v)
             LDi_rdunlock(&LDi_clientlock);
             continue;
         }
-        
+
         char *userurl = LDi_usertourl(client->user);
         char url[4096];
         snprintf(url, sizeof(url), "%s/msdk/eval/users/%s", client->config->appURI, userurl);
@@ -155,13 +156,14 @@ bgfeaturepoller(void *v)
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
 
         LDi_rdunlock(&LDi_clientlock);
-        
+
         int response = 0;
         char *data = LDi_fetchfeaturemap(url, authkey, &response);
         if (response == 401 || response == 403) {
+            LDi_wrlock(&LDi_clientlock);
             client->dead = true;
-            if (LDi_statuscallback)
-                    LDi_statuscallback(0);
+            LDi_updatestatus(client, 0);
+            LDi_wrunlock(&LDi_clientlock);
         }
         if (!data)
             continue;
@@ -272,9 +274,10 @@ onstreameventping(void)
     int response = 0;
     char *data = LDi_fetchfeaturemap(url, authkey, &response);
     if (response == 401 || response == 403) {
+        LDi_wrlock(&LDi_clientlock);
         client->dead = true;
-        if (LDi_statuscallback)
-            LDi_statuscallback(0);
+        LDi_updatestatus(client, 0);
+        LDi_wrunlock(&LDi_clientlock);
     }
     if (!data)
         return;
@@ -284,6 +287,7 @@ onstreameventping(void)
     free(data);
 }
 
+static int streamhandle = 0;
 static bool shouldstopstreaming;
 
 void
@@ -293,6 +297,25 @@ LDi_startstopstreaming(bool stopstreaming)
         shouldstopstreaming = true;
     } else {
         shouldstopstreaming = false;
+    }
+    LDi_condsignal(&LDi_bgpollcond);
+    LDi_condsignal(&LDi_bgstreamcond);
+}
+
+static void
+LDi_updatehandle(int handle)
+{
+    LDi_wrlock(&LDi_clientlock);
+    streamhandle = handle;
+    LDi_wrunlock(&LDi_clientlock);
+}
+
+void
+LDi_reinitializeconnection()
+{
+    if (streamhandle) {
+        LDi_cancelread(streamhandle);
+        streamhandle = 0;
     }
     LDi_condsignal(&LDi_bgpollcond);
     LDi_condsignal(&LDi_bgstreamcond);
@@ -374,7 +397,7 @@ bgfeaturestreamer(void *v)
         char url[4096];
         snprintf(url, sizeof(url), "%s/meval/%s", client->config->streamURI, userurl);
         free(userurl);
-        
+
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
 
@@ -382,16 +405,17 @@ bgfeaturestreamer(void *v)
 
         int response;
         /* this won't return until it disconnects */
-        LDi_readstream(url, authkey, &response, streamcallback);
+        LDi_readstream(url, authkey, &response, streamcallback, LDi_updatehandle);
         if (response == 401 || response == 403) {
-                client->dead = true;
-                retries = 0;
-                if (LDi_statuscallback)
-                    LDi_statuscallback(0);
+            retries = 0;
+            LDi_wrlock(&LDi_clientlock);
+            client->dead = true;
+            LDi_updatestatus(client, 0);
+            LDi_wrunlock(&LDi_clientlock);
         } else if (response == -1) {
-                retries++;
+            retries++;
         } else {
-                retries = 0;
+            retries = 0;
         }
         if (retries) {
             int backoff = 1000 * pow(2, retries - 2);
@@ -401,7 +425,6 @@ bgfeaturestreamer(void *v)
                 retries--; /* avoid excessive incrementing */
             }
             LDi_millisleep(backoff);
-            LDi_rdlock(&LDi_clientlock);
         }
     }
 }

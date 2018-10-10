@@ -94,6 +94,8 @@ void LDClientIdentify(struct LDClient_i *, LDUser *);
 
 void LDClientFlush(struct LDClient_i *client);
 bool LDClientIsInitialized(struct LDClient_i *);
+/* block until initialized up to timeout, returns true if initialized */
+bool LDClientAwaitInitialized(struct LDClient_i *client, unsigned int timeoutmilli);
 bool LDClientIsOffline(struct LDClient_i *);
 void LDClientSetOffline(struct LDClient_i *);
 void LDClientSetOnline(struct LDClient_i *);

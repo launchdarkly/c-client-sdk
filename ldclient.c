@@ -14,17 +14,19 @@
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 ld_once_t LDi_threadsonce = LD_ONCE_INIT;
 
+ld_cond_t LDi_initcond = LD_COND_INIT;
+ld_mutex_t LDi_initcondmtx;
 
 static LDClient *theClient;
 ld_rwlock_t LDi_clientlock = LD_RWLOCK_INIT;
 
 void (*LDi_statuscallback)(int);
 
-
 void
 LDi_earlyinit(void)
 {
     LDi_mtxinit(&LDi_allocmtx);
+    LDi_mtxinit(&LDi_initcondmtx);
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
@@ -190,7 +192,7 @@ LDClientInit(LDConfig *config, LDUser *user)
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
-    
+
     LDi_wrunlock(&LDi_clientlock);
 
     LDi_recordidentify(user);
@@ -250,6 +252,14 @@ LDClientIdentify(LDClient *client, LDUser *user)
         LDi_freeuser(client->user);
     }
     client->user = user;
+    client->allFlags = NULL;
+    LDi_updatestatus(client, 0);
+    char *flags = LDi_loaddata("features", client->user->key);
+    if (flags) {
+        LDi_clientsetflags(client, false, flags, 1);
+        LDFree(flags);
+    }
+    LDi_reinitializeconnection();
     LDi_wrunlock(&LDi_clientlock);
     LDi_recordidentify(user);
 }
@@ -284,6 +294,27 @@ LDClientGetLockedFlags(LDClient *client)
 bool
 LDClientIsInitialized(LDClient *client)
 {
+    LDi_rdlock(&LDi_clientlock);
+    bool isinit = client->isinit;
+    LDi_rdunlock(&LDi_clientlock);
+    return isinit;
+}
+
+bool
+LDClientAwaitInitialized(LDClient *client, unsigned int timeoutmilli)
+{
+    LDi_mtxenter(&LDi_initcondmtx);
+    LDi_rdlock(&LDi_clientlock);
+    if (client->isinit) {
+        LDi_rdunlock(&LDi_clientlock);
+        LDi_mtxleave(&LDi_initcondmtx);
+        return true;
+    }
+    LDi_rdunlock(&LDi_clientlock);
+
+    LDi_condwait(&LDi_initcond, &LDi_initcondmtx, timeoutmilli);
+    LDi_mtxleave(&LDi_initcondmtx);
+
     LDi_rdlock(&LDi_clientlock);
     bool isinit = client->isinit;
     LDi_rdunlock(&LDi_clientlock);
@@ -331,18 +362,22 @@ LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor
     }
     cJSON_Delete(payload);
 
-    if (needlock)
+    if (needlock) {
         LDi_wrlock(&LDi_clientlock);
+    }
+
     bool statuschange = client->isinit == false;
     LDNode *oldhash = client->allFlags;
     client->allFlags = hash;
-    client->isinit = true;
-    if (needlock)
-        LDi_wrunlock(&LDi_clientlock);
 
     /* tell application we are ready to go */
-    if (statuschange && LDi_statuscallback)
-        LDi_statuscallback(1);
+    if (statuschange) {
+        LDi_updatestatus(client, 1);
+    }
+
+    if (needlock) {
+        LDi_wrunlock(&LDi_clientlock);
+    }
 
     LDi_freehash(oldhash);
 
@@ -447,7 +482,7 @@ LDStringVariation(LDClient *client, const char *key, const char *fallback,
         s = res->s;
     else
         s = fallback;
-    
+
     len = strlen(s);
     if (len > space - 1)
         len = space - 1;
@@ -473,7 +508,7 @@ LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
         s = res->s;
     else
         s = fallback;
-    
+
     news = LDi_strdup(s);
     if (!isPrivateAttr(client, key))
         LDi_recordfeature(client->user, res, key, LDNodeString,
@@ -498,6 +533,7 @@ LDJSONVariation(LDClient *client, const char *key, LDNode *fallback)
     if (!isPrivateAttr(client, key))
         LDi_recordfeature(client->user, res, key, LDNodeHash,
             0.0, NULL, j, 0.0, NULL, fallback);
+    LDi_rdunlock(&LDi_clientlock);
     return j;
 }
 
@@ -586,3 +622,13 @@ LDConfigAddPrivateAttribute(LDConfig *config, const char *key)
 
     HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
 }
+
+void
+LDi_updatestatus(struct LDClient_i *client, bool isinit)
+{
+    client->isinit = isinit;
+    if (LDi_statuscallback) {
+        LDi_statuscallback(isinit);
+    }
+    LDi_condsignal(&LDi_initcond);
+};

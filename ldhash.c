@@ -24,6 +24,13 @@ newnode(LDNode **hash, const char *key, LDNodeType type)
 }
 
 LDNode *
+LDNodeAddNone(LDNode **hash, const char *key)
+{
+    LDNode *node = newnode(hash, key, LDNodeNone);
+    return node;
+}
+
+LDNode *
 LDNodeAddBool(LDNode **hash, const char *key, bool b)
 {
     LDNode *node = newnode(hash, key, LDNodeBool);
@@ -109,7 +116,9 @@ LDNode *
 LDNodeLookup(LDNode *hash, const char *key)
 {
     LDNode *res = NULL;
-    HASH_FIND_STR(hash, key, res);
+    if (hash) {
+        HASH_FIND_STR(hash, key, res);
+    }
     return res;
 }
 
@@ -327,7 +336,6 @@ LDi_jsontohash(cJSON *json, int flavor)
             }
             if (!valueitem) {
                 LDi_log(5, "version with no value\n");
-                continue;
             }
             break;
         case 2:
@@ -360,44 +368,47 @@ LDi_jsontohash(cJSON *json, int flavor)
             }
             if (!valueitem) {
                 LDi_log(5, "lost the value\n");
-                continue;
             }
             break;
         }
 
         LDNode *node = NULL;
-        switch (valueitem->type) {
-        case cJSON_False:
-            node = LDNodeAddBool(&hash, key, false);
-            break;
-        case cJSON_True:
-            node = LDNodeAddBool(&hash, key, true);
-            break;
-        case cJSON_NULL:
-            break;
-        case cJSON_Number:
-            node = LDNodeAddNumber(&hash, key, valueitem->valuedouble);
-            break;
-        case cJSON_String:
-            node = LDNodeAddString(&hash, key, valueitem->valuestring);
-            break;
-        case cJSON_Array: {
-            LDNode *array = jsontoarray(valueitem);
-            node = LDNodeAddArray(&hash, key, array);
-            break;
+
+        if (valueitem) {
+            switch (valueitem->type) {
+            case cJSON_False:
+                node = LDNodeAddBool(&hash, key, false);
+                break;
+            case cJSON_True:
+                node = LDNodeAddBool(&hash, key, true);
+                break;
+            case cJSON_Number:
+                node = LDNodeAddNumber(&hash, key, valueitem->valuedouble);
+                break;
+            case cJSON_String:
+                node = LDNodeAddString(&hash, key, valueitem->valuestring);
+                break;
+            case cJSON_Array: {
+                LDNode *array = jsontoarray(valueitem);
+                node = LDNodeAddArray(&hash, key, array);
+                break;
+            }
+            case cJSON_Object:
+                node = LDNodeAddHash(&hash, key, LDi_jsontohash(valueitem, 0));
+                break;
+            default:
+                break;
+            }
         }
-        case cJSON_Object:
-            node = LDNodeAddHash(&hash, key, LDi_jsontohash(valueitem, 0));
-            break;
-        default:
-            break;
+
+        if (!node) {
+            node = LDNodeAddNone(&hash, key);
         }
-        if (node) {
-            node->version = version;
-            node->variation = variation;
-            node->track = track;
-            node->flagversion = flagversion;
-        }
+
+        node->version = version;
+        node->variation = variation;
+        node->track = track;
+        node->flagversion = flagversion;
 
         if (flavor == 2) {
             /* stop */

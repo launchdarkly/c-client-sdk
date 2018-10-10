@@ -87,8 +87,9 @@ char *LDi_strdup(const char *src);
 bool LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor);
 void LDi_savehash(LDClient *client);
 
+void LDi_cancelread(int handle);
 char *LDi_fetchfeaturemap(const char *url, const char *authkey, int *response);
-void LDi_readstream(const char *url, const char *authkey, int *response, int callback(const char *));
+void LDi_readstream(const char *url, const char *authkey, int *response, int cbdata(const char *), void cbhandle(int));
 
 void LDi_recordidentify(LDUser *lduser);
 void LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
@@ -97,6 +98,7 @@ void LDi_recordtrack(LDUser *user, const char *name, LDNode *data);
 char *LDi_geteventdata(void);
 void LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response);
 
+void LDi_reinitializeconnection();
 void LDi_startstopstreaming(bool stopstreaming);
 void LDi_onstreameventput(const char *data);
 void LDi_onstreameventpatch(const char *data);
@@ -142,7 +144,7 @@ char *LDi_loaddata(const char *dataname, const char *username);
 #else
 #define ld_thread_t HANDLE
 void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
-#define ld_rwlock_t SRWLOCK 
+#define ld_rwlock_t SRWLOCK
 #define LD_RWLOCK_INIT SRWLOCK_INIT
 #define LDi_rdlock(lk) AcquireSRWLockShared(lk)
 #define LDi_wrlock(lk) AcquireSRWLockExclusive(lk)
@@ -170,3 +172,6 @@ extern ld_cond_t LDi_bgeventcond;
 extern ld_mutex_t LDi_allocmtx;
 extern ld_once_t LDi_earlyonce;
 void LDi_earlyinit(void);
+
+/* expects caller to own LDi_clientlock */
+void LDi_updatestatus(struct LDClient_i *client, bool isinit);
