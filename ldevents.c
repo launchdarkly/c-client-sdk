@@ -90,6 +90,9 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
         case LDNodeBool:
             LDNodeAddBool(&summary, "default", defaultn);
             break;
+        case LDNodeHash:
+            LDNodeAddHash(&summary, "default", defaultm);
+            break;
         default:
             LDNodeAddString(&summary, "default", "");
             break;
@@ -117,6 +120,9 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
             case LDNodeBool:
                 counter = LDNodeAddBool(&summary->h, countername, n);
                 break;
+            case LDNodeHash:
+                counter = LDNodeAddHash(&summary->h, countername, m);
+                break;
             default:
                 counter = LDNodeAddString(&summary->h, countername, "");
                 break;
@@ -142,6 +148,7 @@ collectSummary()
     LDi_wrlock(&eventlock);
 
     json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "kind", "summary");
     cJSON_AddNumberToObject(json, "startDate", summaryStart);
     cJSON_AddNumberToObject(json, "endDate", milliTimestamp());
     cJSON *features = cJSON_CreateObject();
@@ -162,6 +169,12 @@ collectSummary()
                 case LDNodeString:
                     cJSON_AddStringToObject(jfeature, "default", counter->s);
                     break;
+                case LDNodeBool:
+                    cJSON_AddBoolToObject(jfeature, "default", (int)counter->b);
+                    break;
+                case LDNodeHash:
+                    cJSON_AddItemToObject(jfeature, "default", LDi_hashtojson(counter->h));
+                    break;
                 }
                 continue;
             }
@@ -172,6 +185,12 @@ collectSummary()
                 break;
             case LDNodeString:
                 cJSON_AddStringToObject(jcounter, "value", counter->s);
+                break;
+            case LDNodeBool:
+                cJSON_AddBoolToObject(jcounter, "value", (int)counter->b);
+                break;
+            case LDNodeHash:
+                cJSON_AddItemToObject(jcounter, "value", LDi_hashtojson(counter->h));
                 break;
             }
             cJSON_AddNumberToObject(jcounter, "version", counter->flagversion ? counter->flagversion : counter->version);
@@ -198,10 +217,12 @@ void
 LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
+    summarizeEvent(lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
+
     if (!res || res->track == 0 || (res->track > 1 && res->track < milliTimestamp())) {
-        summarizeEvent(lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
         return;
     }
+
     LDi_log(40, "choosing to track %s %d\n", feature, res->track);
     if (numevents >= eventscapacity) {
         LDi_log(5, "event capacity exceeded\n");

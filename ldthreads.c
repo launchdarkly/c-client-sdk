@@ -150,7 +150,7 @@ bgfeaturepoller(void *v)
 
         char *userurl = LDi_usertourl(client->user);
         char url[4096];
-        snprintf(url, sizeof(url), "%s/msdk/eval/users/%s", client->config->appURI, userurl);
+        snprintf(url, sizeof(url), "%s/msdk/evalx/users/%s", client->config->appURI, userurl);
         free(userurl);
         char authkey[256];
         snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
@@ -167,7 +167,7 @@ bgfeaturepoller(void *v)
         }
         if (!data)
             continue;
-        if (LDi_clientsetflags(client, true, data, 0)) {
+        if (LDi_clientsetflags(client, true, data, 1)) {
             LDi_savehash(client);
         }
         free(data);
