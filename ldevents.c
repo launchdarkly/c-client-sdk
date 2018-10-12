@@ -169,6 +169,12 @@ collectSummary()
                 case LDNodeString:
                     cJSON_AddStringToObject(jfeature, "default", counter->s);
                     break;
+                case LDNodeBool:
+                    cJSON_AddBoolToObject(jfeature, "default", (int)counter->b);
+                    break;
+                case LDNodeHash:
+                    cJSON_AddItemToObject(jfeature, "default", LDi_hashtojson(counter->h));
+                    break;
                 }
                 continue;
             }
@@ -179,6 +185,12 @@ collectSummary()
                 break;
             case LDNodeString:
                 cJSON_AddStringToObject(jcounter, "value", counter->s);
+                break;
+            case LDNodeBool:
+                cJSON_AddBoolToObject(jcounter, "value", (int)counter->b);
+                break;
+            case LDNodeHash:
+                cJSON_AddItemToObject(jcounter, "value", LDi_hashtojson(counter->h));
                 break;
             }
             cJSON_AddNumberToObject(jcounter, "version", counter->flagversion ? counter->flagversion : counter->version);
