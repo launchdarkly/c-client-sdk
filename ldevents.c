@@ -142,6 +142,7 @@ collectSummary()
     LDi_wrlock(&eventlock);
 
     json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "kind", "summary");
     cJSON_AddNumberToObject(json, "startDate", summaryStart);
     cJSON_AddNumberToObject(json, "endDate", milliTimestamp());
     cJSON *features = cJSON_CreateObject();
