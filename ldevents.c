@@ -198,10 +198,12 @@ void
 LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
+    summarizeEvent(lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
+
     if (!res || res->track == 0 || (res->track > 1 && res->track < milliTimestamp())) {
-        summarizeEvent(lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
         return;
     }
+
     LDi_log(40, "choosing to track %s %d\n", feature, res->track);
     if (numevents >= eventscapacity) {
         LDi_log(5, "event capacity exceeded\n");
