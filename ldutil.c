@@ -148,14 +148,22 @@ void LDi_once(ld_once_t *once, void (*fn)(void))
 #endif
 
 char *
-LDi_usertourl(LDUser *user)
+LDi_usertojsontext(LDUser *user)
 {
-    cJSON *jsonuser = LDi_usertojson(user);
-    char *textuser = cJSON_PrintUnformatted(jsonuser);
-    cJSON_Delete(jsonuser);
-    size_t b64len;
-    char *b64text = LDi_base64_encode(textuser, strlen(textuser), &b64len);
-    free(textuser);
-    return b64text;
-}
+    cJSON *const jsonuser = LDi_usertojson(user);
 
+    if (!jsonuser) {
+        LDi_log(2, "LDi_usertojson failed in LDi_usertojsontext\n");
+        return NULL;
+    }
+
+    char *const textuser = cJSON_PrintUnformatted(jsonuser);
+    cJSON_Delete(jsonuser);
+
+    if (!textuser) {
+        LDi_log(2, "cJSON_PrintUnformatted failed in LDi_usertojsontext\n");
+        return NULL;
+    }
+
+    return textuser;
+}

@@ -24,15 +24,16 @@ ld_mutex_t LDi_condmtx;
 
 #ifdef _WINDOWS
 #define THREAD_RETURN DWORD WINAPI
+#define THREAD_RETURN_DEFAULT 0
 #else
 #define THREAD_RETURN void *
+#define THREAD_RETURN_DEFAULT NULL
 #endif
-
 
 static THREAD_RETURN
 bgeventsender(void *v)
 {
-    LDClient *client = v;
+    LDClient *const client = v;
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
@@ -48,7 +49,7 @@ bgeventsender(void *v)
         LDi_mtxleave(&LDi_condmtx);
         LDi_log(20, "bgsender running\n");
 
-        char *eventdata = LDi_geteventdata();
+        char *const eventdata = LDi_geteventdata();
         if (!eventdata) {
             LDi_log(20, "no event data to send\n");
             continue;
@@ -64,9 +65,23 @@ bgeventsender(void *v)
         int retries = 0;
         while (!sent) {
             char url[4096];
-            snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI);
+            if (snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI) < 0) {
+                LDi_log(2, "snprintf config->eventsURI failed\n");
+                client->dead = true;
+                LDi_updatestatus(client, 0);
+                LDi_rdunlock(&LDi_clientlock);
+                return THREAD_RETURN_DEFAULT;
+            }
+
             char authkey[256];
-            snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
+            if (snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey) < 0) {
+                LDi_log(2, "snprintf config->mobileKey failed\n");
+                client->dead = true;
+                LDi_updatestatus(client, 0);
+                LDi_rdunlock(&LDi_clientlock);
+                return THREAD_RETURN_DEFAULT;
+            }
+
             LDi_rdunlock(&LDi_clientlock);
             /* unlocked while sending; will relock if retry needed */
             int response = 0;
@@ -105,8 +120,7 @@ bgeventsender(void *v)
 static THREAD_RETURN
 bgfeaturepoller(void *v)
 {
-    LDClient *client = v;
-    char *prevdata = NULL;
+    LDClient *const client = v;
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
@@ -127,8 +141,7 @@ bgfeaturepoller(void *v)
             }
         }
         /* this triggers the first time the thread runs, so we don't have to wait */
-        if (!skippolling && !client->isinit)
-            ms = 0;
+        if (!skippolling && !client->isinit) { ms = 0; }
         LDi_rdunlock(&LDi_clientlock);
 
         LDi_log(20, "bg poller sleeping\n");
@@ -137,9 +150,7 @@ bgfeaturepoller(void *v)
             LDi_condwait(&LDi_bgpollcond, &LDi_condmtx, ms);
             LDi_mtxleave(&LDi_condmtx);
         }
-        if (skippolling) {
-            continue;
-        }
+        if (skippolling) { continue; }
         LDi_log(20, "bg poller running\n");
 
         LDi_rdlock(&LDi_clientlock);
@@ -148,25 +159,48 @@ bgfeaturepoller(void *v)
             continue;
         }
 
-        char *userurl = LDi_usertourl(client->user);
+        const bool usereport = client->config->useReport;
+
         char url[4096];
-        snprintf(url, sizeof(url), "%s/msdk/evalx/users/%s", client->config->appURI, userurl);
-        free(userurl);
+        if (snprintf(url, sizeof(url), "%s", client->config->appURI) < 0) {
+            LDi_log(2, "snprintf config->appURI failed\n");
+            client->dead = true;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
+
         char authkey[256];
-        snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
+        if (snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey) < 0) {
+            LDi_log(2, "snprintf config->mobileKey failed\n");
+            client->dead = true;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
+
+        char *const jsonuser = LDi_usertojsontext(client->user);
+        if (!jsonuser) {
+            LDi_log(2, "cJSON_PrintUnformatted == NULL in onstreameventping failed\n");
+            client->dead = true;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
 
         LDi_rdunlock(&LDi_clientlock);
 
         int response = 0;
-        char *data = LDi_fetchfeaturemap(url, authkey, &response);
+        char *const data = LDi_fetchfeaturemap(url, authkey, &response, jsonuser, usereport);
+        free(jsonuser);
+
         if (response == 401 || response == 403) {
             LDi_wrlock(&LDi_clientlock);
             client->dead = true;
             LDi_updatestatus(client, 0);
             LDi_wrunlock(&LDi_clientlock);
         }
-        if (!data)
-            continue;
+        if (!data) { continue; }
         if (LDi_clientsetflags(client, true, data, 1)) {
             LDi_savehash(client);
         }
@@ -178,7 +212,7 @@ bgfeaturepoller(void *v)
 void
 LDi_onstreameventput(const char *data)
 {
-    LDClient *client = LDClientGet();
+    LDClient *const client = LDClientGet();
     if (LDi_clientsetflags(client, true, data, 1)) {
         LDi_savedata("features", client->user->key, data);
     }
@@ -193,7 +227,7 @@ applypatch(cJSON *payload, bool isdelete)
     }
     cJSON_Delete(payload);
 
-    LDClient *client = LDClientGet();
+    LDClient *const client = LDClientGet();
     LDi_wrlock(&LDi_clientlock);
     LDNode *hash = client->allFlags;
     LDNode *node, *tmp;
@@ -229,7 +263,7 @@ applypatch(cJSON *payload, bool isdelete)
 void
 LDi_onstreameventpatch(const char *data)
 {
-    cJSON *payload = cJSON_Parse(data);
+    cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
         LDi_log(5, "parsing patch failed\n");
@@ -242,7 +276,7 @@ LDi_onstreameventpatch(const char *data)
 void
 LDi_onstreameventdelete(const char *data)
 {
-    cJSON *payload = cJSON_Parse(data);
+    cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
         LDi_log(5, "parsing delete patch failed\n");
@@ -255,32 +289,56 @@ LDi_onstreameventdelete(const char *data)
 static void
 onstreameventping(void)
 {
-    LDClient *client = LDClientGet();
+    LDClient *const client = LDClientGet();
 
     LDi_rdlock(&LDi_clientlock);
     if (client->dead) {
         LDi_rdunlock(&LDi_clientlock);
         return;
     }
-    char *userurl = LDi_usertourl(client->user);
+
+    const bool usereport = client->config->useReport;
+
     char url[4096];
-    snprintf(url, sizeof(url), "%s/msdk/eval/users/%s", client->config->appURI, userurl);
-    free(userurl);
+    if (snprintf(url, sizeof(url), "%s", client->config->appURI) < 0) {
+        LDi_log(2, "snprintf config->appURI failed\n");
+        client->dead = true;
+        LDi_updatestatus(client, 0);
+        LDi_rdunlock(&LDi_clientlock);
+        return;
+    }
+
     char authkey[256];
-    snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
+    if (snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey) < 0) {
+        LDi_log(2, "snprintf config->mobileKey failed\n");
+        client->dead = true;
+        LDi_updatestatus(client, 0);
+        LDi_rdunlock(&LDi_clientlock);
+        return;
+    }
+
+    char *const jsonuser = LDi_usertojsontext(client->user);
+    if (!jsonuser) {
+        LDi_log(2, "cJSON_PrintUnformatted == NULL in onstreameventping failed\n");
+        client->dead = true;
+        LDi_updatestatus(client, 0);
+        LDi_rdunlock(&LDi_clientlock);
+        return;
+    }
 
     LDi_rdunlock(&LDi_clientlock);
 
     int response = 0;
-    char *data = LDi_fetchfeaturemap(url, authkey, &response);
+    char *const data = LDi_fetchfeaturemap(url, authkey, &response, jsonuser, usereport);
+    free(jsonuser);
+
     if (response == 401 || response == 403) {
         LDi_wrlock(&LDi_clientlock);
         client->dead = true;
         LDi_updatestatus(client, 0);
         LDi_wrunlock(&LDi_clientlock);
     }
-    if (!data)
-        return;
+    if (!data) { return; }
     if (LDi_clientsetflags(client, true, data, 1)) {
         LDi_savedata("features", client->user->key, data);
     }
@@ -293,11 +351,7 @@ static bool shouldstopstreaming;
 void
 LDi_startstopstreaming(bool stopstreaming)
 {
-    if (stopstreaming) {
-        shouldstopstreaming = true;
-    } else {
-        shouldstopstreaming = false;
-    }
+    shouldstopstreaming = stopstreaming;
     LDi_condsignal(&LDi_bgpollcond);
     LDi_condsignal(&LDi_bgstreamcond);
 }
@@ -338,12 +392,18 @@ streamcallback(const char *line)
         LDi_log(10, "i reject your comment\n");
     } else if (wantnewevent) {
         LDi_log(15, "this better be a new event...\n");
-        char *eventtype = strchr(line, ':');
+        const char *const eventtype = strchr(line, ':');
+
         if (!eventtype || eventtype[1] == 0) {
-            LDi_log(5, "unsure\n");
+            LDi_log(5, "unsure in streamcallback\n");
             return 1;
         }
-        snprintf(eventtypebuf, sizeof(eventtypebuf), "%s", eventtype + 1);
+
+        if (snprintf(eventtypebuf, sizeof(eventtypebuf), "%s", eventtype + 1) < 0) {
+            LDi_log(2, "snprintf failed in streamcallback type processing\n");
+            return 1;
+        }
+
         wantnewevent = 0;
     } else if (*line == 0) {
         LDi_log(15, "end of event\n");
@@ -379,11 +439,12 @@ streamcallback(const char *line)
 static THREAD_RETURN
 bgfeaturestreamer(void *v)
 {
-    LDClient *client = v;
+    LDClient *const client = v;
 
     int retries = 0;
     while (true) {
         LDi_rdlock(&LDi_clientlock);
+
         if (client->dead || !client->config->streaming || client->offline || client->background) {
             LDi_rdunlock(&LDi_clientlock);
             int ms = 30000;
@@ -392,20 +453,43 @@ bgfeaturestreamer(void *v)
             LDi_mtxleave(&LDi_condmtx);
             continue;
         }
-        char *userurl = LDi_usertourl(client->user);
+
+        const bool usereport = client->config->useReport;
 
         char url[4096];
-        snprintf(url, sizeof(url), "%s/meval/%s", client->config->streamURI, userurl);
-        free(userurl);
+        if (snprintf(url, sizeof(url), "%s", client->config->streamURI) < 0) {
+            LDi_log(2, "snprintf config->streamURI failed\n");
+            client->dead = true;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
 
         char authkey[256];
-        snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
+        if (snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey) < 0) {
+            LDi_log(2, "snprintf config->mobileKey failed\n");
+            client->dead = true;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
+
+        char *const jsonuser = LDi_usertojsontext(client->user);
+        if (!jsonuser) {
+            LDi_log(2, "cJSON_PrintUnformatted == NULL in bgfeaturestreamer failed\n");
+            client->dead = true;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
 
         LDi_rdunlock(&LDi_clientlock);
 
         int response;
         /* this won't return until it disconnects */
-        LDi_readstream(url, authkey, &response, streamcallback, LDi_updatehandle);
+        LDi_readstream(url, authkey, &response, streamcallback, LDi_updatehandle, jsonuser, usereport);
+        free(jsonuser);
+
         if (response == 401 || response == 403) {
             retries = 0;
             LDi_wrlock(&LDi_clientlock);
