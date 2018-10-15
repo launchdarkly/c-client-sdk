@@ -125,38 +125,35 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
         summaryStart = milliTimestamp();
     }
 
-    char countername[128];
+    char countername[128]; int keystatus;
 
     if (!res) {
-        if (snprintf(countername, sizeof(countername), "unknown") < 0) {
-            LDi_log(5, "snprintf failed in summarizeEvent for unknown\n");
-            LDi_wrunlock(&eventlock); return;
-        }
+        keystatus = snprintf(countername, sizeof(countername), "unknown");
     }
     else if (type == res->type) {
         const int version = res->flagversion ? res->flagversion : res->version;
-        if (snprintf(countername, sizeof(countername), "%d %d", version, res->variation) < 0) {
-            LDi_log(5, "snprintf failed in summarizeEvent for version variation\n");
-            LDi_wrunlock(&eventlock); return;
-        }
+        keystatus = snprintf(countername, sizeof(countername), "%d %d", version, res->variation);
     }
     else {
-        if (snprintf(countername, sizeof(countername), "fallback") < 0) {
-            LDi_log(5, "snprintf failed in summarizeEvent for fallback\n");
-            LDi_wrunlock(&eventlock); return;
-        }
+        keystatus = snprintf(countername, sizeof(countername), "default");
+    }
+
+    if (keystatus < 0) {
+        LDi_log(5, "preparing key failed in summarizeEvent\n");
+        LDi_wrunlock(&eventlock); return;
     }
 
     LDNode *counter = LDNodeLookup(summary->h, countername);
 
     if (!counter) {
         counter = addValueToHash(&summary->h, countername, type, n, s, m);
+    }
 
-        if (res) {
-            counter->version = res->version;
-            counter->flagversion = res->flagversion;
-            counter->variation = res->variation;
-        }
+    // may not have been set on initial recording based on res status
+    if (res && counter->track == 0) {
+        counter->version = res->version;
+        counter->flagversion = res->flagversion;
+        counter->variation = res->variation;
     }
 
     counter->track++;
@@ -188,7 +185,9 @@ collectSummary()
             LDi_log(40, "json summary variation %s\n", counter->key);
 
             if (strcmp(counter->key, "default") == 0) {
-                addNodeToJSONObject(jfeature, "default", counter); continue;
+                addNodeToJSONObject(jfeature, "default", counter);
+                // don't record default in flags if not used
+                if (counter->track == 0) { continue; }
             }
 
             cJSON *const jcounter = cJSON_CreateObject();
@@ -200,7 +199,7 @@ collectSummary()
             else {
                 cJSON_AddNumberToObject(jcounter, "version", counter->flagversion ? counter->flagversion : counter->version);
 
-                if (strcmp(counter->key, "fallback") != 0) {
+                if (strcmp(counter->key, "default") != 0) {
                     cJSON_AddNumberToObject(jcounter, "variation", counter->variation);
                 }
             }
