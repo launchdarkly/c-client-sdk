@@ -379,6 +379,12 @@ LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int 
         curl_easy_cleanup(curl); return;
     }
 
+    const char* const headerschema = "X-LaunchDarkly-Event-Schema: 3";
+    if (!(headerlist = curl_slist_append(headerlist, headerschema))) {
+        LDi_log(5, "curl_slist_append failed for headerschema\n");
+        curl_easy_cleanup(curl); return;
+    }
+
     if (curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist) != CURLE_OK) {
         LDi_log(5, "curl_easy_setopt CURLOPT_HTTPHEADER failed\n");
         curl_easy_cleanup(curl); return;
