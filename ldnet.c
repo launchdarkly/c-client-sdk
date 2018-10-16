@@ -97,55 +97,52 @@ prepareShared(const char *const url, const char *const authkey, CURL **r_curl, s
     CURL *const curl = curl_easy_init();
 
     if (!curl) {
-        LDi_log(5, "curl_easy_init returned NULL\n"); return false;
+        LDi_log(5, "curl_easy_init returned NULL\n"); goto error;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_URL, url) != CURLE_OK) {
-        LDi_log(5, "curl_easy_setopt CURLOPT_URL failed\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "curl_easy_setopt CURLOPT_URL failed\n"); goto error;
     }
 
     char headerauth[256];
     if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s", authkey) < 0) {
-        LDi_log(5, "snprintf during Authorization header creation failed\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "snprintf during Authorization header creation failed\n"); goto error;
     }
 
     struct curl_slist *headers = NULL;
     if (!(headers = curl_slist_append(headers, headerauth))) {
-        LDi_log(5, "curl_slist_append failed for headerauth\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "curl_slist_append failed for headerauth\n"); goto error;
     }
 
     const char *const headeragent = "User-Agent: CClient/0.1";
     if (!(headers = curl_slist_append(headers, headeragent))) {
-        LDi_log(5, "curl_slist_append failed for headeragent\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "curl_slist_append failed for headeragent\n"); goto error;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, headercb) != CURLE_OK) {
-        LDi_log(5, "curl_easy_setopt CURLOPT_HEADERFUNCTION failed\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "curl_easy_setopt CURLOPT_HEADERFUNCTION failed\n"); goto error;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_HEADERDATA, headerdata) != CURLE_OK) {
-        LDi_log(5, "curl_easy_setopt CURLOPT_HEADERDATA failed\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "curl_easy_setopt CURLOPT_HEADERDATA failed\n"); goto error;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, datacb) != CURLE_OK) {
-        LDi_log(5, "curl_easy_setopt CURLOPT_WRITEFUNCTION failed\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "curl_easy_setopt CURLOPT_WRITEFUNCTION failed\n"); goto error;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_WRITEDATA, data) != CURLE_OK) {
-        LDi_log(5, "curl_easy_setopt CURLOPT_WRITEDATA failed\n");
-        curl_easy_cleanup(curl); return false;
+        LDi_log(5, "curl_easy_setopt CURLOPT_WRITEDATA failed\n"); goto error;
     }
 
     *r_curl = curl; *r_headers = headers;
 
     return true;
+
+  error:
+    if (curl) { curl_easy_cleanup(curl); }
+
+    return false;
 };
 
 /*
