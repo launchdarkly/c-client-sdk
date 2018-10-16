@@ -89,7 +89,7 @@ SocketCallback(void cbhandle(int), curlsocktype type, struct curl_sockaddr *addr
     return fd;
 };
 
-/* returns true on failure, results left in clean state */
+/* returns false on failure, results left in clean state */
 static bool
 prepareShared(const char *const url, const char *const authkey, CURL **r_curl, struct curl_slist **r_headers,
     WriteCB headercb, void *const headerdata, WriteCB datacb, void *const data)
@@ -97,55 +97,55 @@ prepareShared(const char *const url, const char *const authkey, CURL **r_curl, s
     CURL *const curl = curl_easy_init();
 
     if (!curl) {
-        LDi_log(5, "curl_easy_init returned NULL\n"); return true;
+        LDi_log(5, "curl_easy_init returned NULL\n"); return false;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_URL, url) != CURLE_OK) {
         LDi_log(5, "curl_easy_setopt CURLOPT_URL failed\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     char headerauth[256];
     if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s", authkey) < 0) {
         LDi_log(5, "snprintf during Authorization header creation failed\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     struct curl_slist *headers = NULL;
     if (!(headers = curl_slist_append(headers, headerauth))) {
         LDi_log(5, "curl_slist_append failed for headerauth\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     const char *const headeragent = "User-Agent: CClient/0.1";
     if (!(headers = curl_slist_append(headers, headeragent))) {
         LDi_log(5, "curl_slist_append failed for headeragent\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, headercb) != CURLE_OK) {
         LDi_log(5, "curl_easy_setopt CURLOPT_HEADERFUNCTION failed\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_HEADERDATA, headerdata) != CURLE_OK) {
         LDi_log(5, "curl_easy_setopt CURLOPT_HEADERDATA failed\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, datacb) != CURLE_OK) {
         LDi_log(5, "curl_easy_setopt CURLOPT_WRITEFUNCTION failed\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_WRITEDATA, data) != CURLE_OK) {
         LDi_log(5, "curl_easy_setopt CURLOPT_WRITEDATA failed\n");
-        curl_easy_cleanup(curl); return true;
+        curl_easy_cleanup(curl); return false;
     }
 
     *r_curl = curl; *r_headers = headers;
 
-    return false;
+    return true;
 };
 
 /*
@@ -219,7 +219,7 @@ LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cb
         }
     }
 
-    if (prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
+    if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
         LDi_log(10, "LDi_readstream prepareShared failed\n"); return;
     }
 
@@ -322,7 +322,7 @@ LDi_fetchfeaturemap(const char *urlprefix, const char *authkey, int *response,
         }
     }
 
-    if (prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
         LDi_log(10, "fetch_url prepareShared failed\n"); return NULL;
     }
 
@@ -372,7 +372,7 @@ LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int 
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
-    if (prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
         LDi_log(10, "post_data prepareShared failed\n"); return;
     }
 
