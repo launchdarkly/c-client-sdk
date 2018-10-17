@@ -115,6 +115,7 @@ void (*LDi_statuscallback)(int);
 
 void LDi_millisleep(int ms);
 unsigned int LDi_random(void);
+void LDi_randomhex(char *buffer, size_t buffersize);
 void LDi_startthreads(LDClient *client);
 
 /* calls into the store interface */
