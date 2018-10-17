@@ -43,6 +43,15 @@ LDi_random(void)
 #endif
 }
 
+void
+LDi_randomhex(char *const buffer, const size_t buffersize)
+{
+    const char *const alphabet = "0123456789ABCDEF";
+    for (size_t i = 0; i < buffersize; i++) {
+        buffer[i] = alphabet[LDi_random() % 16];
+    }
+}
+
 ld_mutex_t LDi_allocmtx;
 unsigned long long LD_allocations;
 unsigned long long LD_frees;
