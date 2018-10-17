@@ -80,7 +80,7 @@ cJSON *LDi_hashtojson(LDNode *hash);
 cJSON *LDi_arraytojson(LDNode *hash);
 LDNode *LDi_jsontohash(cJSON *json, int flavor);
 void LDi_initevents(int capacity);
-char * LDi_usertourl(LDUser *user);
+char *LDi_usertojsontext(LDUser *lduser);
 
 char *LDi_strdup(const char *src);
 
@@ -88,8 +88,10 @@ bool LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int f
 void LDi_savehash(LDClient *client);
 
 void LDi_cancelread(int handle);
-char *LDi_fetchfeaturemap(const char *url, const char *authkey, int *response);
-void LDi_readstream(const char *url, const char *authkey, int *response, int cbdata(const char *), void cbhandle(int));
+char *LDi_fetchfeaturemap(const char *urlprefix, const char *authkey, int *response,
+    const char *const userjson, bool usereport);
+void LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cbdata(const char *),
+    void cbhandle(int), const char *const userjson, bool usereport);
 
 void LDi_recordidentify(LDUser *lduser);
 void LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
@@ -103,6 +105,8 @@ void LDi_startstopstreaming(bool stopstreaming);
 void LDi_onstreameventput(const char *data);
 void LDi_onstreameventpatch(const char *data);
 void LDi_onstreameventdelete(const char *data);
+
+char *LDi_usertojsontext(LDUser *lduser);
 
 cJSON *LDi_usertojson(LDUser *lduser);
 
