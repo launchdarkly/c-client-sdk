@@ -68,6 +68,7 @@ LDConfigNew(const char *mobileKey)
     LDSetString(&config->mobileKey, mobileKey);
     config->offline = false;
     config->pollingIntervalMillis = 300000;
+    config->privateAttributeNames = NULL;
     config->streaming = true;
     LDSetString(&config->streamURI, "https://clientstream.launchdarkly.com");
     config->useReport = false;
@@ -141,6 +142,7 @@ freeconfig(LDConfig *config)
     LDFree(config->eventsURI);
     LDFree(config->mobileKey);
     LDFree(config->streamURI);
+    LDi_freehash(config->privateAttributeNames);
     LDFree(config);
 }
 
@@ -191,8 +193,8 @@ LDClientInit(LDConfig *config, LDUser *user)
         LDFree(flags);
     }
 
+    LDi_recordidentify(client, user);
     LDi_wrunlock(&LDi_clientlock);
-    LDi_recordidentify(user);
 
     LDi_log(10, "Client init done\n");
     LDi_once(&LDi_threadsonce, threadsinit);
@@ -257,8 +259,8 @@ LDClientIdentify(LDClient *client, LDUser *user)
         LDFree(flags);
     }
     LDi_reinitializeconnection();
+    LDi_recordidentify(client, user);
     LDi_wrunlock(&LDi_clientlock);
-    LDi_recordidentify(user);
 }
 
 void
@@ -411,7 +413,7 @@ LDBoolVariation(LDClient *const client, const char *const key, const bool fallba
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeBool,
+    LDi_recordfeature(client, client->user, node, key, LDNodeBool,
         (double)result, NULL, NULL, (double)fallback, NULL, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -432,7 +434,7 @@ LDIntVariation(LDClient *const client, const char *const key, const int fallback
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeNumber,
+    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
         (double)result, NULL, NULL, (double)fallback, NULL, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -454,7 +456,7 @@ LDDoubleVariation(LDClient *client, const char *key, double fallback)
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeNumber,
+    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
         result, NULL, NULL, fallback, NULL, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -484,7 +486,7 @@ LDStringVariation(LDClient *const client, const char *const key,
     memcpy(buffer, result, len);
     buffer[len] = 0;
 
-    LDi_recordfeature(client->user, node, key, LDNodeString,
+    LDi_recordfeature(client, client->user, node, key, LDNodeString,
         0.0, result, NULL, 0.0, fallback, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -508,7 +510,7 @@ LDStringVariationAlloc(LDClient *const client, const char *const key, const char
 
     char *const result = LDi_strdup(value);
 
-    LDi_recordfeature(client->user, node, key, LDNodeString,
+    LDi_recordfeature(client, client->user, node, key, LDNodeString,
         0.0, result, NULL, 0.0, fallback, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -530,7 +532,7 @@ LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fal
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeHash,
+    LDi_recordfeature(client, client->user, node, key, LDNodeHash,
         0.0, NULL, result, 0.0, NULL, fallback);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -548,7 +550,7 @@ void
 LDClientTrack(LDClient *client, const char *name)
 {
     LDi_rdlock(&LDi_clientlock);
-    LDi_recordtrack(client->user, name, NULL);
+    LDi_recordtrack(client, client->user, name, NULL);
     LDi_rdunlock(&LDi_clientlock);
 }
 
@@ -556,7 +558,7 @@ void
 LDClientTrackData(LDClient *client, const char *name, LDNode *data)
 {
     LDi_rdlock(&LDi_clientlock);
-    LDi_recordtrack(client->user, name, data);
+    LDi_recordtrack(client, client->user, name, data);
     LDi_rdunlock(&LDi_clientlock);
 }
 
@@ -610,6 +612,25 @@ LDClientUnregisterFeatureFlagListener(LDClient *client, const char *key, LDliste
     }
     LDi_wrunlock(&LDi_clientlock);
     return list != NULL;
+}
+
+bool
+LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
+{
+    LDNode *const node = LDAlloc(sizeof(*node));
+
+    if (!node) {
+        LDi_log(5, "LDAlloc failed in LDConfigAddPrivateAttribute\n");
+        return false;
+    }
+
+    memset(node, 0, sizeof(*node));
+    node->key = LDi_strdup(key);
+    node->type = LDNodeBool;
+    node->b = true;
+
+    HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
+    return true;
 }
 
 void

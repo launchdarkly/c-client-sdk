@@ -18,7 +18,7 @@ logger(const char *s)
  * Test that turning a user into json looks like we expect.
  */
 void
-test1()
+test1(LDClient *const client)
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -29,7 +29,9 @@ test1()
     LDNodeAddBool(&user->custom, "bossmode", true);
     LDNodeAddString(&user->custom, "species", "krell");
 
-    cJSON *const json = LDi_usertojson(user);
+    LDClientIdentify(client, user);
+
+    cJSON *const json = LDi_usertojson(client, user);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -46,7 +48,7 @@ test1()
  * test setting json directly. also has a list of custom attributes.
  */
 void
-test2()
+test2(LDClient *const client)
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -54,7 +56,9 @@ test2()
     LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
 
-    cJSON *const json = LDi_usertojson(user);
+    LDClientIdentify(client, user);
+
+    cJSON *const json = LDi_usertojson(client, user);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -71,7 +75,7 @@ test2()
  * Test private attribute
  */
 void
-test3()
+test3(LDClient *const client)
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -79,7 +83,9 @@ test3()
 
     LDUserAddPrivateAttribute(user, "avatar");
 
-    cJSON *const json = LDi_usertojson(user);
+    LDClientIdentify(client, user);
+
+    cJSON *const json = LDi_usertojson(client, user);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"privateAttrs\":[\"avatar\"]}";
@@ -98,7 +104,18 @@ main(int argc, char **argv)
 
     LDSetLogFunction(1, logger);
 
-    test1(); test2(); test3();
+    LDUser *const user = LDUserNew("");
+
+    LDConfig *const config = LDConfigNew("authkey");
+    config->offline = true;
+
+    LDClient *const client = LDClientInit(config, user);
+
+    test1(client);
+
+    test2(client);
+
+    test3(client);
 
     extern unsigned long long LD_allocations, LD_frees;
 
