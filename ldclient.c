@@ -193,9 +193,8 @@ LDClientInit(LDConfig *config, LDUser *user)
         LDFree(flags);
     }
 
-    LDi_wrunlock(&LDi_clientlock);
-
     LDi_recordidentify(client, user);
+    LDi_wrunlock(&LDi_clientlock);
 
     LDi_log(10, "Client init done\n");
     LDi_once(&LDi_threadsonce, threadsinit);
@@ -260,8 +259,8 @@ LDClientIdentify(LDClient *client, LDUser *user)
         LDFree(flags);
     }
     LDi_reinitializeconnection();
-    LDi_wrunlock(&LDi_clientlock);
     LDi_recordidentify(client, user);
+    LDi_wrunlock(&LDi_clientlock);
 }
 
 void

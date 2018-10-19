@@ -37,9 +37,12 @@ LDi_initevents(int capacity)
 }
 
 void
-LDi_recordidentify(LDClient *client, LDUser *lduser)
+LDi_recordidentify(LDClient *const client, LDUser *const lduser)
 {
+    LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
+        LDi_wrunlock(&eventlock);
+        LDi_log(5, "LDi_recordidentify event capacity exceeded\n");
         return;
     }
 
@@ -50,7 +53,6 @@ LDi_recordidentify(LDClient *client, LDUser *lduser)
     cJSON *const juser = LDi_usertojson(client, lduser);
     cJSON_AddItemToObject(json, "user", juser);
 
-    LDi_wrlock(&eventlock);
     cJSON_AddItemToArray(eventarray, json);
     numevents++;
     LDi_wrunlock(&eventlock);
@@ -233,8 +235,11 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
     }
 
     LDi_log(40, "choosing to track %s %d\n", feature, res->track);
+
+    LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
-        LDi_log(5, "event capacity exceeded\n");
+        LDi_wrunlock(&eventlock);
+        LDi_log(5, "LDi_recordfeature event capacity exceeded\n");
         return;
     }
 
@@ -266,7 +271,6 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
     cJSON *const juser = LDi_usertojson(client, lduser);
     cJSON_AddItemToObject(json, "user", juser);
 
-    LDi_wrlock(&eventlock);
     cJSON_AddItemToArray(eventarray, json);
     numevents++;
     LDi_wrunlock(&eventlock);
@@ -275,7 +279,10 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
 void
 LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
 {
+    LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
+        LDi_wrunlock(&eventlock);
+        LDi_log(5, "LDi_recordtrack event capacity exceeded\n");
         return;
     }
 
@@ -291,7 +298,6 @@ LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
         cJSON_AddItemToObject(json, "data", LDi_hashtojson(data));
     }
 
-    LDi_wrlock(&eventlock);
     cJSON_AddItemToArray(eventarray, json);
     numevents++;
     LDi_wrunlock(&eventlock);
