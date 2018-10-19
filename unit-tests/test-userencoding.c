@@ -21,9 +21,9 @@ void
 test1(LDClient *const client)
 {
     LDUser *const user = LDUserNew("username");
-    LDSetString(&user->firstName, "Tsrif");
-    LDSetString(&user->lastName, "Tsal");
-    LDSetString(&user->avatar, "pirate");
+    LDUserSetFirstName(user, "Tsrif");
+    LDUserSetLastName(user, "Tsal");
+    LDUserSetAvatar(user, "pirate");
     user->custom = LDNodeCreateHash();
     LDNodeAddNumber(&user->custom, "excellence", 10);
     LDNodeAddBool(&user->custom, "bossmode", true);
