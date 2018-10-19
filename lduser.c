@@ -46,15 +46,13 @@ LDi_freeuser(LDUser *const user)
 }
 
 static bool
-isPrivateAttr(LDClient *const client, const char *const key)
+isPrivateAttr(LDUser *const user, const char *const key)
 {
-    return client->config->allAttributesPrivate ||
-        (LDNodeLookup(client->config->privateAttributeNames, key) != NULL) ||
-        (LDNodeLookup(client->user->privateAttributeNames, key) != NULL);
+    return LDNodeLookup(user->privateAttributeNames, key) != NULL;
 }
 
 cJSON *
-LDi_usertojson(LDClient *const client, LDUser *const lduser)
+LDi_usertojson(LDUser *const lduser)
 {
     cJSON *const json = cJSON_CreateObject();
 
@@ -68,7 +66,7 @@ LDi_usertojson(LDClient *const client, LDUser *const lduser)
 
   #define addstring(field)                                                       \
     if (lduser->field) {                                                        \
-        if (isPrivateAttr(client, #field)) {                                    \
+        if (isPrivateAttr(lduser, #field)) {                                    \
             cJSON_AddItemToArray(hidden, cJSON_CreateString(#field));           \
         }                                                                      \
         else {                                                                 \
@@ -86,7 +84,7 @@ LDi_usertojson(LDClient *const client, LDUser *const lduser)
   #undef addstring
 
     if (lduser->custom) {
-        if (isPrivateAttr(client, "custom")) {
+        if (isPrivateAttr(lduser, "custom")) {
             cJSON_AddItemToArray(hidden, cJSON_CreateString("custom"));
         }
         else {

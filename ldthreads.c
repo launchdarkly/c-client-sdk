@@ -179,7 +179,7 @@ bgfeaturepoller(void *v)
             return THREAD_RETURN_DEFAULT;
         }
 
-        char *const jsonuser = LDi_usertojsontext(client, client->user);
+        char *const jsonuser = LDi_usertojsontext(client->user);
         if (!jsonuser) {
             LDi_log(2, "cJSON_PrintUnformatted == NULL in onstreameventping failed\n");
             client->dead = true;
@@ -317,7 +317,7 @@ onstreameventping(void)
         return;
     }
 
-    char *const jsonuser = LDi_usertojsontext(client, client->user);
+    char *const jsonuser = LDi_usertojsontext(client->user);
     if (!jsonuser) {
         LDi_log(2, "cJSON_PrintUnformatted == NULL in onstreameventping failed\n");
         client->dead = true;
@@ -474,7 +474,7 @@ bgfeaturestreamer(void *v)
             return THREAD_RETURN_DEFAULT;
         }
 
-        char *const jsonuser = LDi_usertojsontext(client, client->user);
+        char *const jsonuser = LDi_usertojsontext(client->user);
         if (!jsonuser) {
             LDi_log(2, "cJSON_PrintUnformatted == NULL in bgfeaturestreamer failed\n");
             client->dead = true;

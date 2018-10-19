@@ -18,7 +18,7 @@ logger(const char *s)
  * Test that turning a user into json looks like we expect.
  */
 void
-test1(LDClient *const client)
+test1()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -29,9 +29,7 @@ test1(LDClient *const client)
     LDNodeAddBool(&user->custom, "bossmode", true);
     LDNodeAddString(&user->custom, "species", "krell");
 
-    LDClientIdentify(client, user);
-
-    cJSON *const json = LDi_usertojson(client, user);
+    cJSON *const json = LDi_usertojson(user);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -48,7 +46,7 @@ test1(LDClient *const client)
  * test setting json directly. also has a list of custom attributes.
  */
 void
-test2(LDClient *const client)
+test2()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -56,9 +54,7 @@ test2(LDClient *const client)
     LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
 
-    LDClientIdentify(client, user);
-
-    cJSON *const json = LDi_usertojson(client, user);
+    cJSON *const json = LDi_usertojson(user);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -75,7 +71,7 @@ test2(LDClient *const client)
  * Test private attribute
  */
 void
-test3(LDClient *const client)
+test3()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -83,9 +79,7 @@ test3(LDClient *const client)
 
     LDUserAddPrivateAttribute(user, "avatar");
 
-    LDClientIdentify(client, user);
-
-    cJSON *const json = LDi_usertojson(client, user);
+    cJSON *const json = LDi_usertojson(user);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"privateAttrs\":[\"avatar\"]}";
@@ -104,18 +98,7 @@ main(int argc, char **argv)
 
     LDSetLogFunction(1, logger);
 
-    LDUser *const user = LDUserNew("");
-
-    LDConfig *const config = LDConfigNew("authkey");
-    config->offline = true;
-
-    LDClient *const client = LDClientInit(config, user);
-
-    test1(client);
-
-    test2(client);
-
-    test3(client);
+    test1(); test2(); test3();
 
     extern unsigned long long LD_allocations, LD_frees;
 

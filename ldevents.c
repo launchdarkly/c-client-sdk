@@ -37,7 +37,7 @@ LDi_initevents(int capacity)
 }
 
 void
-LDi_recordidentify(LDClient *const client, LDUser *const lduser)
+LDi_recordidentify(LDUser *const lduser)
 {
     LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
@@ -50,7 +50,7 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
     cJSON_AddStringToObject(json, "kind", "identify");
     cJSON_AddStringToObject(json, "key", lduser->key);
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
-    cJSON *const juser = LDi_usertojson(client, lduser);
+    cJSON *const juser = LDi_usertojson(lduser);
     cJSON_AddItemToObject(json, "user", juser);
 
     cJSON_AddItemToArray(eventarray, json);
@@ -106,7 +106,7 @@ addNodeToJSONObject(cJSON *obj, const char *key, LDNode *node)
 };
 
 static void
-summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
+summarizeEvent(LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
     LDi_log(40, "updating summary for %s\n", feature);
@@ -225,10 +225,10 @@ collectSummary()
 }
 
 void
-LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature,
-    int type, double n, const char *s, LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
+LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type,
+    double n, const char *s, LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
-    summarizeEvent(lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
+    summarizeEvent(res, feature, type, n, s, m, defaultn, defaults, defaultm);
 
     if (!res || res->track == 0 || (res->track > 1 && res->track < milliTimestamp())) {
         return;
@@ -268,7 +268,7 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
         cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
 
-    cJSON *const juser = LDi_usertojson(client, lduser);
+    cJSON *const juser = LDi_usertojson(lduser);
     cJSON_AddItemToObject(json, "user", juser);
 
     cJSON_AddItemToArray(eventarray, json);
@@ -277,7 +277,7 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
 }
 
 void
-LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
+LDi_recordtrack(LDUser *user, const char *name, LDNode *data)
 {
     LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
@@ -291,7 +291,7 @@ LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
     cJSON_AddStringToObject(json, "key", name);
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
 
-    cJSON *const juser = LDi_usertojson(client, user);
+    cJSON *const juser = LDi_usertojson(user);
     cJSON_AddItemToObject(json, "user", juser);
 
     if (data != NULL) {
