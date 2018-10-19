@@ -3,18 +3,17 @@
 
 
 LDUser *
-LDUserNew(const char *key)
+LDUserNew(const char *const key)
 {
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
-    LDUser *user;
-
-    user = LDAlloc(sizeof(*user));
+    LDUser *const user = LDAlloc(sizeof(*user));
     if (!user) {
         LDi_log(2, "no memory for user\n");
         return NULL;
     }
     memset(user, 0, sizeof(*user));
+
     LDSetString(&user->key, key);
     user->anonymous = false;
     user->secondary = NULL;
@@ -31,10 +30,9 @@ LDUserNew(const char *key)
 }
 
 void
-LDi_freeuser(LDUser *user)
+LDi_freeuser(LDUser *const user)
 {
-    if (!user)
-        return;
+    if (!user) { return; }
     LDFree(user->key);
     LDFree(user->secondary);
     LDFree(user->firstName);
@@ -194,4 +192,10 @@ void
 LDUserSetAvatar(LDUser *user, const char *str)
 {
     LDSetString(&user->avatar, str);
+}
+
+void
+LDUserSetSecondary(LDUser *user, const char *str)
+{
+    LDSetString(&user->secondary, str);
 }

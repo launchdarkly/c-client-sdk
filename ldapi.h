@@ -83,6 +83,7 @@ void LDUserSetLastName(LDUser *user, const char *str);
 void LDUserSetEmail(LDUser *user, const char *str);
 void LDUserSetName(LDUser *user, const char *str);
 void LDUserSetAvatar(LDUser *user, const char *str);
+void LDUserSetSecondary(LDUser *user, const char *str);
 
 bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
 void LDUSerSetCustomAttributes(LDUser *user, LDNode *custom);
