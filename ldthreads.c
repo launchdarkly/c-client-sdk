@@ -100,12 +100,18 @@ bgeventsender(void *v)
                 retries = 0;
             }
             if (retries) {
+                unsigned int rng = 0;
+                if (!LDi_random(&rng)) {
+                    LDi_log(10, "rng failed in bgeventsender\n");
+                }
+
                 int backoff = 1000 * pow(2, retries - 2);
-                backoff += LDi_random() % backoff;
+                backoff += rng % backoff;
                 if (backoff > 3600 * 1000) {
                     backoff = 3600 * 1000;
                     retries--; /* avoid excessive incrementing */
                 }
+
                 LDi_millisleep(backoff);
                 LDi_rdlock(&LDi_clientlock);
             }
@@ -502,12 +508,18 @@ bgfeaturestreamer(void *v)
             retries = 0;
         }
         if (retries) {
+            unsigned int rng = 0;
+            if (!LDi_random(&rng)) {
+                LDi_log(10, "rng failed in bgeventsender\n");
+            }
+
             int backoff = 1000 * pow(2, retries - 2);
-            backoff += LDi_random() % backoff;
+            backoff += rng % backoff;
             if (backoff > 3600 * 1000) {
                 backoff = 3600 * 1000;
                 retries--; /* avoid excessive incrementing */
             }
+
             LDi_millisleep(backoff);
         }
     }
