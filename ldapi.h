@@ -66,7 +66,8 @@ void LDConfigSetStreaming(LDConfig *config, bool streaming);
 void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
-void LDConfigAddPrivateAttribute(LDConfig *, const char *name);
+/* returns true on success */
+bool LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
 
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);

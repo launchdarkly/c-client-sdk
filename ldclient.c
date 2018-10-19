@@ -623,16 +623,23 @@ LDClientUnregisterFeatureFlagListener(LDClient *client, const char *key, LDliste
     return list != NULL;
 }
 
-void
-LDConfigAddPrivateAttribute(LDConfig *config, const char *key)
+bool
+LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
 {
-    LDNode *node = LDAlloc(sizeof(*node));
+    LDNode *const node = LDAlloc(sizeof(*node));
+
+    if (!node) {
+        LDi_log(5, "LDAlloc failed in LDConfigAddPrivateAttribute\n");
+        return false;
+    }
+
     memset(node, 0, sizeof(*node));
     node->key = LDi_strdup(key);
     node->type = LDNodeBool;
     node->b = true;
 
     HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
+    return true;
 }
 
 void
