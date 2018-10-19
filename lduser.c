@@ -72,17 +72,34 @@ LDi_usertojson(LDUser *lduser)
     return json;
 }
 
-
-void
-LDUserAddPrivateAttribute(LDUser *user, const char *key)
+bool
+LDUserAddPrivateAttribute(LDUser *const user, const char *const key)
 {
-    LDNode *node = LDAlloc(sizeof(*node));
+    if (!user) {
+        LDi_log(2, "Passed NULL user to LDUserAddPrivateAttribute\n");
+        return false;
+    }
+
+    if (!key) {
+        LDi_log(2, "Passed NULL attribute key to LDUserAddPrivateAttribute\n");
+        return false;
+    }
+
+    LDNode *const node = LDAlloc(sizeof(*node));
+
+    if (!node) {
+        LDi_log(2, "LDAlloc failed in LDUserAddPrivateAttribute\n");
+        return false;
+    }
+
     memset(node, 0, sizeof(*node));
     node->key = LDi_strdup(key);
     node->type = LDNodeBool;
     node->b = true;
 
     HASH_ADD_KEYPTR(hh, user->privateAttributeNames, node->key, strlen(node->key), node);
+
+    return true;
 }
 
 bool

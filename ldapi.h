@@ -85,7 +85,8 @@ void LDUserSetAvatar(LDUser *user, const char *str);
 
 bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
 void LDUSerSetCustomAttributes(LDUser *user, LDNode *custom);
-void LDUserAddPrivateAttribute(LDUser *, const char *name);
+/* returns true on success */
+bool LDUserAddPrivateAttribute(LDUser *user, const char *attribute);
 
 char *LDClientSaveFlags(struct LDClient_i *client);
 void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
