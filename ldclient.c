@@ -398,143 +398,155 @@ LDi_savehash(LDClient *client)
  * a block of functions to look up feature flags
  */
 
- bool
- isPrivateAttr(LDClient *client, const char *key)
- {
-     return client->config->allAttributesPrivate ||
+bool
+isPrivateAttr(LDClient *client, const char *key)
+{
+    return client->config->allAttributesPrivate ||
         (LDNodeLookup(client->config->privateAttributeNames, key) != NULL) ||
         (LDNodeLookup(client->user->privateAttributeNames, key) != NULL);
- }
+}
 
 bool
-LDBoolVariation(LDClient *client, const char *key, bool fallback)
+LDBoolVariation(LDClient *const client, const char *const key, const bool fallback)
 {
-    LDNode *res;
-    bool b;
-
+    bool result;
     LDi_rdlock(&LDi_clientlock);
-    res = LDNodeLookup(client->allFlags, key);
-    if (res && res->type == LDNodeBool) {
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeBool) {
         LDi_log(15, "found result for %s\n", key);
-        b = res->b;
+        result = node->b;
     } else {
         LDi_log(15, "no result for %s\n", key);
-        b = fallback;
+        result = fallback;
     }
-    if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, res, key, LDNodeBool,
-            (double)b, NULL, NULL, (double)fallback, NULL, NULL);
+
+    LDi_recordfeature(client->user, node, key, LDNodeBool,
+        (double)result, NULL, NULL, (double)fallback, NULL, NULL);
+
     LDi_rdunlock(&LDi_clientlock);
-    return b;
+    return result;
 }
 
 int
-LDIntVariation(LDClient *client, const char *key, int fallback)
+LDIntVariation(LDClient *const client, const char *const key, const int fallback)
 {
-    LDNode *res;
-    int i;
-
+    int result;
     LDi_rdlock(&LDi_clientlock);
-    res = LDNodeLookup(client->allFlags, key);
-    if (res && res->type == LDNodeNumber)
-        i = (int)res->n;
-    else
-        i = fallback;
-    if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, res, key, LDNodeNumber,
-            (double)i, NULL, NULL, (double)fallback, NULL, NULL);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeNumber) {
+        result = (int)node->n;
+    } else {
+        result = fallback;
+    }
+
+    LDi_recordfeature(client->user, node, key, LDNodeNumber,
+        (double)result, NULL, NULL, (double)fallback, NULL, NULL);
+
     LDi_rdunlock(&LDi_clientlock);
-    return i;
+
+    return result;
 }
 
 double
 LDDoubleVariation(LDClient *client, const char *key, double fallback)
 {
-    LDNode *res;
-    double d;
-
+    double result;
     LDi_rdlock(&LDi_clientlock);
-    res = LDNodeLookup(client->allFlags, key);
-    if (res && res->type == LDNodeNumber)
-        d = res->n;
-    else
-        d = fallback;
-    if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, res, key, LDNodeNumber,
-            d, NULL, NULL, fallback, NULL, NULL);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeNumber) {
+        result = node->n;
+    } else {
+        result = fallback;
+    }
+
+    LDi_recordfeature(client->user, node, key, LDNodeNumber,
+        result, NULL, NULL, fallback, NULL, NULL);
+
     LDi_rdunlock(&LDi_clientlock);
-    return d;
+
+    return result;
 }
 
 char *
-LDStringVariation(LDClient *client, const char *key, const char *fallback,
-    char *buffer, size_t space)
+LDStringVariation(LDClient *const client, const char *const key,
+    const char *const fallback, char *buffer, size_t space)
 {
-    LDNode *res;
-    const char *s;
-    size_t len;
-
-    LDi_log(20, "string variation for %s\n", key);
-
+    const char *result;
     LDi_rdlock(&LDi_clientlock);
-    res = LDNodeLookup(client->allFlags, key);
-    if (res && res->type == LDNodeString)
-        s = res->s;
-    else
-        s = fallback;
 
-    len = strlen(s);
-    if (len > space - 1)
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeString) {
+        result = node->s;
+    } else {
+        result = fallback;
+    }
+
+    size_t len = strlen(result);
+    if (len > space - 1) {
         len = space - 1;
-    memcpy(buffer, s, len);
+    }
+    memcpy(buffer, result, len);
     buffer[len] = 0;
-    if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, res, key, LDNodeString,
-            0.0, buffer, NULL, 0.0, fallback, NULL);
+
+    LDi_recordfeature(client->user, node, key, LDNodeString,
+        0.0, result, NULL, 0.0, fallback, NULL);
+
     LDi_rdunlock(&LDi_clientlock);
+
     return buffer;
 }
 
 char *
-LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
+LDStringVariationAlloc(LDClient *const client, const char *const key, const char *const fallback)
 {
-    LDNode *res;
-    const char *s;
-    char *news;
-
+    const char *value;
     LDi_rdlock(&LDi_clientlock);
-    res = LDNodeLookup(client->allFlags, key);
-    if (res && res->type == LDNodeString)
-        s = res->s;
-    else
-        s = fallback;
 
-    news = LDi_strdup(s);
-    if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, res, key, LDNodeString,
-            0.0, news, NULL, 0.0, fallback, NULL);
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeString) {
+        value = node->s;
+    } else {
+        value = fallback;
+    }
+
+    char *const result = LDi_strdup(value);
+
+    LDi_recordfeature(client->user, node, key, LDNodeString,
+        0.0, result, NULL, 0.0, fallback, NULL);
+
     LDi_rdunlock(&LDi_clientlock);
-    return news;
+
+    return result;
 }
 
 LDNode *
-LDJSONVariation(LDClient *client, const char *key, LDNode *fallback)
+LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fallback)
 {
-    LDNode *res;
-    LDNode *j;
-
+    LDNode *result;
     LDi_rdlock(&LDi_clientlock);
-    res = LDNodeLookup(client->allFlags, key);
-    if (res && res->type == LDNodeHash) {
-        j = res->h;
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeHash) {
+        result = node->h;
     } else {
-        j = fallback;
+        result = fallback;
     }
-    if (!isPrivateAttr(client, key))
-        LDi_recordfeature(client->user, res, key, LDNodeHash,
-            0.0, NULL, j, 0.0, NULL, fallback);
+
+    LDi_recordfeature(client->user, node, key, LDNodeHash,
+        0.0, NULL, result, 0.0, NULL, fallback);
+
     LDi_rdunlock(&LDi_clientlock);
-    return j;
+
+    return result;
 }
 
 void
