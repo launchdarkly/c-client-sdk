@@ -195,7 +195,7 @@ LDClientInit(LDConfig *config, LDUser *user)
 
     LDi_wrunlock(&LDi_clientlock);
 
-    LDi_recordidentify(user);
+    LDi_recordidentify(client, user);
 
     LDi_log(10, "Client init done\n");
     LDi_once(&LDi_threadsonce, threadsinit);
@@ -254,14 +254,14 @@ LDClientIdentify(LDClient *client, LDUser *user)
     client->user = user;
     client->allFlags = NULL;
     LDi_updatestatus(client, 0);
-    char *flags = LDi_loaddata("features", client->user->key);
+    char *const flags = LDi_loaddata("features", client->user->key);
     if (flags) {
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
     LDi_reinitializeconnection();
     LDi_wrunlock(&LDi_clientlock);
-    LDi_recordidentify(user);
+    LDi_recordidentify(client, user);
 }
 
 void
@@ -399,14 +399,6 @@ LDi_savehash(LDClient *client)
  */
 
 bool
-isPrivateAttr(LDClient *client, const char *key)
-{
-    return client->config->allAttributesPrivate ||
-        (LDNodeLookup(client->config->privateAttributeNames, key) != NULL) ||
-        (LDNodeLookup(client->user->privateAttributeNames, key) != NULL);
-}
-
-bool
 LDBoolVariation(LDClient *const client, const char *const key, const bool fallback)
 {
     bool result;
@@ -422,7 +414,7 @@ LDBoolVariation(LDClient *const client, const char *const key, const bool fallba
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeBool,
+    LDi_recordfeature(client, client->user, node, key, LDNodeBool,
         (double)result, NULL, NULL, (double)fallback, NULL, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -443,7 +435,7 @@ LDIntVariation(LDClient *const client, const char *const key, const int fallback
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeNumber,
+    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
         (double)result, NULL, NULL, (double)fallback, NULL, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -465,7 +457,7 @@ LDDoubleVariation(LDClient *client, const char *key, double fallback)
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeNumber,
+    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
         result, NULL, NULL, fallback, NULL, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -495,7 +487,7 @@ LDStringVariation(LDClient *const client, const char *const key,
     memcpy(buffer, result, len);
     buffer[len] = 0;
 
-    LDi_recordfeature(client->user, node, key, LDNodeString,
+    LDi_recordfeature(client, client->user, node, key, LDNodeString,
         0.0, result, NULL, 0.0, fallback, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -519,7 +511,7 @@ LDStringVariationAlloc(LDClient *const client, const char *const key, const char
 
     char *const result = LDi_strdup(value);
 
-    LDi_recordfeature(client->user, node, key, LDNodeString,
+    LDi_recordfeature(client, client->user, node, key, LDNodeString,
         0.0, result, NULL, 0.0, fallback, NULL);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -541,7 +533,7 @@ LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fal
         result = fallback;
     }
 
-    LDi_recordfeature(client->user, node, key, LDNodeHash,
+    LDi_recordfeature(client, client->user, node, key, LDNodeHash,
         0.0, NULL, result, 0.0, NULL, fallback);
 
     LDi_rdunlock(&LDi_clientlock);
@@ -559,7 +551,7 @@ void
 LDClientTrack(LDClient *client, const char *name)
 {
     LDi_rdlock(&LDi_clientlock);
-    LDi_recordtrack(client->user, name, NULL);
+    LDi_recordtrack(client, client->user, name, NULL);
     LDi_rdunlock(&LDi_clientlock);
 }
 
@@ -567,7 +559,7 @@ void
 LDClientTrackData(LDClient *client, const char *name, LDNode *data)
 {
     LDi_rdlock(&LDi_clientlock);
-    LDi_recordtrack(client->user, name, data);
+    LDi_recordtrack(client, client->user, name, data);
     LDi_rdunlock(&LDi_clientlock);
 }
 

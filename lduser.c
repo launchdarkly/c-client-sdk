@@ -47,17 +47,37 @@ LDi_freeuser(LDUser *user)
     LDFree(user);
 }
 
+static bool
+isPrivateAttr(LDClient *const client, const char *const key)
+{
+    return client->config->allAttributesPrivate ||
+        (LDNodeLookup(client->config->privateAttributeNames, key) != NULL) ||
+        (LDNodeLookup(client->user->privateAttributeNames, key) != NULL);
+}
 
 cJSON *
-LDi_usertojson(LDUser *lduser)
+LDi_usertojson(LDClient *const client, LDUser *lduser)
 {
-    cJSON *json;
+    cJSON *const json = cJSON_CreateObject();
 
-    json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "key", lduser->key);
-    if (lduser->anonymous)
+
+    if (lduser->anonymous) {
         cJSON_AddBoolToObject(json, "anonymous", lduser->anonymous);
-#define addstring(field) if (lduser->field) cJSON_AddStringToObject(json, #field, lduser->field)
+    }
+
+    cJSON *const hidden = cJSON_CreateArray();
+
+  #define addstring(field)                                                       \
+    if (lduser->field) {                                                        \
+        if (isPrivateAttr(client, #field)) {                                    \
+            cJSON_AddItemToArray(hidden, cJSON_CreateString(#field));           \
+        }                                                                      \
+        else {                                                                 \
+            cJSON_AddStringToObject(json, #field, lduser->field);                \
+        }                                                                      \
+    }                                                                          \
+
     addstring(secondary);
     addstring(ip);
     addstring(firstName);
@@ -65,10 +85,23 @@ LDi_usertojson(LDUser *lduser)
     addstring(email);
     addstring(name);
     addstring(avatar);
-#undef addstring
+  #undef addstring
+
     if (lduser->custom) {
-        cJSON_AddItemToObject(json, "custom", LDi_hashtojson(lduser->custom));
+        if (isPrivateAttr(client, "custom")) {
+            cJSON_AddItemToArray(hidden, cJSON_CreateString("custom"));
+        }
+        else {
+            cJSON_AddItemToObject(json, "custom", LDi_hashtojson(lduser->custom));
+        }
     }
+
+    if (cJSON_GetArraySize(hidden)) {
+        cJSON_AddItemToObject(json, "privateAttrs", hidden);
+    } else {
+        cJSON_Delete(hidden);
+    }
+
     return json;
 }
 
@@ -127,32 +160,36 @@ LDUserSetAnonymous(LDUser *user, bool anon)
     user->anonymous = anon;
 }
 
-
 void
 LDUserSetIP(LDUser *user, const char *str)
 {
     LDSetString(&user->ip, str);
 }
+
 void
 LDUserSetFirstName(LDUser *user, const char *str)
 {
     LDSetString(&user->firstName, str);
 }
+
 void
 LDUserSetLastName(LDUser *user, const char *str)
 {
     LDSetString(&user->lastName, str);
 }
+
 void
 LDUserSetEmail(LDUser *user, const char *str)
 {
     LDSetString(&user->email, str);
 }
+
 void
 LDUserSetName(LDUser *user, const char *str)
 {
     LDSetString(&user->name, str);
 }
+
 void
 LDUserSetAvatar(LDUser *user, const char *str)
 {

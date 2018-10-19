@@ -37,7 +37,7 @@ LDi_initevents(int capacity)
 }
 
 void
-LDi_recordidentify(LDUser *lduser)
+LDi_recordidentify(LDClient *client, LDUser *lduser)
 {
     if (numevents >= eventscapacity) {
         return;
@@ -47,7 +47,7 @@ LDi_recordidentify(LDUser *lduser)
     cJSON_AddStringToObject(json, "kind", "identify");
     cJSON_AddStringToObject(json, "key", lduser->key);
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
-    cJSON *const juser = LDi_usertojson(lduser);
+    cJSON *const juser = LDi_usertojson(client, lduser);
     cJSON_AddItemToObject(json, "user", juser);
 
     LDi_wrlock(&eventlock);
@@ -223,8 +223,8 @@ collectSummary()
 }
 
 void
-LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
-    LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
+LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature,
+    int type, double n, const char *s, LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
     summarizeEvent(lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
 
@@ -263,7 +263,7 @@ LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, do
         cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
 
-    cJSON *const juser = LDi_usertojson(lduser);
+    cJSON *const juser = LDi_usertojson(client, lduser);
     cJSON_AddItemToObject(json, "user", juser);
 
     LDi_wrlock(&eventlock);
@@ -273,7 +273,7 @@ LDi_recordfeature(LDUser *lduser, LDNode *res, const char *feature, int type, do
 }
 
 void
-LDi_recordtrack(LDUser *user, const char *name, LDNode *data)
+LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
 {
     if (numevents >= eventscapacity) {
         return;
@@ -284,7 +284,7 @@ LDi_recordtrack(LDUser *user, const char *name, LDNode *data)
     cJSON_AddStringToObject(json, "key", name);
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
 
-    cJSON *const juser = LDi_usertojson(user);
+    cJSON *const juser = LDi_usertojson(client, user);
     cJSON_AddItemToObject(json, "user", juser);
 
     if (data != NULL) {
