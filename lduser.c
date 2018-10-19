@@ -54,7 +54,7 @@ isPrivateAttr(LDClient *const client, const char *const key)
 }
 
 cJSON *
-LDi_usertojson(LDClient *const client, LDUser *lduser)
+LDi_usertojson(LDClient *const client, LDUser *const lduser)
 {
     cJSON *const json = cJSON_CreateObject();
 
