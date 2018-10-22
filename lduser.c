@@ -1,21 +1,30 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-
 LDUser *
 LDUserNew(const char *const key)
 {
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
     LDUser *const user = LDAlloc(sizeof(*user));
+
     if (!user) {
         LDi_log(2, "no memory for user\n");
         return NULL;
     }
     memset(user, 0, sizeof(*user));
 
-    LDSetString(&user->key, key);
-    user->anonymous = false;
+    if (!key || key[0] == '\0') {
+        char randomkey[32 + 1] = { 0 };
+        LDi_randomhex(randomkey, sizeof(randomkey) - 1);
+        LDSetString(&user->key, randomkey);
+        user->anonymous = true;
+    }
+    else {
+        LDSetString(&user->key, key);
+        user->anonymous = false;
+    }
+
     user->secondary = NULL;
     user->ip = NULL;
     user->firstName = NULL;

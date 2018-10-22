@@ -112,7 +112,12 @@ void LDi_log(int level, const char *fmt, ...);
 void (*LDi_statuscallback)(int);
 
 void LDi_millisleep(int ms);
-unsigned int LDi_random(void);
+/* must be called exactly once before rng is used */
+void LDi_initializerng();
+/* returns true on success, leaves result clean on failure*/
+bool LDi_random(unsigned int *result);
+/* returns true on success, may leave buffer dirty */
+bool LDi_randomhex(char *buffer, size_t buffersize);
 void LDi_startthreads(LDClient *client);
 
 /* calls into the store interface */

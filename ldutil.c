@@ -1,9 +1,14 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
+
 #ifndef _WINDOWS
 #include <unistd.h>
+#else
+/* required for rng setup on windows must be before stdlib */
+#define _CRT_RAND_S
 #endif
-#include <math.h>
+
+#include <stdlib.h>
 
 #include "ldapi.h"
 #include "ldinternal.h"
@@ -33,14 +38,55 @@ LDi_millisleep(int ms)
 #endif
 }
 
-unsigned int
-LDi_random(void)
-{
 #ifndef _WINDOWS
-    return random();
-#else
-    return rand();
+static unsigned int LDi_rngstate;
+static ld_mutex_t LDi_rngmtx;
 #endif
+
+void
+LDi_initializerng(){
+#ifndef _WINDOWS
+    LDi_mtxinit(&LDi_rngmtx);
+    LDi_rngstate = time(NULL);
+#endif
+};
+
+bool
+LDi_random(unsigned int *const result)
+{
+    if(!result) { return false; }
+
+#ifndef _WINDOWS
+    LDi_mtxenter(&LDi_rngmtx);
+    const int generated = rand_r(&LDi_rngstate);
+    LDi_mtxleave(&LDi_rngmtx);
+#else
+    unsigned int generated;
+    if (rand_s(&generated)) {
+        return false;
+    }
+#endif
+
+    *result = generated;
+    return true;
+}
+
+bool
+LDi_randomhex(char *const buffer, const size_t buffersize)
+{
+    const char *const alphabet = "0123456789ABCDEF";
+
+    for (size_t i = 0; i < buffersize; i++) {
+        unsigned int rng = 0;
+        if (LDi_random(&rng)) {
+            buffer[i] = alphabet[rng % 16];
+        }
+        else {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 ld_mutex_t LDi_allocmtx;

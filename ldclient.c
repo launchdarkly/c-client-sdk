@@ -30,6 +30,8 @@ LDi_earlyinit(void)
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
+    LDi_initializerng();
+
     theClient = LDAlloc(sizeof(*theClient));
     if (!theClient) {
         LDi_log(2, "no memory for the client\n");
