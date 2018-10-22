@@ -105,24 +105,19 @@ LDi_usertojson(LDClient *const client, LDUser *const lduser, const bool redact)
     addstring(avatar);
 
     if (lduser->custom) {
-        if (redact && isPrivateAttr(client, lduser, "custom")) {
-            addHidden(&hidden, "custom");
-        }
-        else {
-            cJSON *const custom = LDi_hashtojson(lduser->custom);
-            if (redact && cJSON_IsObject(custom)) {
-                for (cJSON *item = custom->child; item;) {
-                    cJSON *const next = item->next; //must record next to make delete safe
-                    if (isPrivateAttr(client, lduser, item->string)) {
-                        addHidden(&hidden, item->string);
-                        cJSON *const current = cJSON_DetachItemFromObjectCaseSensitive(custom, item->string);
-                        cJSON_Delete(current);
-                    }
-                    item = next;
+        cJSON *const custom = LDi_hashtojson(lduser->custom);
+        if (redact && cJSON_IsObject(custom)) {
+            for (cJSON *item = custom->child; item;) {
+                cJSON *const next = item->next; //must record next to make delete safe
+                if (isPrivateAttr(client, lduser, item->string)) {
+                    addHidden(&hidden, item->string);
+                    cJSON *const current = cJSON_DetachItemFromObjectCaseSensitive(custom, item->string);
+                    cJSON_Delete(current);
                 }
+                item = next;
             }
-            cJSON_AddItemToObject(json, "custom", custom);
         }
+        cJSON_AddItemToObject(json, "custom", custom);
     }
 
     if (hidden) {
