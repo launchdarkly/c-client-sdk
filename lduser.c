@@ -58,7 +58,6 @@ isPrivateAttr(LDClient *const client, LDUser *const user, const char *const key)
     return global || (LDNodeLookup(user->privateAttributeNames, key) != NULL);
 }
 
-//checks for duplicates because user may set field in custom
 static void
 addHidden(cJSON **ref, const char *const value){
     if (!(*ref)) { *ref = cJSON_CreateArray(); }
