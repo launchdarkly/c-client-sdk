@@ -39,10 +39,9 @@ LDUserNew(const char *const key)
 }
 
 void
-LDi_freeuser(LDUser *user)
+LDi_freeuser(LDUser *const user)
 {
-    if (!user)
-        return;
+    if (!user) { return; }
     LDFree(user->key);
     LDFree(user->secondary);
     LDFree(user->firstName);
@@ -55,16 +54,48 @@ LDi_freeuser(LDUser *user)
     LDFree(user);
 }
 
-cJSON *
-LDi_usertojson(LDUser *lduser)
+static bool
+isPrivateAttr(LDClient *const client, LDUser *const user, const char *const key)
 {
-    cJSON *json;
+    bool global = false;
 
-    json = cJSON_CreateObject();
+    if (client) {
+        global = client->config->allAttributesPrivate  ||
+            (LDNodeLookup(client->config->privateAttributeNames, key) != NULL);
+    }
+
+    return global || (LDNodeLookup(user->privateAttributeNames, key) != NULL);
+}
+
+static void
+addHidden(cJSON **ref, const char *const value){
+    if (!(*ref)) { *ref = cJSON_CreateArray(); }
+    cJSON_AddItemToArray(*ref, cJSON_CreateString(value));
+}
+
+cJSON *
+LDi_usertojson(LDClient *const client, LDUser *const lduser, const bool redact)
+{
+    cJSON *const json = cJSON_CreateObject();
+
     cJSON_AddStringToObject(json, "key", lduser->key);
-    if (lduser->anonymous)
+
+    if (lduser->anonymous) {
         cJSON_AddBoolToObject(json, "anonymous", lduser->anonymous);
-#define addstring(field) if (lduser->field) cJSON_AddStringToObject(json, #field, lduser->field)
+    }
+
+    cJSON *hidden = NULL;
+
+    #define addstring(field)                                                     \
+        if (lduser->field) {                                                    \
+            if (redact && isPrivateAttr(client, lduser, #field)) {              \
+                addHidden(&hidden, #field);                                     \
+            }                                                                  \
+            else {                                                             \
+                cJSON_AddStringToObject(json, #field, lduser->field);            \
+            }                                                                  \
+        }                                                                      \
+
     addstring(secondary);
     addstring(ip);
     addstring(firstName);
@@ -72,23 +103,61 @@ LDi_usertojson(LDUser *lduser)
     addstring(email);
     addstring(name);
     addstring(avatar);
-#undef addstring
+
     if (lduser->custom) {
-        cJSON_AddItemToObject(json, "custom", LDi_hashtojson(lduser->custom));
+        cJSON *const custom = LDi_hashtojson(lduser->custom);
+        if (redact && cJSON_IsObject(custom)) {
+            for (cJSON *item = custom->child; item;) {
+                cJSON *const next = item->next; //must record next to make delete safe
+                if (isPrivateAttr(client, lduser, item->string)) {
+                    addHidden(&hidden, item->string);
+                    cJSON *const current = cJSON_DetachItemFromObjectCaseSensitive(custom, item->string);
+                    cJSON_Delete(current);
+                }
+                item = next;
+            }
+        }
+        cJSON_AddItemToObject(json, "custom", custom);
     }
+
+    if (hidden) {
+        cJSON_AddItemToObject(json, "privateAttrs", hidden);
+    }
+
     return json;
+
+    #undef addstring
+    #undef addhidden
 }
 
-void
-LDUserAddPrivateAttribute(LDUser *user, const char *key)
+bool
+LDUserAddPrivateAttribute(LDUser *const user, const char *const key)
 {
-    LDNode *node = LDAlloc(sizeof(*node));
+    if (!user) {
+        LDi_log(2, "Passed NULL user to LDUserAddPrivateAttribute\n");
+        return false;
+    }
+
+    if (!key) {
+        LDi_log(2, "Passed NULL attribute key to LDUserAddPrivateAttribute\n");
+        return false;
+    }
+
+    LDNode *const node = LDAlloc(sizeof(*node));
+
+    if (!node) {
+        LDi_log(2, "LDAlloc failed in LDUserAddPrivateAttribute\n");
+        return false;
+    }
+
     memset(node, 0, sizeof(*node));
     node->key = LDi_strdup(key);
     node->type = LDNodeBool;
     node->b = true;
 
     HASH_ADD_KEYPTR(hh, user->privateAttributeNames, node->key, strlen(node->key), node);
+
+    return true;
 }
 
 bool
@@ -121,28 +190,39 @@ LDUserSetIP(LDUser *user, const char *str)
 {
     LDSetString(&user->ip, str);
 }
+
 void
 LDUserSetFirstName(LDUser *user, const char *str)
 {
     LDSetString(&user->firstName, str);
 }
+
 void
 LDUserSetLastName(LDUser *user, const char *str)
 {
     LDSetString(&user->lastName, str);
 }
+
 void
 LDUserSetEmail(LDUser *user, const char *str)
 {
     LDSetString(&user->email, str);
 }
+
 void
 LDUserSetName(LDUser *user, const char *str)
 {
     LDSetString(&user->name, str);
 }
+
 void
 LDUserSetAvatar(LDUser *user, const char *str)
 {
     LDSetString(&user->avatar, str);
+}
+
+void
+LDUserSetSecondary(LDUser *user, const char *str)
+{
+    LDSetString(&user->secondary, str);
 }

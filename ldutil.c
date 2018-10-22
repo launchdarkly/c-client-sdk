@@ -194,9 +194,9 @@ void LDi_once(ld_once_t *once, void (*fn)(void))
 #endif
 
 char *
-LDi_usertojsontext(LDUser *user)
+LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact)
 {
-    cJSON *const jsonuser = LDi_usertojson(user);
+    cJSON *const jsonuser = LDi_usertojson(client, user, redact);
 
     if (!jsonuser) {
         LDi_log(2, "LDi_usertojson failed in LDi_usertojsontext\n");

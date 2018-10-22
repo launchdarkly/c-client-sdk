@@ -66,7 +66,8 @@ void LDConfigSetStreaming(LDConfig *config, bool streaming);
 void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
-void LDConfigAddPrivateAttribute(LDConfig *, const char *name);
+/* returns true on success */
+bool LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
 
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
@@ -82,10 +83,12 @@ void LDUserSetLastName(LDUser *user, const char *str);
 void LDUserSetEmail(LDUser *user, const char *str);
 void LDUserSetName(LDUser *user, const char *str);
 void LDUserSetAvatar(LDUser *user, const char *str);
+void LDUserSetSecondary(LDUser *user, const char *str);
 
 bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
 void LDUSerSetCustomAttributes(LDUser *user, LDNode *custom);
-void LDUserAddPrivateAttribute(LDUser *, const char *name);
+/* returns true on success */
+bool LDUserAddPrivateAttribute(LDUser *user, const char *attribute);
 
 char *LDClientSaveFlags(struct LDClient_i *client);
 void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
