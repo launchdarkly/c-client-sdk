@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <assert.h>
 
 #include "ldapi.h"
 #include "ldinternal.h"
@@ -29,9 +30,7 @@ test1(LDClient *const client)
     LDNodeAddBool(&user->custom, "bossmode", true);
     LDNodeAddString(&user->custom, "species", "krell");
 
-    LDClientIdentify(client, user);
-
-    cJSON *const json = LDi_usertojson(client, user);
+    cJSON *const json = LDi_usertojson(client, user, true);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -56,9 +55,7 @@ test2(LDClient *const client)
     LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
 
-    LDClientIdentify(client, user);
-
-    cJSON *const json = LDi_usertojson(client, user);
+    cJSON *const json = LDi_usertojson(client, user, true);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -72,7 +69,7 @@ test2(LDClient *const client)
 }
 
 /*
- * Test private attribute
+ * Test private attributes
  */
 void
 test3(LDClient *const client)
@@ -80,15 +77,15 @@ test3(LDClient *const client)
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
     LDUserSetAvatar(user, "pirate");
+    LDUserSetCustomAttributesJSON(user, "{\"food\": [\"apple\"], \"count\": 23}");
 
-    LDUserAddPrivateAttribute(user, "avatar");
+    assert(LDUserAddPrivateAttribute(user, "count"));
+    assert(LDUserAddPrivateAttribute(user, "avatar"));
 
-    LDClientIdentify(client, user);
-
-    cJSON *const json = LDi_usertojson(client, user);
+    cJSON *const json = LDi_usertojson(client, user, true);
     const char *const str = cJSON_PrintUnformatted(json);
 
-    const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"privateAttrs\":[\"avatar\"]}";
+    const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"custom\":{\"food\":[\"apple\"]},\"privateAttrs\":[\"avatar\",\"count\"]}";
 
     if (strcmp(str, expected) != 0) {
         printf("ERROR: User json %s was not expected\n", str);

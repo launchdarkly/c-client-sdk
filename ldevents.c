@@ -50,7 +50,7 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
     cJSON_AddStringToObject(json, "kind", "identify");
     cJSON_AddStringToObject(json, "key", lduser->key);
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
-    cJSON *const juser = LDi_usertojson(client, lduser);
+    cJSON *const juser = LDi_usertojson(client, lduser, true);
     cJSON_AddItemToObject(json, "user", juser);
 
     cJSON_AddItemToArray(eventarray, json);
@@ -268,7 +268,7 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
         cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
 
-    cJSON *const juser = LDi_usertojson(client, lduser);
+    cJSON *const juser = LDi_usertojson(client, lduser, true);
     cJSON_AddItemToObject(json, "user", juser);
 
     cJSON_AddItemToArray(eventarray, json);
@@ -291,7 +291,7 @@ LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
     cJSON_AddStringToObject(json, "key", name);
     cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
 
-    cJSON *const juser = LDi_usertojson(client, user);
+    cJSON *const juser = LDi_usertojson(client, user, true);
     cJSON_AddItemToObject(json, "user", juser);
 
     if (data != NULL) {

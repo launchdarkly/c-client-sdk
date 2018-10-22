@@ -105,8 +105,8 @@ void LDi_onstreameventput(const char *data);
 void LDi_onstreameventpatch(const char *data);
 void LDi_onstreameventdelete(const char *data);
 
-char *LDi_usertojsontext(LDClient *client, LDUser *lduser);
-cJSON *LDi_usertojson(LDClient *client, LDUser *lduser);
+char *LDi_usertojsontext(LDClient *client, LDUser *lduser, bool redact);
+cJSON *LDi_usertojson(LDClient *client, LDUser *lduser, bool redact);
 
 void LDi_log(int level, const char *fmt, ...);
 void (*LDi_statuscallback)(int);
