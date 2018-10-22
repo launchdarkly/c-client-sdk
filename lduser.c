@@ -62,15 +62,7 @@ isPrivateAttr(LDClient *const client, LDUser *const user, const char *const key)
 static void
 addHidden(cJSON **ref, const char *const value){
     if (!(*ref)) { *ref = cJSON_CreateArray(); }
-    cJSON *const hidden = *ref; bool exists = false;
-    for (cJSON *item = hidden->child; item; item = item->next) {
-        if (strcmp(item->valuestring, value) == 0) {
-            exists = true; break;
-        }
-    }
-    if (!exists) {
-        cJSON_AddItemToArray(hidden, cJSON_CreateString(value));
-    }
+    cJSON_AddItemToArray(*ref, cJSON_CreateString(value));
 }
 
 cJSON *
