@@ -82,9 +82,9 @@ SocketCallback(void cbhandle(int), curlsocktype type, struct curl_sockaddr *addr
 {
     curl_socket_t fd = socket(addr->family, addr->socktype, addr->protocol);
     if (cbhandle) {
-        LDi_log(LD_LOG_DEBUG, "about to call connection handle callback \n");
+        LDi_log(LD_LOG_TRACE, "about to call connection handle callback \n");
         cbhandle(fd);
-        LDi_log(LD_LOG_DEBUG, "finished calling connection handle callback\n");
+        LDi_log(LD_LOG_TRACE, "finished calling connection handle callback\n");
     }
     return fd;
 };
@@ -101,12 +101,12 @@ prepareShared(const char *const url, const char *const authkey, CURL **r_curl, s
     }
 
     if (curl_easy_setopt(curl, CURLOPT_URL, url) != CURLE_OK) {
-        LDi_log(LD_LOG_ERROR, "curl_easy_setopt CURLOPT_URL failed\n"); goto error;
+        LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_URL failed on: %s\n", url); goto error;
     }
 
     char headerauth[256];
     if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s", authkey) < 0) {
-        LDi_log(LD_LOG_ERROR, "snprintf during Authorization header creation failed\n"); goto error;
+        LDi_log(LD_LOG_CRITICAL, "snprintf during Authorization header creation failed\n"); goto error;
     }
 
     struct curl_slist *headers = NULL;
@@ -197,7 +197,7 @@ LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cb
     char url[4096];
     if (usereport) {
         if (snprintf(url, sizeof(url), "%s/meval", urlprefix) < 0) {
-            LDi_log(LD_LOG_ERROR, "snprintf usereport failed\n"); return;
+            LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return;
         }
     }
     else {
@@ -217,7 +217,7 @@ LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cb
     }
 
     if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
-        LDi_log(LD_LOG_ERROR, "LDi_readstream prepareShared failed\n"); return;
+        return;
     }
 
     if (usereport) {
@@ -320,7 +320,7 @@ LDi_fetchfeaturemap(const char *urlprefix, const char *authkey, int *response,
     }
 
     if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
-        LDi_log(LD_LOG_ERROR, "fetch_url prepareShared failed\n"); return NULL;
+        return NULL;
     }
 
     if (usereport) {
@@ -370,7 +370,7 @@ LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
     if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
-        LDi_log(LD_LOG_ERROR, "post_data prepareShared failed\n"); return;
+        return;
     }
 
     const char* const headermime = "Content-Type: application/json";

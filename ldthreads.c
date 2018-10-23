@@ -43,9 +43,11 @@ bgeventsender(void *v)
         }
         LDi_rdunlock(&LDi_clientlock);
 
+        LDi_log(LD_LOG_TRACE, "bg sender sleeping\n");
         LDi_mtxenter(&LDi_condmtx);
         LDi_condwait(&LDi_bgeventcond, &LDi_condmtx, ms);
         LDi_mtxleave(&LDi_condmtx);
+        LDi_log(LD_LOG_TRACE, "bgsender running\n");
 
         char *const eventdata = LDi_geteventdata();
         if (!eventdata) { continue; }
@@ -235,7 +237,6 @@ applypatch(cJSON *payload, bool isdelete)
         HASH_FIND_STR(hash, node->key, res);
         if (res && res->version > node->version) {
             /* stale patch, skip */
-            LDi_log(LD_LOG_WARNING, "patch for %s version %d is staler than %d\n", node->key, node->version, res->version);
             continue;
         }
         if (res) {

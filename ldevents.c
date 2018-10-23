@@ -42,7 +42,7 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
     LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
         LDi_wrunlock(&eventlock);
-        LDi_log(LD_LOG_WARNING, "LDi_recordidentify event capacity exceeded\n");
+        LDi_log(LD_LOG_WARNING, "event capacity exceeded\n");
         return;
     }
 
@@ -277,7 +277,7 @@ LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
     LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
         LDi_wrunlock(&eventlock);
-        LDi_log(LD_LOG_WARNING, "LDi_recordtrack event capacity exceeded\n");
+        LDi_log(LD_LOG_WARNING, "event capacity exceeded\n");
         return;
     }
 
