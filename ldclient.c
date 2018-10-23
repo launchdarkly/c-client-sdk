@@ -34,7 +34,7 @@ LDi_earlyinit(void)
 
     theClient = LDAlloc(sizeof(*theClient));
     if (!theClient) {
-        LDi_log(2, "no memory for the client\n");
+        LDi_log(LD_LOG_CRITICAL, "no memory for the client\n");
         return;
     }
     memset(theClient, 0, sizeof(*theClient));
@@ -55,7 +55,7 @@ LDConfigNew(const char *mobileKey)
 
     config = LDAlloc(sizeof(*config));
     if (!config) {
-        LDi_log(2, "no memory for config\n");
+        LDi_log(LD_LOG_CRITICAL, "no memory for config\n");
         return NULL;
     }
     memset(config, 0, sizeof(*config));
@@ -161,8 +161,6 @@ LDClientInit(LDConfig *config, LDUser *user)
 {
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
-    LDi_log(10, "LDClientInit called\n");
-
     checkconfig(config);
 
     LDi_initevents(config->eventsCapacity);
@@ -198,7 +196,6 @@ LDClientInit(LDConfig *config, LDUser *user)
     LDi_recordidentify(client, user);
     LDi_wrunlock(&LDi_clientlock);
 
-    LDi_log(10, "Client init done\n");
     LDi_once(&LDi_threadsonce, threadsinit);
 
     return client;
@@ -354,7 +351,7 @@ LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor
     cJSON *payload = cJSON_Parse(data);
 
     if (!payload) {
-        LDi_log(5, "parsing failed\n");
+        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags parsing failed\n");
         return false;
     }
     LDNode *hash = NULL;
@@ -408,10 +405,8 @@ LDBoolVariation(LDClient *const client, const char *const key, const bool fallba
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
     if (node && node->type == LDNodeBool) {
-        LDi_log(15, "found result for %s\n", key);
         result = node->b;
     } else {
-        LDi_log(15, "no result for %s\n", key);
         result = fallback;
     }
 
@@ -622,7 +617,7 @@ LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
     LDNode *const node = LDAlloc(sizeof(*node));
 
     if (!node) {
-        LDi_log(5, "LDAlloc failed in LDConfigAddPrivateAttribute\n");
+        LDi_log(LD_LOG_CRITICAL, "LDAlloc failed in LDConfigAddPrivateAttribute\n");
         return false;
     }
 

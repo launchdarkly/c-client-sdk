@@ -9,6 +9,15 @@
 extern "C" {
 #endif
 
+enum ld_log_level {
+    LD_LOG_CRITICAL = 0,
+    LD_LOG_ERROR,
+    LD_LOG_WARNING,
+    LD_LOG_INFO,
+    LD_LOG_DEBUG,
+    LD_LOG_TRACE
+};
+
 typedef enum {
     LDNodeNone = 0,
     LDNodeString,
