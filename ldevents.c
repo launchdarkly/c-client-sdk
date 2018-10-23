@@ -42,7 +42,7 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
     LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
         LDi_wrunlock(&eventlock);
-        LDi_log(5, "LDi_recordidentify event capacity exceeded\n");
+        LDi_log(LD_LOG_WARNING, "LDi_recordidentify event capacity exceeded\n");
         return;
     }
 
@@ -109,7 +109,7 @@ static void
 summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
 {
-    LDi_log(40, "updating summary for %s\n", feature);
+    LDi_log(LD_LOG_TRACE, "updating summary for %s\n", feature);
 
     LDi_wrlock(&eventlock);
 
@@ -141,7 +141,7 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
     }
 
     if (keystatus < 0) {
-        LDi_log(5, "preparing key failed in summarizeEvent\n");
+        LDi_log(LD_LOG_CRITICAL, "preparing key failed in summarizeEvent\n");
         LDi_wrunlock(&eventlock); return;
     }
 
@@ -178,14 +178,11 @@ collectSummary()
 
     LDNode *feature, *tmp;
     HASH_ITER(hh, summaryEvent, feature, tmp) {
-        LDi_log(40, "json summary for %s\n", feature->key);
         cJSON *const jfeature = cJSON_CreateObject();
         cJSON *const counterarray = cJSON_CreateArray();
 
         LDNode *counter, *tmp2;
         HASH_ITER(hh, feature->h, counter, tmp2) {
-            LDi_log(40, "json summary variation %s\n", counter->key);
-
             if (strcmp(counter->key, "default") == 0) {
                 addNodeToJSONObject(jfeature, "default", counter);
                 // don't record default in flags if not used
@@ -234,12 +231,10 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
         return;
     }
 
-    LDi_log(40, "choosing to track %s %d\n", feature, res->track);
-
     LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
         LDi_wrunlock(&eventlock);
-        LDi_log(5, "LDi_recordfeature event capacity exceeded\n");
+        LDi_log(LD_LOG_WARNING, "LDi_recordfeature event capacity exceeded\n");
         return;
     }
 
@@ -282,7 +277,7 @@ LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
     LDi_wrlock(&eventlock);
     if (numevents >= eventscapacity) {
         LDi_wrunlock(&eventlock);
-        LDi_log(5, "LDi_recordtrack event capacity exceeded\n");
+        LDi_log(LD_LOG_WARNING, "LDi_recordtrack event capacity exceeded\n");
         return;
     }
 

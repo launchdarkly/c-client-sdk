@@ -334,9 +334,6 @@ LDi_jsontohash(cJSON *json, int flavor)
                     break;
                 }
             }
-            if (!valueitem) {
-                LDi_log(5, "version with no value\n");
-            }
             break;
         case 2:
             /* patch, the key is also hiding one level down */
@@ -365,9 +362,6 @@ LDi_jsontohash(cJSON *json, int flavor)
                 if (strcmp(valueitem->string, "value") == 0) {
                     break;
                 }
-            }
-            if (!valueitem) {
-                LDi_log(5, "lost the value\n");
             }
             break;
         }

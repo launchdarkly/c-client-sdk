@@ -43,12 +43,12 @@ char *
 LDi_loaddata(const char *dataname, const char *username)
 {
     char *data = NULL;
-    
+
     if (!store_readstring)
         return NULL;
     char fullname[1024];
     snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username);
-    LDi_log(15, "About to open abstract file %s\n", fullname);
+    LDi_log(LD_LOG_INFO, "About to open abstract file %s\n", fullname);
     void *handle = store_open(store_ctx, fullname, "r", 0);
     if (!handle)
         return NULL;
@@ -78,7 +78,7 @@ LD_store_fileopen(void *context, const char *name, const char *mode, size_t len)
     snprintf(filename, sizeof(filename), "LD-%s.txt", name);
     handle->fp = fopen(filename, mode);
     if (!handle->fp) {
-        LDi_log(10, "Failed to open %s\n", filename);
+        LDi_log(LD_LOG_ERROR, "Failed to open %s\n", filename);
         LDFree(handle);
         return NULL;
     }
@@ -99,14 +99,14 @@ LD_store_fileread(void *h)
     struct stdio_store *handle = h;
     char *buf;
     size_t bufsize, bufspace, buflen;
-    
+
     buflen = 0;
     bufspace = bufsize = 4096;
     bufspace--; /* save a byte for nul */
     buf = malloc(bufsize);
     if (!buf)
         return NULL;
-    
+
     while (true) {
         size_t amt = fread(buf + buflen, 1, bufspace, handle->fp);
         buflen += amt;
@@ -128,7 +128,6 @@ LD_store_fileread(void *h)
     }
     buf[buflen] = 0;
     handle->s = buf;
-    LDi_log(15, "Read %ld bytes of string\n", (long)buflen);
     return buf;
 }
 

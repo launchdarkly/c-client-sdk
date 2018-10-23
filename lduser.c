@@ -9,7 +9,7 @@ LDUserNew(const char *const key)
     LDUser *const user = LDAlloc(sizeof(*user));
 
     if (!user) {
-        LDi_log(2, "no memory for user\n");
+        LDi_log(LD_LOG_CRITICAL, "no memory for user\n");
         return NULL;
     }
     memset(user, 0, sizeof(*user));
@@ -134,19 +134,19 @@ bool
 LDUserAddPrivateAttribute(LDUser *const user, const char *const key)
 {
     if (!user) {
-        LDi_log(2, "Passed NULL user to LDUserAddPrivateAttribute\n");
+        LDi_log(LD_LOG_ERROR, "Passed NULL user to LDUserAddPrivateAttribute\n");
         return false;
     }
 
     if (!key) {
-        LDi_log(2, "Passed NULL attribute key to LDUserAddPrivateAttribute\n");
+        LDi_log(LD_LOG_ERROR, "Passed NULL attribute key to LDUserAddPrivateAttribute\n");
         return false;
     }
 
     LDNode *const node = LDAlloc(sizeof(*node));
 
     if (!node) {
-        LDi_log(2, "LDAlloc failed in LDUserAddPrivateAttribute\n");
+        LDi_log(LD_LOG_CRITICAL, "LDAlloc failed in LDUserAddPrivateAttribute\n");
         return false;
     }
 

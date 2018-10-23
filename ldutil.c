@@ -199,7 +199,7 @@ LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact
     cJSON *const jsonuser = LDi_usertojson(client, user, redact);
 
     if (!jsonuser) {
-        LDi_log(2, "LDi_usertojson failed in LDi_usertojsontext\n");
+        LDi_log(LD_LOG_ERROR, "LDi_usertojson failed in LDi_usertojsontext\n");
         return NULL;
     }
 
@@ -207,7 +207,7 @@ LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact
     cJSON_Delete(jsonuser);
 
     if (!textuser) {
-        LDi_log(2, "cJSON_PrintUnformatted failed in LDi_usertojsontext\n");
+        LDi_log(LD_LOG_ERROR, "cJSON_PrintUnformatted failed in LDi_usertojsontext\n");
         return NULL;
     }
 
