@@ -10,7 +10,8 @@ extern "C" {
 #endif
 
 enum ld_log_level {
-    LD_LOG_CRITICAL = 0,
+    LD_LOG_FATAL = 0,
+    LD_LOG_CRITICAL,
     LD_LOG_ERROR,
     LD_LOG_WARNING,
     LD_LOG_INFO,
@@ -58,7 +59,8 @@ typedef struct LDUser_i LDUser;
 
 struct LDClient_i;
 
-void LDSetString(char **, const char *);
+/* returns true on success */
+bool LDSetString(char **target, const char *value);
 
 LDConfig *LDConfigNew(const char *);
 void LDConfigSetAllAttributesPrivate(LDConfig *config, bool allprivate);
@@ -75,8 +77,7 @@ void LDConfigSetStreaming(LDConfig *config, bool streaming);
 void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
-/* returns true on success */
-bool LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
+void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
 
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
@@ -96,8 +97,7 @@ void LDUserSetSecondary(LDUser *user, const char *str);
 
 bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
 void LDUSerSetCustomAttributes(LDUser *user, LDNode *custom);
-/* returns true on success */
-bool LDUserAddPrivateAttribute(LDUser *user, const char *attribute);
+void LDUserAddPrivateAttribute(LDUser *user, const char *attribute);
 
 char *LDClientSaveFlags(struct LDClient_i *client);
 void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
@@ -181,7 +181,7 @@ typedef void (*LDlistenerfn)(const char *, int);
 /*
  * register a new listener.
  */
-bool LDClientRegisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
+void LDClientRegisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
 bool LDClientUnregisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
 
 #if !defined(__cplusplus) && !defined(LD_C_API)
@@ -223,7 +223,7 @@ class LDClient {
         void flush(void);
         void close(void);
 
-        bool registerFeatureFlagListener(const std::string &name, LDlistenerfn fn);
+        void registerFeatureFlagListener(const std::string &name, LDlistenerfn fn);
         bool unregisterFeatureFlagListener(const std::string &name, LDlistenerfn fn);
 
     private:
