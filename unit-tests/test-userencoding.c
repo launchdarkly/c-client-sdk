@@ -78,9 +78,8 @@ test3(LDClient *const client)
     LDUserSetFirstName(user, "Tsrif");
     LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"food\": [\"apple\"], \"count\": 23}");
-
-    assert(LDUserAddPrivateAttribute(user, "count"));
-    assert(LDUserAddPrivateAttribute(user, "avatar"));
+    LDUserAddPrivateAttribute(user, "count");
+    LDUserAddPrivateAttribute(user, "avatar");
 
     cJSON *const json = LDi_usertojson(client, user, true);
     const char *const str = cJSON_PrintUnformatted(json);

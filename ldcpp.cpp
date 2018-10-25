@@ -129,13 +129,11 @@ void LDClient::restoreFlags(const std::string &flags)
     LDClientRestoreFlags(this->client, flags.c_str());
 }
 
-bool LDClient::registerFeatureFlagListener(const std::string &name, LDlistenerfn fn)
+void LDClient::registerFeatureFlagListener(const std::string &name, LDlistenerfn fn)
 {
-    return LDClientRegisterFeatureFlagListener(this->client, name.c_str(), fn);
+    LDClientRegisterFeatureFlagListener(this->client, name.c_str(), fn);
 }
 bool LDClient::unregisterFeatureFlagListener(const std::string &name, LDlistenerfn fn)
 {
     return LDClientUnregisterFeatureFlagListener(this->client, name.c_str(), fn);
 }
-
-

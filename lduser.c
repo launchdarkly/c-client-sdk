@@ -6,12 +6,7 @@ LDUserNew(const char *const key)
 {
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
-    LDUser *const user = LDAlloc(sizeof(*user));
-
-    if (!user) {
-        LDi_log(LD_LOG_CRITICAL, "no memory for user\n");
-        return NULL;
-    }
+    LDUser *const user = LDAlloc(sizeof(*user)); LD_ASSERT(user != NULL);
     memset(user, 0, sizeof(*user));
 
     if (!key || key[0] == '\0') {
@@ -130,99 +125,94 @@ LDi_usertojson(LDClient *const client, LDUser *const lduser, const bool redact)
     #undef addhidden
 }
 
-bool
+void
 LDUserAddPrivateAttribute(LDUser *const user, const char *const key)
 {
-    if (!user) {
-        LDi_log(LD_LOG_ERROR, "Passed NULL user to LDUserAddPrivateAttribute\n");
-        return false;
-    }
+    LD_ASSERT(user); LD_ASSERT(key);
 
-    if (!key) {
-        LDi_log(LD_LOG_ERROR, "Passed NULL attribute key to LDUserAddPrivateAttribute\n");
-        return false;
-    }
-
-    LDNode *const node = LDAlloc(sizeof(*node));
-
-    if (!node) {
-        LDi_log(LD_LOG_CRITICAL, "LDAlloc failed in LDUserAddPrivateAttribute\n");
-        return false;
-    }
-
+    LDNode *const node = LDAlloc(sizeof(*node)); LD_ASSERT(node);
     memset(node, 0, sizeof(*node));
+
     node->key = LDi_strdup(key);
     node->type = LDNodeBool;
     node->b = true;
+    LD_ASSERT(node->key);
 
     HASH_ADD_KEYPTR(hh, user->privateAttributeNames, node->key, strlen(node->key), node);
 
-    return true;
+    return;
 }
 
 bool
-LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring)
+LDUserSetCustomAttributesJSON(LDUser *const user, const char *const jstring)
 {
-    cJSON *json = cJSON_Parse(jstring);
-    if (!json) {
-        return false;
+    LD_ASSERT(user);
+
+    if (jstring) {
+        cJSON *const json = cJSON_Parse(jstring);
+        if (!json) {
+            return false;
+        }
+        user->custom = LDi_jsontohash(json, 0);
+        cJSON_Delete(json);
     }
-    user->custom = LDi_jsontohash(json, 0);
-    cJSON_Delete(json);
+    else {
+        user->custom = NULL;
+    }
 
     return true;
 }
 
 void
-LDUSerSetCustomAttributes(LDUser *user, LDNode *custom)
+LDUserSetCustomAttributes(LDUser *const user, LDNode *const custom)
 {
-    user->custom = custom;
+    LD_ASSERT(user); user->custom = custom;
 }
 
 void
-LDUserSetAnonymous(LDUser *user, bool anon)
+LDUserSetAnonymous(LDUser *const user, const bool anon)
 {
-    user->anonymous = anon;
+    LD_ASSERT(user); user->anonymous = anon;
 }
 
 void
-LDUserSetIP(LDUser *user, const char *str)
+LDUserSetIP(LDUser *const user, const char *const str)
 {
-    LDSetString(&user->ip, str);
+    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->ip, str));
 }
 
 void
-LDUserSetFirstName(LDUser *user, const char *str)
+LDUserSetFirstName(LDUser *const user, const char *const str)
 {
-    LDSetString(&user->firstName, str);
+    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->firstName, str));
 }
 
 void
-LDUserSetLastName(LDUser *user, const char *str)
+LDUserSetLastName(LDUser *const user, const char *const str)
 {
-    LDSetString(&user->lastName, str);
+    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->lastName, str));
 }
 
 void
-LDUserSetEmail(LDUser *user, const char *str)
+LDUserSetEmail(LDUser *const user, const char *const str)
 {
-    LDSetString(&user->email, str);
+    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->email, str));
 }
 
 void
-LDUserSetName(LDUser *user, const char *str)
+LDUserSetName(LDUser *const user, const char *const str)
 {
-    LDSetString(&user->name, str);
+    LD_ASSERT(user); LDSetString(&user->name, str);
 }
 
 void
-LDUserSetAvatar(LDUser *user, const char *str)
+LDUserSetAvatar(LDUser *const user, const char *const str)
 {
-    LDSetString(&user->avatar, str);
+    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->avatar, str));
 }
 
 void
-LDUserSetSecondary(LDUser *user, const char *str)
+LDUserSetSecondary(LDUser *const user, const char *const str)
 {
-    LDSetString(&user->secondary, str);
+    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->secondary, str));
 }

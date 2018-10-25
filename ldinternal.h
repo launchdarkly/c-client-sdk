@@ -111,6 +111,12 @@ cJSON *LDi_usertojson(LDClient *client, LDUser *lduser, bool redact);
 void LDi_log(int level, const char *fmt, ...);
 void (*LDi_statuscallback)(int);
 
+#define LD_ASSERT(condition) \
+    if (!(condition)) { \
+        LDi_log(0, "LD_ASSERT failed: expected condition '%s' in function '%s' aborting", #condition, __func__); \
+        abort(); \
+    } \
+
 void LDi_millisleep(int ms);
 /* must be called exactly once before rng is used */
 void LDi_initializerng();
@@ -142,7 +148,6 @@ char *LDi_loaddata(const char *dataname, const char *username);
 
 #define ld_cond_t pthread_cond_t
 #define LD_COND_INIT PTHREAD_COND_INITIALIZER
-
 
 #define ld_once_t pthread_once_t
 #define LD_ONCE_INIT PTHREAD_ONCE_INIT

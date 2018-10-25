@@ -16,15 +16,22 @@
 /*
  * set a string value, copying the memory, and freeing the old.
  */
-void
-LDSetString(char **target, const char *value)
+bool
+LDSetString(char **const target, const char *const value)
 {
-    LDFree(*target);
-    if (value) {
-        *target = LDi_strdup(value);
-    } else {
-        *target = NULL;
+    if (target) {
+        LDFree(*target);
+        if (value) {
+            *target = LDi_strdup(value);
+            if (*target) {
+                return true;
+            }
+        } else {
+            *target = NULL;
+            return true;
+        }
     }
+    return false;
 }
 
 void
