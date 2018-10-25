@@ -176,7 +176,11 @@ progressinspector(void *v, double dltotal, double dlnow, double ultotal, double 
 void
 LDi_cancelread(int handle)
 {
+    #ifdef _WINDOWS
+    shutdown(handle, SD_BOTH);
+    #else
     shutdown(handle, SHUT_RDWR);
+    #endif
 }
 
 /*
