@@ -139,8 +139,6 @@ LDUserAddPrivateAttribute(LDUser *const user, const char *const key)
     LD_ASSERT(node->key);
 
     HASH_ADD_KEYPTR(hh, user->privateAttributeNames, node->key, strlen(node->key), node);
-
-    return;
 }
 
 bool
