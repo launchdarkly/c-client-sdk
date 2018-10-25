@@ -155,6 +155,7 @@ LDUserSetCustomAttributesJSON(LDUser *const user, const char *const jstring)
         cJSON_Delete(json);
     }
     else {
+        LDi_freehash(user->custom);
         user->custom = NULL;
     }
 
@@ -164,7 +165,9 @@ LDUserSetCustomAttributesJSON(LDUser *const user, const char *const jstring)
 void
 LDUserSetCustomAttributes(LDUser *const user, LDNode *const custom)
 {
-    LD_ASSERT(user); user->custom = custom;
+    LD_ASSERT(user);
+    LDi_freehash(user->custom);
+    user->custom = custom;
 }
 
 void
