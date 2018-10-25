@@ -113,7 +113,7 @@ void (*LDi_statuscallback)(int);
 
 #define LD_ASSERT(condition) \
     if (!(condition)) { \
-        LDi_log(0, "LD_ASSERT failed: expected condition '%s' in function '%s' aborting", #condition, __func__); \
+        LDi_log(0, "LD_ASSERT failed: expected condition '%s' in function '%s' aborting\n", #condition, __func__); \
         abort(); \
     } \
 
