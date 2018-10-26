@@ -1,14 +1,23 @@
-CURL=curl-7.59.0/builds/libcurl-vc-x86-release-static-ipv6-sspi-winssl
-CFLAGS=/I $(CURL)/include /DCURL_STATICLIB
+#CURL=curl-7.59.0/builds/libcurl-vc-x86-release-static-ipv6-sspi-winssl
+CURL=curl-7.59.0/builds/libcurl-vc-x64-release-static-ipv6-sspi-winssl
+CFLAGS=/I $(CURL)/include /DCURL_STATICLIB /D_WINDOWS /MD
 CC=cl $(CFLAGS)
+CPP=cl $(CFLAGS) /EHsc
+CSRCS=ldclient.c ldutil.c lduser.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c ldstore.c base64.c cJSON.c
+COBJS=$(CSRCS:.c=.obj) ldcpp.obj
 
 all: test.exe
 
 clean:
-	del test.exe
+	del test.exe *.obj *.dll *.lib
 
-test.exe: test.c ldapi.h ldnet.c $(CURL)/lib/libcurl_a.lib
-	$(CC) /MD /Fe: test.exe test.c ldnet.c $(CURL)/lib/libcurl_a.lib
+curl: $(CURL)/lib/libcurl_a.lib
+
+test.exe: ldapi.h test.obj ldapi.dll
+	$(CC) /Fe: test.exe test.obj /link ldapi.lib
+
+ldapi.dll: ldapi.def ldapi.h $(COBJS) $(CURL)/lib/libcurl_a.lib
+	link /OUT:ldapi.dll /DLL /DEF:ldapi.def $(COBJS) $(CURL)/lib/libcurl_a.lib
 
 $(CURL)/lib/libcurl_a.lib:
 	cd curl-7.59.0/winbuild

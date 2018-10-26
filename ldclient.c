@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef _WINDOWS
 #include <unistd.h>
-#include <pthread.h>
+#endif
 #include <math.h>
 
 #include "curl/curl.h"
@@ -9,222 +10,214 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
+ld_once_t LDi_earlyonce = LD_ONCE_INIT;
+ld_once_t LDi_threadsonce = LD_ONCE_INIT;
 
-static pthread_once_t clientonce = PTHREAD_ONCE_INIT;
-static pthread_t eventthread;
-static pthread_t pollingthread;
+ld_cond_t LDi_initcond = LD_COND_INIT;
+ld_mutex_t LDi_initcondmtx;
 
 static LDClient *theClient;
-static pthread_rwlock_t clientlock = PTHREAD_RWLOCK_INITIALIZER;
+ld_rwlock_t LDi_clientlock = LD_RWLOCK_INIT;
+
+void (*LDi_statuscallback)(int);
 
 void
-LDSetString(char **target, const char *value)
+LDi_earlyinit(void)
 {
-    free(*target);
-    if (value) {
-        *target = strdup(value);
-    } else {
-        *target = NULL;
+    LDi_mtxinit(&LDi_allocmtx);
+    LDi_mtxinit(&LDi_initcondmtx);
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    LDi_initializerng();
+
+    theClient = LDAlloc(sizeof(*theClient));
+    if (!theClient) {
+        LDi_log(LD_LOG_CRITICAL, "no memory for the client\n");
+        return;
     }
+    memset(theClient, 0, sizeof(*theClient));
+}
+
+static void
+threadsinit(void)
+{
+    LDi_startthreads(theClient);
 }
 
 LDConfig *
-LDConfigNew(const char *mobileKey)
+LDConfigNew(const char *const mobileKey)
 {
-    LDConfig *config;
+    LD_ASSERT(mobileKey);
 
-    config = malloc(sizeof(*config));
+    LDi_once(&LDi_earlyonce, LDi_earlyinit);
+
+    LDConfig *const config = LDAlloc(sizeof(*config)); LD_ASSERT(config);
+
+    memset(config, 0, sizeof(*config));
+
+    LD_ASSERT(LDSetString(&config->appURI, "https://app.launchdarkly.com"));
+
+    LD_ASSERT(LDSetString(&config->eventsURI, "https://mobile.launchdarkly.com"));
+
+    LD_ASSERT(LDSetString(&config->mobileKey, mobileKey));
+
+    LD_ASSERT(LDSetString(&config->streamURI, "https://clientstream.launchdarkly.com"));
+
     config->allAttributesPrivate = false;
     config->backgroundPollingIntervalMillis = 3600000;
-    LDSetString(&config->appURI, "https://app.launchdarkly.com");
     config->connectionTimeoutMillis = 10000;
     config->disableBackgroundUpdating = false;
     config->eventsCapacity = 100;
     config->eventsFlushIntervalMillis = 30000;
-    LDSetString(&config->eventsURI, "https://mobile.launchdarkly.com");
-    LDSetString(&config->mobileKey, mobileKey);
     config->offline = false;
     config->pollingIntervalMillis = 300000;
     config->privateAttributeNames = NULL;
     config->streaming = true;
-    LDSetString(&config->streamURI, "https://clientstream.launchdarkly.com");
     config->useReport = false;
 
     return config;
 }
 
-LDUser *
-LDUserNew(const char *key)
+void LDConfigSetAllAttributesPrivate(LDConfig *const config, const bool private)
 {
-    LDUser *user;
+    LD_ASSERT(config); config->allAttributesPrivate = private;
+}
 
-    user = malloc(sizeof(*user));
-    LDSetString(&user->key, key);
-    user->anonymous = false;
-    user->secondary = NULL;
-    user->ip = NULL;
-    user->firstName = NULL;
-    user->lastName = NULL;
-    user->avatar = NULL;
-    user->custom = NULL;
-    user->privateAttributeNames = NULL;
+void LDConfigSetBackgroundPollingIntervalMillis(LDConfig *const config, const int millis)
+{
+    LD_ASSERT(config); config->backgroundPollingIntervalMillis = millis;
+}
 
-    return user;
+void LDConfigSetAppURI(LDConfig *const config, const char *const uri)
+{
+    LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->appURI, uri));
+}
+
+void LDConfigSetConnectionTimeoutMillies(LDConfig *const config, const int millis)
+{
+    LD_ASSERT(config); config->connectionTimeoutMillis = millis;
+}
+
+void LDConfigSetDisableBackgroundUpdating(LDConfig *const config, const bool disable)
+{
+    LD_ASSERT(config); config->disableBackgroundUpdating = disable;
+}
+
+void LDConfigSetEventsCapacity(LDConfig *const config, const int capacity)
+{
+    LD_ASSERT(config); config->eventsCapacity = capacity;
+}
+
+void LDConfigSetEventsFlushIntervalMillis(LDConfig *const config, const int millis)
+{
+    LD_ASSERT(config); config->eventsFlushIntervalMillis = millis;
+}
+
+void LDConfigSetEventsURI(LDConfig *const config, const char *const uri)
+{
+    LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->eventsURI, uri));
+}
+
+void LDConfigSetMobileKey(LDConfig *const config, const char *const key)
+{
+    LD_ASSERT(config); LD_ASSERT(key); LD_ASSERT(LDSetString(&config->mobileKey, key));
+}
+
+void LDConfigSetOffline(LDConfig *const config, const bool offline)
+{
+    LD_ASSERT(config); config->offline = offline;
+}
+
+void LDConfigSetStreaming(LDConfig *const config, const bool streaming)
+{
+    LD_ASSERT(config); config->streaming = streaming;
+}
+
+void LDConfigSetPollingIntervalMillis(LDConfig *const config, const int millis)
+{
+    LD_ASSERT(config); config->pollingIntervalMillis = millis;
+}
+
+void LDConfigSetStreamURI(LDConfig *const config, const char *const uri)
+{
+    LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->streamURI, uri));
+}
+
+void LDConfigSetUseReport(LDConfig *const config, const bool report)
+{
+    LD_ASSERT(config); config->useReport = report;
 }
 
 static void
-milliSleep(int ms)
+freeconfig(LDConfig *config)
 {
-    sleep(ms / 1000);
-}
-
-static void *
-bgeventsender(void *v)
-{
-    LDClient *client = v;
-
-    while (true) {
-        LDi_rdlock(&clientlock);
-        int ms = client->config->eventsFlushIntervalMillis;
-        LDi_unlock(&clientlock);
-
-        
-
-        printf("bg sender sleeping\n");
-        milliSleep(ms);
-        printf("bgsender running\n");
-
-        char *eventdata = LDi_geteventdata();
-        if (!eventdata) {
-            printf("no event data to send\n");
-            continue;
-        }
-
-        LDi_rdlock(&clientlock);
-        if (client->dead) {
-            LDi_unlock(&clientlock);
-            continue;
-        }
-        
-        bool sent = false;
-        int retries = 0;
-        while (!sent) {
-            char url[4096];
-            snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI);
-            char authkey[256];
-            snprintf(authkey, sizeof(authkey), "%s", client->config->mobileKey);
-            LDi_unlock(&clientlock);
-            /* unlocked while sending; will relock if retry needed */
-            int response = 0;
-            LDi_sendevents(url, authkey, eventdata, &response);
-            if (response == 401 || response == 403) {
-                sent = true; /* consider it done */
-                client->dead = true;
-                retries = 0;
-            } else if (response == -1) {
-                retries++;
-            } else {
-                sent = true;
-                retries = 0;
-            }
-            if (retries) {
-                int backoff = 1000 * pow(2, retries - 2);
-                backoff += random() % backoff;
-                if (backoff > 3600 * 1000) {
-                    backoff = 3600 * 1000;
-                    retries--; /* avoid excessive incrementing */
-                }
-                milliSleep(backoff);
-                LDi_rdlock(&clientlock);
-            }
-        }
-        free(eventdata);
-    }
-}
-
-static void *
-bgfeaturepoller(void *v)
-{
-    LDClient *client = v;
-    char *prevdata = NULL;
-
-    while (true) {
-        LDi_rdlock(&clientlock);
-        int ms = client->config->pollingIntervalMillis;
-        LDi_unlock(&clientlock);
-
-        printf("bg poller sleeping\n");
-        milliSleep(ms);
-        printf("bg poller running\n");
-
-        LDi_rdlock(&clientlock);
-        if (client->dead) {
-            LDi_unlock(&clientlock);
-            continue;
-        }
-        int response = 0;
-        LDMapNode *hash = LDi_fetchfeaturemap(client, &response);
-        if (response == 401 || response == 403) {
-            client->dead = true;
-        }
-        LDi_unlock(&clientlock);
-        if (!hash)
-            continue;
-        LDMapNode *oldhash;
-
-        LDi_wrlock(&clientlock);
-        oldhash = client->allFlags;
-        client->allFlags = hash;
-        LDi_unlock(&clientlock);
-        LDi_freehash(oldhash);
-    }
-}
-
-static void
-starteverything(void)
-{
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
-    theClient = malloc(sizeof(*theClient));
-    memset(theClient, 0, sizeof(*theClient));
-
-    pthread_create(&eventthread, NULL, bgeventsender, theClient);
-    pthread_create(&pollingthread, NULL, bgfeaturepoller, theClient);
+    if (!config)
+        return;
+    LDFree(config->appURI);
+    LDFree(config->eventsURI);
+    LDFree(config->mobileKey);
+    LDFree(config->streamURI);
+    LDi_freehash(config->privateAttributeNames);
+    LDFree(config);
 }
 
 static void
 checkconfig(LDConfig *config)
 {
-
+    if (config->pollingIntervalMillis < 300000)
+        config->pollingIntervalMillis = 300000;
 
 }
 
 LDClient *
-LDClientInit(LDConfig *config, LDUser *user)
+LDClientInit(LDConfig *const config, LDUser *const user)
 {
+    LD_ASSERT(config); LD_ASSERT(user);
+
+    LDi_once(&LDi_earlyonce, LDi_earlyinit);
+
     checkconfig(config);
 
     LDi_initevents(config->eventsCapacity);
 
-    LDi_wrlock(&clientlock);
+    LDi_wrlock(&LDi_clientlock);
 
-    pthread_once(&clientonce, starteverything);
+    if (!theClient) {
+        LDi_wrunlock(&LDi_clientlock);
+        return NULL;
+    }
 
-    theClient->config = config;
-    theClient->user = user;
-    theClient->dead = false;
+    LDClient *const client = theClient;
 
-    int response;
-    LDMapNode *hash = LDi_fetchfeaturemap(theClient, &response);
-    theClient->allFlags = hash;
+    if (client->config != config) {
+        freeconfig(client->config);
+    }
 
-    LDi_unlock(&clientlock);
+    client->config = config;
+    if (client->user != user) {
+        LDi_freeuser(client->user);
+    }
 
-    LDi_recordidentify(user);
+    client->user = user;
+    client->dead = false;
+    client->offline = config->offline;
+    client->background = false;
+    client->isinit = false;
+    client->allFlags = NULL;
 
-    printf("init done\n");
-    return theClient;
+    char *const flags = LDi_loaddata("features", user->key);
+    if (flags) {
+        LDi_clientsetflags(client, false, flags, 1);
+        LDFree(flags);
+    }
+
+    LDi_recordidentify(client, user);
+    LDi_wrunlock(&LDi_clientlock);
+
+    LDi_once(&LDi_threadsonce, threadsinit);
+
+    return client;
 }
 
 LDClient *
@@ -233,108 +226,459 @@ LDClientGet()
     return theClient;
 }
 
-static LDMapNode *
-lookupnode(LDMapNode *hash, const char *key)
+void
+LDClientSetOffline(LDClient *const client)
 {
-    LDMapNode *res = NULL;
+    LD_ASSERT(client);
+    LDi_wrlock(&LDi_clientlock);
+    client->offline = true;
+    LDi_wrunlock(&LDi_clientlock);
+}
 
-    HASH_FIND_STR(hash, key, res);
-    
-    return res;
+void
+LDClientSetOnline(LDClient *const client)
+{
+    LD_ASSERT(client);
+    LDi_wrlock(&LDi_clientlock);
+    client->offline = false;
+    client->isinit = false;
+    LDi_wrunlock(&LDi_clientlock);
 }
 
 bool
-LDBoolVariation(LDClient *client, const char *key, bool fallback)
+LDClientIsOffline(LDClient *const client)
 {
-    LDMapNode *res;
-    bool b;
+    LD_ASSERT(client);
+    LDi_rdlock(&LDi_clientlock);
+    bool offline = client->offline;
+    LDi_rdunlock(&LDi_clientlock);
+    return offline;
+}
 
-    LDi_rdlock(&clientlock);
-    res = lookupnode(client->allFlags, key);
-    if (res && res->type == LDNodeBool)
-        b = res->b;
-    else
-        b = fallback;
-    LDi_unlock(&clientlock);
-    LDi_recordfeature(client->user, key, LDNodeBool, (double)b, NULL, (double)fallback, NULL);
-    return b;
+void
+LDClientSetBackground(LDClient *const client, const bool background)
+{
+    LD_ASSERT(client);
+    LDi_wrlock(&LDi_clientlock);
+    client->background = background;
+    LDi_startstopstreaming(background);
+    LDi_wrunlock(&LDi_clientlock);
+}
+
+void
+LDClientIdentify(LDClient *const client, LDUser *const user)
+{
+    LD_ASSERT(client); LD_ASSERT(user);
+    LDi_wrlock(&LDi_clientlock);
+    if (user != client->user) {
+        LDi_freeuser(client->user);
+    }
+    client->user = user;
+    client->allFlags = NULL;
+    LDi_updatestatus(client, 0);
+    char *const flags = LDi_loaddata("features", client->user->key);
+    if (flags) {
+        LDi_clientsetflags(client, false, flags, 1);
+        LDFree(flags);
+    }
+    LDi_reinitializeconnection();
+    LDi_recordidentify(client, user);
+    LDi_wrunlock(&LDi_clientlock);
+}
+
+void
+LDClientClose(LDClient *const client)
+{
+    LD_ASSERT(client);
+
+    LDi_wrlock(&LDi_clientlock);
+    client->dead = true;
+    LDNode *const oldhash = client->allFlags;
+    client->allFlags = NULL;
+    freeconfig(client->config);
+    client->config = NULL;
+    LDi_freeuser(client->user);
+    client->user = NULL;
+    LDi_wrunlock(&LDi_clientlock);
+
+    LDi_freehash(oldhash);
+
+    /* stop the threads */
+}
+
+LDNode *
+LDClientGetLockedFlags(LDClient *const client)
+{
+    LD_ASSERT(client);
+    LDi_rdlock(&LDi_clientlock);
+    LDNode *const flags = client->allFlags;
+    LDi_rdunlock(&LDi_clientlock);
+    return flags;
+}
+
+bool
+LDClientIsInitialized(LDClient *const client)
+{
+    LD_ASSERT(client);
+    LDi_rdlock(&LDi_clientlock);
+    bool isinit = client->isinit;
+    LDi_rdunlock(&LDi_clientlock);
+    return isinit;
+}
+
+bool
+LDClientAwaitInitialized(LDClient *const client, const unsigned int timeoutmilli)
+{
+    LD_ASSERT(client);
+    LDi_mtxenter(&LDi_initcondmtx);
+    LDi_rdlock(&LDi_clientlock);
+    if (client->isinit) {
+        LDi_rdunlock(&LDi_clientlock);
+        LDi_mtxleave(&LDi_initcondmtx);
+        return true;
+    }
+    LDi_rdunlock(&LDi_clientlock);
+
+    LDi_condwait(&LDi_initcond, &LDi_initcondmtx, timeoutmilli);
+    LDi_mtxleave(&LDi_initcondmtx);
+
+    LDi_rdlock(&LDi_clientlock);
+    bool isinit = client->isinit;
+    LDi_rdunlock(&LDi_clientlock);
+    return isinit;
+}
+
+void
+LDSetClientStatusCallback(void (callback)(int))
+{
+    LDi_statuscallback = callback;
+}
+
+/*
+ * save and restore flags
+ */
+char *
+LDClientSaveFlags(LDClient *const client)
+{
+    LD_ASSERT(client);
+    LDi_rdlock(&LDi_clientlock);
+    char *const serialized = LDi_hashtostring(client->allFlags, true);
+    LDi_rdunlock(&LDi_clientlock);
+    return serialized;
+}
+
+void
+LDClientRestoreFlags(LDClient *const client, const char *const data)
+{
+    LD_ASSERT(client); LD_ASSERT(data);
+    if (LDi_clientsetflags(client, true, data, 1)) {
+        LDi_savedata("features", client->user->key, data);
+    }
+}
+
+bool
+LDi_clientsetflags(LDClient *const client, const bool needlock, const char *const data, const int flavor)
+{
+    LD_ASSERT(client); LD_ASSERT(data);
+
+    cJSON *const payload = cJSON_Parse(data);
+
+    if (!payload) {
+        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags parsing failed\n");
+        return false;
+    }
+
+    LDNode *hash = NULL;
+    if (payload->type == cJSON_Object) {
+        hash = LDi_jsontohash(payload, flavor);
+    }
+    cJSON_Delete(payload);
+
+    if (needlock) {
+        LDi_wrlock(&LDi_clientlock);
+    }
+
+    bool statuschange = client->isinit == false;
+    LDNode *const oldhash = client->allFlags;
+    client->allFlags = hash;
+
+    /* tell application we are ready to go */
+    if (statuschange) {
+        LDi_updatestatus(client, 1);
+    }
+
+    if (needlock) {
+        LDi_wrunlock(&LDi_clientlock);
+    }
+
+    LDi_freehash(oldhash);
+
+    return true;
+}
+
+void
+LDi_savehash(LDClient *const client)
+{
+    LD_ASSERT(client);
+    LDi_rdlock(&LDi_clientlock);
+    char *const serialized = LDi_hashtostring(client->allFlags, true);
+    LDi_savedata("features", client->user->key, serialized);
+    LDi_rdunlock(&LDi_clientlock);
+    LDFree(serialized);
+}
+
+/*
+ * a block of functions to look up feature flags
+ */
+
+bool
+LDBoolVariation(LDClient *const client, const char *const key, const bool fallback)
+{
+    LD_ASSERT(client); LD_ASSERT(key);
+
+    bool result;
+    LDi_rdlock(&LDi_clientlock);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeBool) {
+        result = node->b;
+    } else {
+        result = fallback;
+    }
+
+    LDi_recordfeature(client, client->user, node, key, LDNodeBool,
+        (double)result, NULL, NULL, (double)fallback, NULL, NULL);
+
+    LDi_rdunlock(&LDi_clientlock);
+    return result;
 }
 
 int
-LDIntVariation(LDClient *client, const char *key, int fallback)
+LDIntVariation(LDClient *const client, const char *const key, const int fallback)
 {
-    LDMapNode *res;
-    int i;
+    LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&clientlock);
-    res = lookupnode(client->allFlags, key);
-    if (res && res->type == LDNodeNumber)
-        i = (int)res->n;
-    else
-        i = fallback;
-    LDi_unlock(&clientlock);
-    LDi_recordfeature(client->user, key, LDNodeNumber, (double)i, NULL, (double)fallback, NULL);
-    return i;
+    int result;
+    LDi_rdlock(&LDi_clientlock);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeNumber) {
+        result = (int)node->n;
+    } else {
+        result = fallback;
+    }
+
+    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
+        (double)result, NULL, NULL, (double)fallback, NULL, NULL);
+
+    LDi_rdunlock(&LDi_clientlock);
+
+    return result;
 }
 
 double
-LDDoubleVariation(LDClient *client, const char *key, double fallback)
+LDDoubleVariation(LDClient *const client, const char *const key, const double fallback)
 {
-    LDMapNode *res;
-    double d;
+    LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&clientlock);
-    res = lookupnode(client->allFlags, key);
-    if (res && res->type == LDNodeNumber)
-        d = res->n;
-    else
-        d = fallback;
-    LDi_unlock(&clientlock);
-    LDi_recordfeature(client->user, key, LDNodeNumber, d, NULL, fallback, NULL);
-    return d;
+    double result;
+    LDi_rdlock(&LDi_clientlock);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeNumber) {
+        result = node->n;
+    } else {
+        result = fallback;
+    }
+
+    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
+        result, NULL, NULL, fallback, NULL, NULL);
+
+    LDi_rdunlock(&LDi_clientlock);
+
+    return result;
 }
 
 char *
-LDStringVariation(LDClient *client, const char *key, const char *fallback,
-    char *buffer, size_t space)
+LDStringVariation(LDClient *const client, const char *const key,
+    const char *const fallback, char *const buffer, const size_t space)
 {
-    LDMapNode *res;
-    const char *s;
-    size_t len;
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));
 
-    LDi_rdlock(&clientlock);
-    res = lookupnode(client->allFlags, key);
-    if (res && res->type == LDNodeString)
-        s = res->s;
-    else
-        s = fallback;
-    
-    len = strlen(s);
-    if (len > space - 1)
+    const char *result;
+    LDi_rdlock(&LDi_clientlock);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeString) {
+        result = node->s;
+    } else {
+        result = fallback;
+    }
+
+    size_t len = strlen(result);
+    if (len > space - 1) {
         len = space - 1;
-    memcpy(buffer, s, len);
+    }
+    memcpy(buffer, result, len);
     buffer[len] = 0;
-    LDi_unlock(&clientlock);
-    LDi_recordfeature(client->user, key, LDNodeString, 0.0, buffer, 0.0, fallback);
+
+    LDi_recordfeature(client, client->user, node, key, LDNodeString,
+        0.0, result, NULL, 0.0, fallback, NULL);
+
+    LDi_rdunlock(&LDi_clientlock);
+
     return buffer;
 }
 
 char *
-LDStringVariationAlloc(LDClient *client, const char *key, const char *fallback)
+LDStringVariationAlloc(LDClient *const client, const char *const key, const char *const fallback)
 {
-    LDMapNode *res;
-    const char *s;
-    char *news;
+    LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&clientlock);
-    res = lookupnode(client->allFlags, key);
-    if (res && res->type == LDNodeString)
-        s = res->s;
-    else
-        s = fallback;
-    
-    news = strdup(s);
-    LDi_unlock(&clientlock);
-    LDi_recordfeature(client->user, key, LDNodeString, 0.0, news, 0.0, fallback);
-    return news;
+    const char *value;
+    LDi_rdlock(&LDi_clientlock);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeString) {
+        value = node->s;
+    } else {
+        value = fallback;
+    }
+
+    char *const result = LDi_strdup(value);
+
+    LDi_recordfeature(client, client->user, node, key, LDNodeString,
+        0.0, result, NULL, 0.0, fallback, NULL);
+
+    LDi_rdunlock(&LDi_clientlock);
+
+    return result;
 }
+
+LDNode *
+LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fallback)
+{
+    LD_ASSERT(client); LD_ASSERT(key);
+
+    LDNode *result;
+    LDi_rdlock(&LDi_clientlock);
+
+    LDNode *const node = LDNodeLookup(client->allFlags, key);
+
+    if (node && node->type == LDNodeHash) {
+        result = node->h;
+    } else {
+        result = fallback;
+    }
+
+    LDi_recordfeature(client, client->user, node, key, LDNodeHash,
+        0.0, NULL, result, 0.0, NULL, fallback);
+
+    LDi_rdunlock(&LDi_clientlock);
+
+    return result;
+}
+
+void
+LDJSONRelease(LDNode *const node)
+{
+    LDi_freehash(node);
+}
+
+void
+LDClientTrack(LDClient *const client, const char *const name)
+{
+    LD_ASSERT(client); LD_ASSERT(name);
+    LDi_rdlock(&LDi_clientlock);
+    LDi_recordtrack(client, client->user, name, NULL);
+    LDi_rdunlock(&LDi_clientlock);
+}
+
+void
+LDClientTrackData(LDClient *const client, const char *const name, LDNode *const data)
+{
+    LD_ASSERT(client); LD_ASSERT(name); LD_ASSERT(data);
+    LDi_rdlock(&LDi_clientlock);
+    LDi_recordtrack(client, client->user, name, data);
+    LDi_rdunlock(&LDi_clientlock);
+}
+
+void
+LDClientFlush(LDClient *const client)
+{
+    LD_ASSERT(client); LDi_condsignal(&LDi_bgeventcond);
+}
+
+void
+LDClientRegisterFeatureFlagListener(LDClient *const client, const char *const key, LDlistenerfn fn)
+{
+    LD_ASSERT(client != NULL); LD_ASSERT(key != NULL);
+
+    struct listener *const list = LDAlloc(sizeof(*list)); LD_ASSERT(list);
+
+    list->fn = fn;
+    list->key = LDi_strdup(key);
+    LD_ASSERT(list->key);
+
+    LDi_wrlock(&LDi_clientlock);
+    list->next = client->listeners;
+    client->listeners = list;
+    LDi_wrunlock(&LDi_clientlock);
+}
+
+bool
+LDClientUnregisterFeatureFlagListener(LDClient *const client, const char *const key, LDlistenerfn fn)
+{
+    LD_ASSERT(client); LD_ASSERT(key);
+
+    struct listener *list = NULL, *prev = NULL;
+
+    LDi_wrlock(&LDi_clientlock);
+    for (list = client->listeners; list; prev = list, list = list->next) {
+        if (list->fn == fn && strcmp(key, list->key)) {
+            if (prev) {
+                prev->next = list->next;
+            } else {
+                client->listeners = list->next;
+            }
+            LDFree(list->key);
+            LDFree(list);
+            break;
+        }
+    }
+    LDi_wrunlock(&LDi_clientlock);
+
+    return list != NULL;
+}
+
+void
+LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
+{
+    LD_ASSERT(config); LD_ASSERT(key);
+
+    LDNode *const node = LDAlloc(sizeof(*node)); LD_ASSERT(node);
+    memset(node, 0, sizeof(*node));
+
+    node->key = LDi_strdup(key);
+    LD_ASSERT(node->key);
+
+    node->type = LDNodeBool;
+    node->b = true;
+
+    HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
+}
+
+void
+LDi_updatestatus(struct LDClient_i *const client, const bool isinit)
+{
+    client->isinit = isinit;
+    if (LDi_statuscallback) {
+        LDi_statuscallback(isinit);
+    }
+    LDi_condsignal(&LDi_initcond);
+};

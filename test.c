@@ -2,41 +2,97 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WINDOWS
 #include <unistd.h>
+#endif
 #include <time.h>
 
 #include "ldapi.h"
 
-#include "ldinternal.h"
+void
+logger(const char *s)
+{
+    printf("LD: %s", s);
+}
 
+void
+statusupdate(int status)
+{
+    printf("The status is now %d\n", status);
+}
 
 int
 main(int argc, char **argv)
 {
-    printf("back to basics\n");
+    printf("Beginning tests\n");
 
-    LDConfig *config = LDConfigNew("mobie-disco");
+    LDSetLogFunction(200, logger);
+
+    LDSetClientStatusCallback(statusupdate);
+
+    LDConfig *config = LDConfigNew("authkey");
+    LDConfigSetOffline(config, true);
 
     LDUser *user = LDUserNew("user200");
 
     LDClient *client = LDClientInit(config, user);
 
-    int delay = 0;
-    while (true) {
-    if (LDIntVariation(client, "bugcount", 10) > 5) {
-        printf("it's greater than five\n");
+    char *testflags = "{ \"sort.order\": { \"value\": false}, \"bugcount\": { \"value\": 0} , \"jj\": { \"value\": { \"ii\": 7 }} }";
+
+    printf("Restoring flags\n");
+    LDClientRestoreFlags(client, testflags);
+    printf("Done restoring. Did the status change?\n");
+
+    char *ss = LDClientSaveFlags(client);
+    printf("INFO: the output json is %s\n", ss);
+    LDFree(ss);
+
+    int high, low;
+
+    low = LDIntVariation(client, "bugcount", 1);
+    high = LDIntVariation(client, "bugcount", 10);
+    if (high != low) {
+        printf("ERROR: bugcount inconsistent\n");
     }
-    if (LDBoolVariation(client, "sort.order", true)) {
-        printf("sort order is true\n");
-    } else {
-        printf("sort order is false\n");
+    low = LDIntVariation(client, "missing", 1);
+    high = LDIntVariation(client, "missing", 10);
+    if (high == low) {
+        printf("ERROR: default malfunction\n");
     }
 
-    delay += 10;
-    sleep(delay);
-    
-    printf("%d seconds up\n", delay);
+    char buffer[10];
+    /* deliberately check for truncation (no overflow) */
+    LDStringVariation(client, "missing", "more than ten letters", buffer, sizeof(buffer));
+    if (strcmp(buffer, "more than") != 0) {
+        printf("ERROR: the string variation failed\n");
     }
+    char *letters = LDStringVariationAlloc(client, "missing", "more than ten letters");
+    if (strcmp(letters, "more than ten letters") != 0) {
+        printf("ERROR: the string variation failed\n");
+    }
+    LDFree(letters);
+
+    LDNode *jnode = LDJSONVariation(client, "jj", NULL);
+    LDNode *ii = LDNodeLookup(jnode, "ii");
+    if (ii->type != LDNodeNumber || ii->n != 7) {
+        printf("ERROR: the json was not as expected\n");
+    }
+    LDJSONRelease(jnode);
+    jnode = LDJSONVariation(client, "missing", NULL);
+    ii = LDNodeLookup(jnode, "ii");
+    if (ii != NULL) {
+        printf("ERROR: found some unexpected json\n");
+    }
+    LDJSONRelease(jnode);
+    
+    LDClientClose(client);
+
+    printf("Completed all tests\n");
+
+    extern unsigned long long LD_allocations, LD_frees;
+
+    printf("Memory consumed: %lld allocs %lld frees\n", LD_allocations, LD_frees);
 
     return 0;
 }
+
