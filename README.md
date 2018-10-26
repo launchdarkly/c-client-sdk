@@ -1,5 +1,7 @@
-LaunchDarkly SDK for C / C++
-===========================
+LaunchDarkly SDK for C / C++ (BETA)
+===================================
+
+*Warning:* This software is beta software and should not be used in a production environment.
 
 The LaunchDarkly C / C++ SDK is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
 
@@ -72,6 +74,17 @@ You'll also want to ensure that the client is initialized before checking the fl
 ```C
 initialized = LDClientIsInitialized(client);
 ```
+
+Unimplemented features and known bugs
+-------------------------------------
+There are several unimplemented features and known bugs. We intend to address all of these before our first non-beta release.
+
+* Multiple clients: It is currently not safe to create more than one LDClient instance per application.
+* Cross-platform continuous integration: We have not yet set up a full cross-platform CI suite. You may encounter problems building the SDK on particular platforms. If you run into any issues building the SDK, please reach out, and we'll prioritize addressing your issues.
+* All Flags: This function for getting all flag values at once has not been implemented.
+* Anonymous user keys: In the other mobile SDKs, if you do not specify any user key, the SDK generates one based on unique properties of the device and also sets the anonymous attribute. The equivalent in the C SDK will probably be based on the MAC, but this is not implemented yet, so currently you will get a randomized key instead.
+* Flag listeners: In the current implementation of LDClientRegisterFeatureFlagListener, it is not safe for the listener function to perform any operations on the LDClient, including checking flag values. Doing so could cause a deadlock.
+* Client shutdown: LDClientClose does not currently stop the client's background threads and does not ensure the delivery of any pending events.
 
 Learn more
 -----------
