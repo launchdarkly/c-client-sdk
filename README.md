@@ -10,6 +10,12 @@ The C / C++ SDK requires a POSIX environment, and assumes that both `libcurl` an
 
 Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
 
+You can get the required dependencies on Ubuntu Linux with:
+
+```
+sudo apt-get update && sudo apt-get install build-essential libcurl4-openssl-dev
+```
+
 Quick setup (Windows)
 ---------------------
 
@@ -17,7 +23,9 @@ Building the SDK requires that the Visual Studio C compiler be installed. The SD
 
 Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page.
 
-Open a Visual Studio command prompt, navigate to the c-sdk directory, and run nmake /f Makefile.win to build the SDK libraries.
+You can obtain the libcurl dependency at [curl.haxx.se](https://curl.haxx.se/download/curl-7.59.0.zip). You will need to extract curl and then update `Makefile.win` with the path you saved it to. The Makefile will automatically build curl for you.
+
+Open a Visual Studio command prompt, navigate to the c-sdk directory, and run `nmake /f Makefile.win` to build the SDK libraries.
 
 Getting started
 ---------------
@@ -55,7 +63,7 @@ show_feature = LDBoolVariation(client, "your.flag.key", false);
 if (show_feature) {
     // application code to show the feature
 } else {
-    // the code to run if the feature is off 
+    // the code to run if the feature is off
 }
 ```
 
@@ -103,4 +111,3 @@ About LaunchDarkly
     * [docs.launchdarkly.com](http://docs.launchdarkly.com/  "LaunchDarkly Documentation") for our documentation and SDKs
     * [apidocs.launchdarkly.com](http://apidocs.launchdarkly.com/  "LaunchDarkly API Documentation") for our API documentation
     * [blog.launchdarkly.com](http://blog.launchdarkly.com/  "LaunchDarkly Blog Documentation") for the latest product updates
-
