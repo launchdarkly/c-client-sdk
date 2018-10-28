@@ -192,6 +192,7 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->allFlags = NULL;
     client->threads = 3;
     client->wantnewevent = true;
+    client->streamhandle = 0;
 
     LDi_mtxinit(&client->condMtx);
     LDi_createthread(&client->eventThread, LDi_bgeventsender, client);

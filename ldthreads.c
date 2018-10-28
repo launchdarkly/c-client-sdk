@@ -267,7 +267,6 @@ onstreameventping(LDClient *const client)
     free(data);
 }
 
-static int streamhandle = 0;
 static bool shouldstopstreaming;
 
 void
@@ -279,22 +278,24 @@ LDi_startstopstreaming(LDClient *const client, bool stopstreaming)
 }
 
 static void
-LDi_updatehandle(int handle)
+LDi_updatehandle(LDClient *const client, const int handle)
 {
     LDi_wrlock(&LDi_clientlock);
-    streamhandle = handle;
+    client->streamhandle = handle;
     LDi_wrunlock(&LDi_clientlock);
 }
 
 void
 LDi_reinitializeconnection(LDClient *const client)
 {
-    if (streamhandle) {
-        LDi_cancelread(streamhandle);
-        streamhandle = 0;
+    LDi_wrlock(&LDi_clientlock);
+    if (client->streamhandle) {
+        LDi_cancelread(client->streamhandle);
+        client->streamhandle = 0;
     }
     LDi_condsignal(&client->pollCond);
     LDi_condsignal(&client->streamCond);
+    LDi_wrunlock(&LDi_clientlock);
 }
 
 /*

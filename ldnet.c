@@ -22,6 +22,11 @@ struct streamdata {
     LDClient *client;
 };
 
+struct cbhandlecontext {
+    LDClient *client;
+    void (*cb)(LDClient *, int);
+};
+
 typedef size_t (*WriteCB)(void*, size_t, size_t, void*);
 
 static size_t
@@ -79,12 +84,13 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 }
 
 static curl_socket_t
-SocketCallback(void cbhandle(int), curlsocktype type, struct curl_sockaddr *addr)
+SocketCallback(void *c, curlsocktype type, struct curl_sockaddr *addr)
 {
+    struct cbhandlecontext *const ctx = c;
     curl_socket_t fd = socket(addr->family, addr->socktype, addr->protocol);
-    if (cbhandle) {
+    if (ctx) {
         LDi_log(LD_LOG_TRACE, "about to call connection handle callback \n");
-        cbhandle(fd);
+        ctx->cb(ctx->client, fd);
         LDi_log(LD_LOG_TRACE, "finished calling connection handle callback\n");
     }
     return fd;
@@ -192,10 +198,12 @@ LDi_cancelread(const int handle)
  * it doesn't return except after a disconnect. (or some other failure.)
  */
 void
-LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, const char *), void cbhandle(int))
+LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, const char *), void cbhandle(LDClient *, int))
 {
-    struct MemoryStruct headers; struct streamdata streamdata;
+    struct MemoryStruct headers; struct streamdata streamdata; struct cbhandlecontext handledata;
     CURL *curl = NULL; struct curl_slist *headerlist = NULL;
+
+    handledata.client = client; handledata.cb = cbhandle;
 
     memset(&headers, 0, sizeof(headers)); memset(&streamdata, 0, sizeof(streamdata));
 
@@ -269,7 +277,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         curl_easy_cleanup(curl); return;
     }
 
-    if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETDATA, cbhandle) != CURLE_OK) {
+    if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETDATA, &handledata) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_OPENSOCKETDATA failed\n");
         curl_easy_cleanup(curl); return;
     }
