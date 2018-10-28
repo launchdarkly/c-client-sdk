@@ -151,7 +151,7 @@ prepareShared(const char *const url, const char *const authkey, CURL **r_curl, s
  * seen for a while, disconnect. this shouldn't normally happen.
  */
 static int
-progressinspector(void *v, double dltotal, double dlnow, double ultotal, double ulnow)
+progressinspector(void *const v, double dltotal, double dlnow, double ultotal, double ulnow)
 {
     struct streamdata *const streamdata = v;
     const time_t now = time(NULL);
@@ -174,7 +174,7 @@ progressinspector(void *v, double dltotal, double dlnow, double ultotal, double 
 }
 
 void
-LDi_cancelread(int handle)
+LDi_cancelread(const int handle)
 {
     #ifdef _WINDOWS
     shutdown(handle, SD_BOTH);
@@ -188,8 +188,7 @@ LDi_cancelread(int handle)
  * it doesn't return except after a disconnect. (or some other failure.)
  */
 void
-LDi_readstream(LDClient *const client, int *response,
-    int cbdata(LDClient *, const char *), void cbhandle(int), const char *const userjson)
+LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, const char *), void cbhandle(int))
 {
     struct MemoryStruct headers; struct streamdata streamdata;
     CURL *curl = NULL; struct curl_slist *headerlist = NULL;
@@ -200,21 +199,28 @@ LDi_readstream(LDClient *const client, int *response,
 
     LDi_rdlock(&LDi_clientlock);
 
+    char *const jsonuser = LDi_usertojsontext(client, client->user, false);
+    if (!jsonuser) {
+        LDi_rdunlock(&LDi_clientlock);
+        LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed\n");
+        return;
+    }
+
     const bool usereport = client->config->useReport;
 
     char url[4096];
     if (usereport) {
         if (snprintf(url, sizeof(url), "%s/meval", client->config->streamURI) < 0) {
-            LDi_rdunlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return;
         }
     }
     else {
         size_t b64len;
-        char *const b64text = LDi_base64_encode(userjson, strlen(userjson), &b64len);
+        char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
-            LDi_rdunlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
             LDi_log(LD_LOG_ERROR, "LDi_base64_encode == NULL in LDi_readstream\n"); return;
         }
 
@@ -222,15 +228,17 @@ LDi_readstream(LDClient *const client, int *response,
         free(b64text);
 
         if (status < 0) {
-            LDi_rdunlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return;
         }
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
-        LDi_rdunlock(&LDi_clientlock);
+        LDi_rdunlock(&LDi_clientlock); free(jsonuser);
         return;
     }
+
+    free(jsonuser);
 
     LDi_rdunlock(&LDi_clientlock);
 
@@ -246,7 +254,7 @@ LDi_readstream(LDClient *const client, int *response,
             curl_easy_cleanup(curl); return;
         }
 
-        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, userjson) != CURLE_OK) {
+        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonuser) != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed\n");
             curl_easy_cleanup(curl); return;
         }
@@ -303,7 +311,7 @@ LDi_readstream(LDClient *const client, int *response,
 }
 
 char *
-LDi_fetchfeaturemap(LDClient *const client, int *response, const char *const userjson)
+LDi_fetchfeaturemap(LDClient *const client, int *response)
 {
     struct MemoryStruct headers, data;
     CURL *curl = NULL; struct curl_slist *headerlist = NULL;
@@ -312,20 +320,28 @@ LDi_fetchfeaturemap(LDClient *const client, int *response, const char *const use
 
     LDi_rdlock(&LDi_clientlock);
 
+    char *const jsonuser = LDi_usertojsontext(client, client->user, false);
+    if (!jsonuser) {
+        LDi_rdunlock(&LDi_clientlock);
+        LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed\n");
+        return NULL;
+    }
+
     const bool usereport = client->config->useReport;
 
     char url[4096];
     if (usereport) {
         if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", client->config->appURI) < 0) {
-            LDi_rdunlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return NULL;
         }
     }
     else {
         size_t b64len;
-        char *const b64text = LDi_base64_encode(userjson, strlen(userjson), &b64len);
+        char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
+            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "LDi_base64_encode == NULL in LDi_fetchfeaturemap\n"); return NULL;
         }
 
@@ -333,15 +349,17 @@ LDi_fetchfeaturemap(LDClient *const client, int *response, const char *const use
         free(b64text);
 
         if (status < 0) {
-            LDi_rdunlock(&LDi_clientlock);
+            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return NULL;
         }
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
-        LDi_rdunlock(&LDi_clientlock);
+        LDi_rdunlock(&LDi_clientlock); free(jsonuser);
         return NULL;
     }
+
+    free(jsonuser);
 
     LDi_rdunlock(&LDi_clientlock);
 
@@ -357,7 +375,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response, const char *const use
             curl_easy_cleanup(curl); return NULL;
         }
 
-        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, userjson) != CURLE_OK) {
+        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonuser) != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed\n");
             curl_easy_cleanup(curl); return NULL;
         }

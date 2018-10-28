@@ -142,20 +142,10 @@ bgfeaturepoller(void *const v)
             continue;
         }
 
-        char *const jsonuser = LDi_usertojsontext(client, client->user, false);
-        if (!jsonuser) {
-            LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in onstreameventping failed\n");
-            client->dead = true;
-            LDi_updatestatus(client, 0);
-            LDi_rdunlock(&LDi_clientlock);
-            return THREAD_RETURN_DEFAULT;
-        }
-
         LDi_rdunlock(&LDi_clientlock);
 
         int response = 0;
-        char *const data = LDi_fetchfeaturemap(client, &response, jsonuser);
-        free(jsonuser);
+        char *const data = LDi_fetchfeaturemap(client, &response);
 
         if (response == 401 || response == 403) {
             LDi_wrlock(&LDi_clientlock);
@@ -258,20 +248,10 @@ onstreameventping(LDClient *const client)
         return;
     }
 
-    char *const jsonuser = LDi_usertojsontext(client, client->user, false);
-    if (!jsonuser) {
-        LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in onstreameventping failed\n");
-        client->dead = true;
-        LDi_updatestatus(client, 0);
-        LDi_rdunlock(&LDi_clientlock);
-        return;
-    }
-
     LDi_rdunlock(&LDi_clientlock);
 
     int response = 0;
-    char *const data = LDi_fetchfeaturemap(client, &response, jsonuser);
-    free(jsonuser);
+    char *const data = LDi_fetchfeaturemap(client, &response);
 
     if (response == 401 || response == 403) {
         LDi_wrlock(&LDi_clientlock);
@@ -395,21 +375,11 @@ bgfeaturestreamer(void *const v)
             continue;
         }
 
-        char *const jsonuser = LDi_usertojsontext(client, client->user, false);
-        if (!jsonuser) {
-            LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in bgfeaturestreamer failed\n");
-            client->dead = true;
-            LDi_updatestatus(client, 0);
-            LDi_rdunlock(&LDi_clientlock);
-            return THREAD_RETURN_DEFAULT;
-        }
-
         LDi_rdunlock(&LDi_clientlock);
 
         int response;
         /* this won't return until it disconnects */
-        LDi_readstream(client,  &response, streamcallback, LDi_updatehandle, jsonuser);
-        free(jsonuser);
+        LDi_readstream(client,  &response, streamcallback, LDi_updatehandle);
 
         if (response == 401 || response == 403) {
             retries = 0;
