@@ -6,6 +6,60 @@
 #include <windows.h>
 #endif
 
+#ifndef _WINDOWS
+#define ld_thread_t pthread_t
+#define LDi_createthread(thread, fn, arg) pthread_create(thread, NULL, fn, arg)
+
+#define ld_rwlock_t pthread_rwlock_t
+#define LD_RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
+#define LDi_rdlock(lk) pthread_rwlock_rdlock(lk)
+#define LDi_wrlock(lk) pthread_rwlock_wrlock(lk)
+#define LDi_rdunlock(lk) pthread_rwlock_unlock(lk)
+#define LDi_wrunlock(lk) pthread_rwlock_unlock(lk)
+
+#define ld_mutex_t pthread_mutex_t
+#define LDi_mtxinit(mtx) pthread_mutex_init(mtx, NULL)
+#define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
+#define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
+
+#define ld_cond_t pthread_cond_t
+#define LD_COND_INIT PTHREAD_COND_INITIALIZER
+
+#define ld_once_t pthread_once_t
+#define LD_ONCE_INIT PTHREAD_ONCE_INIT
+#define LDi_once(once, fn) pthread_once(once, fn)
+/* windows */
+#else
+#define ld_thread_t HANDLE
+void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
+#define ld_rwlock_t SRWLOCK
+#define LD_RWLOCK_INIT SRWLOCK_INIT
+#define LDi_rdlock(lk) AcquireSRWLockShared(lk)
+#define LDi_wrlock(lk) AcquireSRWLockExclusive(lk)
+#define LDi_rdunlock(lk) ReleaseSRWLockShared(lk)
+#define LDi_wrunlock(lk) ReleaseSRWLockExclusive(lk)
+
+#define ld_mutex_t CRITICAL_SECTION
+#define LDi_mtxinit(mtx) InitializeCriticalSection(mtx)
+#define LDi_mtxenter(mtx) EnterCriticalSection(mtx)
+#define LDi_mtxleave(mtx) LeaveCriticalSection(mtx)
+
+#define ld_cond_t CONDITION_VARIABLE
+#define LD_COND_INIT CONDITION_VARIABLE_INIT
+
+#define ld_once_t INIT_ONCE
+#define LD_ONCE_INIT INIT_ONCE_STATIC_INIT
+void LDi_once(ld_once_t *once, void (*fn)(void));
+#endif
+
+#ifdef _WINDOWS
+#define THREAD_RETURN DWORD WINAPI
+#define THREAD_RETURN_DEFAULT 0
+#else
+#define THREAD_RETURN void *
+#define THREAD_RETURN_DEFAULT NULL
+#endif
+
 struct listener {
     LDlistenerfn fn;
     char *key;
@@ -21,7 +75,15 @@ struct LDClient_i {
     bool dead;
     bool isinit;
     struct listener *listeners;
+    /* thread management */
     unsigned int threads;
+    ld_thread_t eventThread;
+    ld_thread_t pollingThread;
+    ld_thread_t streamingThread;
+    ld_cond_t eventCond;
+    ld_cond_t pollCond;
+    ld_cond_t streamCond;
+    ld_mutex_t condMtx;
 };
 
 struct LDConfig_i {
@@ -100,8 +162,8 @@ void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *d
 char *LDi_geteventdata(void);
 void LDi_sendevents(LDClient *const client, const char *eventdata, int *response);
 
-void LDi_reinitializeconnection();
-void LDi_startstopstreaming(bool stopstreaming);
+void LDi_reinitializeconnection(LDClient *client);
+void LDi_startstopstreaming(LDClient *client, bool stopstreaming);
 void LDi_onstreameventput(LDClient *client, const char *data);
 void LDi_onstreameventpatch(LDClient *client, const char *data);
 void LDi_onstreameventdelete(LDClient *client, const char *data);
@@ -125,57 +187,10 @@ void LDi_initializerng();
 bool LDi_random(unsigned int *result);
 /* returns true on success, may leave buffer dirty */
 bool LDi_randomhex(char *buffer, size_t buffersize);
-void LDi_startthreads(LDClient *client);
 
 /* calls into the store interface */
 void LDi_savedata(const char *dataname, const char *username, const char *data);
 char *LDi_loaddata(const char *dataname, const char *username);
-
-#ifndef _WINDOWS
-#define ld_thread_t pthread_t
-#define LDi_createthread(thread, fn, arg) pthread_create(thread, NULL, fn, arg)
-
-#define ld_rwlock_t pthread_rwlock_t
-#define LD_RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
-#define LDi_rdlock(lk) pthread_rwlock_rdlock(lk)
-#define LDi_wrlock(lk) pthread_rwlock_wrlock(lk)
-#define LDi_rdunlock(lk) pthread_rwlock_unlock(lk)
-#define LDi_wrunlock(lk) pthread_rwlock_unlock(lk)
-
-#define ld_mutex_t pthread_mutex_t
-#define LDi_mtxinit(mtx) pthread_mutex_init(mtx, NULL)
-#define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
-#define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
-
-#define ld_cond_t pthread_cond_t
-#define LD_COND_INIT PTHREAD_COND_INITIALIZER
-
-#define ld_once_t pthread_once_t
-#define LD_ONCE_INIT PTHREAD_ONCE_INIT
-#define LDi_once(once, fn) pthread_once(once, fn)
-/* windows */
-#else
-#define ld_thread_t HANDLE
-void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
-#define ld_rwlock_t SRWLOCK
-#define LD_RWLOCK_INIT SRWLOCK_INIT
-#define LDi_rdlock(lk) AcquireSRWLockShared(lk)
-#define LDi_wrlock(lk) AcquireSRWLockExclusive(lk)
-#define LDi_rdunlock(lk) ReleaseSRWLockShared(lk)
-#define LDi_wrunlock(lk) ReleaseSRWLockExclusive(lk)
-
-#define ld_mutex_t CRITICAL_SECTION
-#define LDi_mtxinit(mtx) InitializeCriticalSection(mtx)
-#define LDi_mtxenter(mtx) EnterCriticalSection(mtx)
-#define LDi_mtxleave(mtx) LeaveCriticalSection(mtx)
-
-#define ld_cond_t CONDITION_VARIABLE
-#define LD_COND_INIT CONDITION_VARIABLE_INIT
-
-#define ld_once_t INIT_ONCE
-#define LD_ONCE_INIT INIT_ONCE_STATIC_INIT
-void LDi_once(ld_once_t *once, void (*fn)(void));
-#endif
 
 void LDi_condwait(ld_cond_t *cond, ld_mutex_t *mtx, int ms);
 void LDi_condsignal(ld_cond_t *cond);
@@ -188,3 +203,7 @@ void LDi_earlyinit(void);
 
 /* expects caller to own LDi_clientlock */
 void LDi_updatestatus(struct LDClient_i *client, bool isinit);
+
+THREAD_RETURN LDi_bgeventsender(void *const v);
+THREAD_RETURN LDi_bgfeaturepoller(void *const v);
+THREAD_RETURN LDi_bgfeaturestreamer(void *const v);

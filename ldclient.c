@@ -15,7 +15,6 @@ ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 ld_cond_t LDi_initcond = LD_COND_INIT;
 ld_mutex_t LDi_initcondmtx;
 
-static LDClient *theClient;
 ld_rwlock_t LDi_clientlock = LD_RWLOCK_INIT;
 
 void (*LDi_statuscallback)(int);
@@ -194,6 +193,11 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->allFlags = NULL;
     client->threads = 3;
 
+    LDi_mtxinit(&client->condMtx);
+    LDi_createthread(&client->eventThread, LDi_bgeventsender, client);
+    LDi_createthread(&client->pollingThread, LDi_bgfeaturepoller, client);
+    LDi_createthread(&client->streamingThread, LDi_bgfeaturestreamer, client);
+
     char *const flags = LDi_loaddata("features", user->key);
     if (flags) {
         LDi_clientsetflags(client, false, flags, 1);
@@ -202,8 +206,6 @@ LDClientInit(LDConfig *const config, LDUser *const user)
 
     LDi_recordidentify(client, user);
     LDi_wrunlock(&LDi_clientlock);
-
-    LDi_startthreads(client);
 
     return client;
 }
@@ -243,7 +245,7 @@ LDClientSetBackground(LDClient *const client, const bool background)
     LD_ASSERT(client);
     LDi_wrlock(&LDi_clientlock);
     client->background = background;
-    LDi_startstopstreaming(background);
+    LDi_startstopstreaming(client, background);
     LDi_wrunlock(&LDi_clientlock);
 }
 
@@ -263,7 +265,7 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
-    LDi_reinitializeconnection();
+    LDi_reinitializeconnection(client);
     LDi_recordidentify(client, user);
     LDi_wrunlock(&LDi_clientlock);
 }
@@ -593,7 +595,7 @@ LDClientTrackData(LDClient *const client, const char *const name, LDNode *const 
 void
 LDClientFlush(LDClient *const client)
 {
-    LD_ASSERT(client); LDi_condsignal(&LDi_bgeventcond);
+    LD_ASSERT(client); LDi_condsignal(&client->eventCond);
 }
 
 void

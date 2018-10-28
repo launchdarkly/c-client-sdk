@@ -14,29 +14,22 @@
  * plus the server event parser and streaming update handler.
  */
 
-ld_thread_t LDi_eventthread;
-ld_thread_t LDi_pollingthread;
-ld_thread_t LDi_streamingthread;
-ld_cond_t LDi_bgeventcond = LD_COND_INIT;
-ld_cond_t LDi_bgpollcond = LD_COND_INIT;
-ld_cond_t LDi_bgstreamcond = LD_COND_INIT;
-ld_mutex_t LDi_condmtx;
-
-#ifdef _WINDOWS
-#define THREAD_RETURN DWORD WINAPI
-#define THREAD_RETURN_DEFAULT 0
-#else
-#define THREAD_RETURN void *
-#define THREAD_RETURN_DEFAULT NULL
-#endif
-
-static THREAD_RETURN
-bgeventsender(void *const v)
+THREAD_RETURN
+LDi_bgeventsender(void *const v)
 {
     LDClient *const client = v;
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
+
+        if (client->dead) {
+            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender\n");
+            client->threads--;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
+
         int ms = 30000;
         if (client->config) {
             ms = client->config->eventsFlushIntervalMillis;
@@ -44,9 +37,9 @@ bgeventsender(void *const v)
         LDi_rdunlock(&LDi_clientlock);
 
         LDi_log(LD_LOG_TRACE, "bg sender sleeping\n");
-        LDi_mtxenter(&LDi_condmtx);
-        LDi_condwait(&LDi_bgeventcond, &LDi_condmtx, ms);
-        LDi_mtxleave(&LDi_condmtx);
+        LDi_mtxenter(&client->condMtx);
+        LDi_condwait(&client->eventCond, &client->condMtx, ms);
+        LDi_mtxleave(&client->condMtx);
         LDi_log(LD_LOG_TRACE, "bgsender running\n");
 
         char *const eventdata = LDi_geteventdata();
@@ -66,12 +59,10 @@ bgeventsender(void *const v)
             int response = 0;
             LDi_sendevents(client, eventdata, &response);
             if (response == 401 || response == 403) {
-                sent = true; /* consider it done */
-                retries = 0;
                 LDi_wrlock(&LDi_clientlock);
                 client->dead = true;
-                LDi_updatestatus(client, 0);
                 LDi_wrunlock(&LDi_clientlock);
+                break;
             } else if (response == -1) {
                 retries++;
             } else {
@@ -102,20 +93,29 @@ bgeventsender(void *const v)
 /*
  * this thread always runs, even when using streaming, but then it just sleeps
  */
-static THREAD_RETURN
-bgfeaturepoller(void *const v)
+THREAD_RETURN
+LDi_bgfeaturepoller(void *const v)
 {
     LDClient *const client = v;
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
+
+        if (client->dead) {
+            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller\n");
+            client->threads--;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
+
         /*
          * the logic here is a bit tangled. we start with a default ms poll interval.
          * we skip polling if the client is dead or offline.
          * if we have a config, we revise those values.
          */
         int ms = 3000000;
-        bool skippolling = client->dead || client->offline;
+        bool skippolling = client->offline;
         if (client->config) {
             ms = client->config->pollingIntervalMillis;
             if (client->background) {
@@ -130,9 +130,9 @@ bgfeaturepoller(void *const v)
         LDi_rdunlock(&LDi_clientlock);
 
         if (ms > 0) {
-            LDi_mtxenter(&LDi_condmtx);
-            LDi_condwait(&LDi_bgpollcond, &LDi_condmtx, ms);
-            LDi_mtxleave(&LDi_condmtx);
+            LDi_mtxenter(&client->condMtx);
+            LDi_condwait(&client->pollCond, &client->condMtx, ms);
+            LDi_mtxleave(&client->condMtx);
         }
         if (skippolling) { continue; }
 
@@ -150,7 +150,6 @@ bgfeaturepoller(void *const v)
         if (response == 401 || response == 403) {
             LDi_wrlock(&LDi_clientlock);
             client->dead = true;
-            LDi_updatestatus(client, 0);
             LDi_wrunlock(&LDi_clientlock);
         }
         if (!data) { continue; }
@@ -270,11 +269,11 @@ static int streamhandle = 0;
 static bool shouldstopstreaming;
 
 void
-LDi_startstopstreaming(bool stopstreaming)
+LDi_startstopstreaming(LDClient *const client, bool stopstreaming)
 {
     shouldstopstreaming = stopstreaming;
-    LDi_condsignal(&LDi_bgpollcond);
-    LDi_condsignal(&LDi_bgstreamcond);
+    LDi_condsignal(&client->pollCond);
+    LDi_condsignal(&client->streamCond);
 }
 
 static void
@@ -286,14 +285,14 @@ LDi_updatehandle(int handle)
 }
 
 void
-LDi_reinitializeconnection()
+LDi_reinitializeconnection(LDClient *const client)
 {
     if (streamhandle) {
         LDi_cancelread(streamhandle);
         streamhandle = 0;
     }
-    LDi_condsignal(&LDi_bgpollcond);
-    LDi_condsignal(&LDi_bgstreamcond);
+    LDi_condsignal(&client->pollCond);
+    LDi_condsignal(&client->streamCond);
 }
 
 /*
@@ -357,8 +356,8 @@ streamcallback(LDClient *const client, const char *line)
     return 0;
 }
 
-static THREAD_RETURN
-bgfeaturestreamer(void *const v)
+THREAD_RETURN
+LDi_bgfeaturestreamer(void *const v)
 {
     LDClient *const client = v;
 
@@ -366,12 +365,20 @@ bgfeaturestreamer(void *const v)
     while (true) {
         LDi_rdlock(&LDi_clientlock);
 
-        if (client->dead || !client->config->streaming || client->offline || client->background) {
+        if (client->dead) {
+            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer\n");
+            client->threads--;
+            LDi_updatestatus(client, 0);
+            LDi_rdunlock(&LDi_clientlock);
+            return THREAD_RETURN_DEFAULT;
+        }
+
+        if (!client->config->streaming || client->offline || client->background) {
             LDi_rdunlock(&LDi_clientlock);
             int ms = 30000;
-            LDi_mtxenter(&LDi_condmtx);
-            LDi_condwait(&LDi_bgstreamcond, &LDi_condmtx, ms);
-            LDi_mtxleave(&LDi_condmtx);
+            LDi_mtxenter(&client->condMtx);
+            LDi_condwait(&client->streamCond, &client->condMtx, ms);
+            LDi_mtxleave(&client->condMtx);
             continue;
         }
 
@@ -382,11 +389,10 @@ bgfeaturestreamer(void *const v)
         LDi_readstream(client,  &response, streamcallback, LDi_updatehandle);
 
         if (response == 401 || response == 403) {
-            retries = 0;
             LDi_wrlock(&LDi_clientlock);
             client->dead = true;
-            LDi_updatestatus(client, 0);
             LDi_wrunlock(&LDi_clientlock);
+            continue;
         } else if (response == -1) {
             retries++;
         } else {
@@ -408,13 +414,4 @@ bgfeaturestreamer(void *const v)
             LDi_millisleep(backoff);
         }
     }
-}
-
-void
-LDi_startthreads(LDClient *const client)
-{
-    LDi_mtxinit(&LDi_condmtx);
-    LDi_createthread(&LDi_eventthread, bgeventsender, client);
-    LDi_createthread(&LDi_pollingthread, bgfeaturepoller, client);
-    LDi_createthread(&LDi_streamingthread, bgfeaturestreamer, client);
 }
