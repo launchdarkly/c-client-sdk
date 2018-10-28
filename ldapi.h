@@ -168,13 +168,13 @@ typedef bool (*LD_store_stringwriter)(void *, const char *data);
 typedef const char *(*LD_store_stringreader)(void *);
 typedef void (*LD_store_closer)(void *);
 
-void
-LD_store_setfns(void *context, LD_store_opener, LD_store_stringwriter, LD_store_stringreader, LD_store_closer);
+void LD_store_setfns(struct LDClient_i *client, void *context,
+    LD_store_opener, LD_store_stringwriter, LD_store_stringreader, LD_store_closer);
 
-void *LD_store_fileopen(void *, const char *name, const char *mode, size_t len);
-bool LD_store_filewrite(void *h, const char *data);
-const char *LD_store_fileread(void *h);
-void LD_store_fileclose(void *h);
+void *LD_store_fileopen(struct LDClient_i *client, void *h, const char *name, const char *mode, size_t len);
+bool LD_store_filewrite(struct LDClient_i *client, void *h, const char *data);
+const char *LD_store_fileread(struct LDClient_i *client, void *h);
+void LD_store_fileclose(struct LDClient_i *client, void *h);
 
 /*
  * listener function for flag changes.
