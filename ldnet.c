@@ -15,10 +15,11 @@ struct MemoryStruct {
 };
 
 struct streamdata {
-    int (*callback)(const char *);
+    int (*callback)(LDClient *client, const char *);
     struct MemoryStruct mem;
     time_t lastdatatime;
     double lastdataamt;
+    LDClient *client;
 };
 
 typedef size_t (*WriteCB)(void*, size_t, size_t, void*);
@@ -67,7 +68,7 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
         size_t eaten = 0;
         while (nl) {
             *nl = 0;
-            streamdata->callback(mem->memory + eaten);
+            streamdata->callback(streamdata->client, mem->memory + eaten);
             eaten = nl - mem->memory + 1;
             nl = memchr(mem->memory + eaten, '\n', mem->size - eaten);
         }
@@ -143,7 +144,7 @@ prepareShared(const char *const url, const char *const authkey, CURL **r_curl, s
     if (curl) { curl_easy_cleanup(curl); }
 
     return false;
-};
+}
 
 /*
  * record the timestamp of the last received data. if nothing has been
@@ -165,8 +166,7 @@ progressinspector(void *v, double dltotal, double dlnow, double ultotal, double 
         return 1;
     }
 
-    const LDClient *const client = LDClientGet();
-    if (client->dead || client->offline) {
+    if (streamdata->client->dead || streamdata->client->offline) {
         return 1;
     }
 
@@ -188,19 +188,24 @@ LDi_cancelread(int handle)
  * it doesn't return except after a disconnect. (or some other failure.)
  */
 void
-LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cbdata(const char *),
-    void cbhandle(int), const char *const userjson, bool usereport)
+LDi_readstream(LDClient *const client, int *response,
+    int cbdata(LDClient *, const char *), void cbhandle(int), const char *const userjson)
 {
     struct MemoryStruct headers; struct streamdata streamdata;
     CURL *curl = NULL; struct curl_slist *headerlist = NULL;
 
     memset(&headers, 0, sizeof(headers)); memset(&streamdata, 0, sizeof(streamdata));
 
-    streamdata.callback = cbdata; streamdata.lastdatatime = time(NULL);
+    streamdata.callback = cbdata; streamdata.lastdatatime = time(NULL); streamdata.client = client;
+
+    LDi_rdlock(&LDi_clientlock);
+
+    const bool usereport = client->config->useReport;
 
     char url[4096];
     if (usereport) {
-        if (snprintf(url, sizeof(url), "%s/meval", urlprefix) < 0) {
+        if (snprintf(url, sizeof(url), "%s/meval", client->config->streamURI) < 0) {
+            LDi_rdunlock(&LDi_clientlock);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return;
         }
     }
@@ -209,20 +214,25 @@ LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cb
         char *const b64text = LDi_base64_encode(userjson, strlen(userjson), &b64len);
 
         if (!b64text) {
+            LDi_rdunlock(&LDi_clientlock);
             LDi_log(LD_LOG_ERROR, "LDi_base64_encode == NULL in LDi_readstream\n"); return;
         }
 
-        const int status = snprintf(url, sizeof(url), "%s/meval/%s", urlprefix, b64text);
+        const int status = snprintf(url, sizeof(url), "%s/meval/%s", client->config->streamURI, b64text);
         free(b64text);
 
         if (status < 0) {
+            LDi_rdunlock(&LDi_clientlock);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return;
         }
     }
 
-    if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
+    if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
+        LDi_rdunlock(&LDi_clientlock);
         return;
     }
+
+    LDi_rdunlock(&LDi_clientlock);
 
     if (usereport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
@@ -293,17 +303,21 @@ LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cb
 }
 
 char *
-LDi_fetchfeaturemap(const char *urlprefix, const char *authkey, int *response,
-    const char *const userjson, bool usereport)
+LDi_fetchfeaturemap(LDClient *const client, int *response, const char *const userjson)
 {
     struct MemoryStruct headers, data;
     CURL *curl = NULL; struct curl_slist *headerlist = NULL;
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
+    LDi_rdlock(&LDi_clientlock);
+
+    const bool usereport = client->config->useReport;
+
     char url[4096];
     if (usereport) {
-        if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", urlprefix) < 0) {
+        if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", client->config->appURI) < 0) {
+            LDi_rdunlock(&LDi_clientlock);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return NULL;
         }
     }
@@ -315,17 +329,21 @@ LDi_fetchfeaturemap(const char *urlprefix, const char *authkey, int *response,
             LDi_log(LD_LOG_CRITICAL, "LDi_base64_encode == NULL in LDi_fetchfeaturemap\n"); return NULL;
         }
 
-        const int status = snprintf(url, sizeof(url), "%s/msdk/evalx/users/%s", urlprefix, b64text);
+        const int status = snprintf(url, sizeof(url), "%s/msdk/evalx/users/%s", client->config->appURI, b64text);
         free(b64text);
 
         if (status < 0) {
+            LDi_rdunlock(&LDi_clientlock);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return NULL;
         }
     }
 
-    if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+        LDi_rdunlock(&LDi_clientlock);
         return NULL;
     }
+
+    LDi_rdunlock(&LDi_clientlock);
 
     if (usereport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
@@ -366,16 +384,28 @@ LDi_fetchfeaturemap(const char *urlprefix, const char *authkey, int *response,
 }
 
 void
-LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response)
+LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
 {
     struct MemoryStruct headers, data;
     CURL *curl = NULL; struct curl_slist *headerlist = NULL;
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
-    if (!prepareShared(url, authkey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    LDi_rdlock(&LDi_clientlock);
+
+    char url[4096];
+    if (snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI) < 0) {
+        LDi_rdunlock(&LDi_clientlock);
+        LDi_log(LD_LOG_CRITICAL, "snprintf config->eventsURI failed\n");
         return;
     }
+
+    if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+        LDi_rdunlock(&LDi_clientlock);
+        return;
+    }
+
+    LDi_rdunlock(&LDi_clientlock);
 
     const char* const headermime = "Content-Type: application/json";
     if (!(headerlist = curl_slist_append(headerlist, headermime))) {

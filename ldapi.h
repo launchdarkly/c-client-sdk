@@ -79,10 +79,7 @@ void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
-
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
-struct LDClient_i *LDClientGet(void);
-
 
 LDUser *LDUserNew(const char *);
 

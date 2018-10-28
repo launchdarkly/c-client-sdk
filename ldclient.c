@@ -11,7 +11,6 @@
 #include "ldinternal.h"
 
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
-ld_once_t LDi_threadsonce = LD_ONCE_INIT;
 
 ld_cond_t LDi_initcond = LD_COND_INIT;
 ld_mutex_t LDi_initcondmtx;
@@ -30,19 +29,6 @@ LDi_earlyinit(void)
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     LDi_initializerng();
-
-    theClient = LDAlloc(sizeof(*theClient));
-    if (!theClient) {
-        LDi_log(LD_LOG_CRITICAL, "no memory for the client\n");
-        return;
-    }
-    memset(theClient, 0, sizeof(*theClient));
-}
-
-static void
-threadsinit(void)
-{
-    LDi_startthreads(theClient);
 }
 
 LDConfig *
@@ -150,10 +136,9 @@ void LDConfigSetUseReport(LDConfig *const config, const bool report)
 }
 
 static void
-freeconfig(LDConfig *config)
+freeconfig(LDConfig *const config)
 {
-    if (!config)
-        return;
+    if (!config) { return; }
     LDFree(config->appURI);
     LDFree(config->eventsURI);
     LDFree(config->mobileKey);
@@ -183,12 +168,14 @@ LDClientInit(LDConfig *const config, LDUser *const user)
 
     LDi_wrlock(&LDi_clientlock);
 
-    if (!theClient) {
-        LDi_wrunlock(&LDi_clientlock);
+    LDClient *const client = LDAlloc(sizeof(*client));
+
+    if (!client) {
+        LDi_log(LD_LOG_CRITICAL, "no memory for the client\n");
         return NULL;
     }
 
-    LDClient *const client = theClient;
+    memset(client, 0, sizeof(*client));
 
     if (client->config != config) {
         freeconfig(client->config);
@@ -205,6 +192,7 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->background = false;
     client->isinit = false;
     client->allFlags = NULL;
+    client->threads = 3;
 
     char *const flags = LDi_loaddata("features", user->key);
     if (flags) {
@@ -215,15 +203,9 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     LDi_recordidentify(client, user);
     LDi_wrunlock(&LDi_clientlock);
 
-    LDi_once(&LDi_threadsonce, threadsinit);
+    LDi_startthreads(client);
 
     return client;
-}
-
-LDClient *
-LDClientGet()
-{
-    return theClient;
 }
 
 void

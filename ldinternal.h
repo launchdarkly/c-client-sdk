@@ -21,6 +21,7 @@ struct LDClient_i {
     bool dead;
     bool isinit;
     struct listener *listeners;
+    unsigned int threads;
 };
 
 struct LDConfig_i {
@@ -87,23 +88,23 @@ bool LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int f
 void LDi_savehash(LDClient *client);
 
 void LDi_cancelread(int handle);
-char *LDi_fetchfeaturemap(const char *urlprefix, const char *authkey, int *response,
-    const char *const userjson, bool usereport);
-void LDi_readstream(const char *urlprefix, const char *authkey, int *response, int cbdata(const char *),
-    void cbhandle(int), const char *const userjson, bool usereport);
+char *LDi_fetchfeaturemap(LDClient *client, int *response, const char *const userjson);
+
+void LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *client, const char *line),
+    void cbhandle(int handle), const char *const userjson);
 
 void LDi_recordidentify(LDClient *client, LDUser *lduser);
 void LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *, double defaultn, const char *defaults, LDNode *);
 void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data);
 char *LDi_geteventdata(void);
-void LDi_sendevents(const char *url, const char *authkey, const char *eventdata, int *response);
+void LDi_sendevents(LDClient *const client, const char *eventdata, int *response);
 
 void LDi_reinitializeconnection();
 void LDi_startstopstreaming(bool stopstreaming);
-void LDi_onstreameventput(const char *data);
-void LDi_onstreameventpatch(const char *data);
-void LDi_onstreameventdelete(const char *data);
+void LDi_onstreameventput(LDClient *client, const char *data);
+void LDi_onstreameventpatch(LDClient *client, const char *data);
+void LDi_onstreameventdelete(LDClient *client, const char *data);
 
 char *LDi_usertojsontext(LDClient *client, LDUser *lduser, bool redact);
 cJSON *LDi_usertojson(LDClient *client, LDUser *lduser, bool redact);
