@@ -194,18 +194,12 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->wantnewevent = true;
     client->streamhandle = 0;
 
-    client->store_ctx = NULL;
-    client->store_open = NULL;
-    client->store_writestring = NULL;
-    client->store_readstring = NULL;;
-    client->store_close = NULL;
-
     LDi_mtxinit(&client->condMtx);
     LDi_createthread(&client->eventThread, LDi_bgeventsender, client);
     LDi_createthread(&client->pollingThread, LDi_bgfeaturepoller, client);
     LDi_createthread(&client->streamingThread, LDi_bgfeaturestreamer, client);
 
-    char *const flags = LDi_loaddata(client, "features", user->key);
+    char *const flags = LDi_loaddata("features", user->key);
     if (flags) {
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
@@ -267,7 +261,7 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
     client->user = user;
     client->allFlags = NULL;
     LDi_updatestatus(client, 0);
-    char *const flags = LDi_loaddata(client, "features", client->user->key);
+    char *const flags = LDi_loaddata("features", client->user->key);
     if (flags) {
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
@@ -380,7 +374,7 @@ LDClientRestoreFlags(LDClient *const client, const char *const data)
 {
     LD_ASSERT(client); LD_ASSERT(data);
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_savedata(client, "features", client->user->key, data);
+        LDi_savedata("features", client->user->key, data);
     }
 }
 
@@ -426,7 +420,7 @@ LDi_savehash(LDClient *const client)
     LD_ASSERT(client);
     LDi_rdlock(&LDi_clientlock);
     char *const serialized = LDi_hashtostring(client->allFlags, true);
-    LDi_savedata(client, "features", client->user->key, serialized);
+    LDi_savedata("features", client->user->key, serialized);
     LDi_rdunlock(&LDi_clientlock);
     LDFree(serialized);
 }

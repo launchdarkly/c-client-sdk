@@ -168,7 +168,7 @@ void
 LDi_onstreameventput(LDClient *const client, const char *const data)
 {
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_savedata(client, "features", client->user->key, data);
+        LDi_savedata("features", client->user->key, data);
     }
 }
 
@@ -262,7 +262,7 @@ onstreameventping(LDClient *const client)
     }
     if (!data) { return; }
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_savedata(client, "features", client->user->key, data);
+        LDi_savedata("features", client->user->key, data);
     }
     free(data);
 }

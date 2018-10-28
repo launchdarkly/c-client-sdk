@@ -87,12 +87,6 @@ struct LDClient_i {
     int wantnewevent;
     char eventtypebuf[256];
     int streamhandle;
-    /* store state */
-    void *store_ctx;
-    LD_store_opener store_open;
-    LD_store_stringwriter store_writestring;
-    LD_store_stringreader store_readstring;
-    LD_store_closer store_close;
 };
 
 struct LDConfig_i {
@@ -198,8 +192,8 @@ bool LDi_random(unsigned int *result);
 bool LDi_randomhex(char *buffer, size_t buffersize);
 
 /* calls into the store interface */
-void LDi_savedata(LDClient *client, const char *dataname, const char *username, const char *data);
-char *LDi_loaddata(LDClient *client, const char *dataname, const char *username);
+void LDi_savedata(const char *dataname, const char *username, const char *data);
+char *LDi_loaddata(const char *dataname, const char *username);
 
 void LDi_condwait(ld_cond_t *cond, ld_mutex_t *mtx, int ms);
 void LDi_condsignal(ld_cond_t *cond);
