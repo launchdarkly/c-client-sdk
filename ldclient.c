@@ -191,6 +191,7 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->status = LDStatusInitializing;
     client->allFlags = NULL;
     client->threads = 3;
+    client->wantnewevent = true;
 
     LDi_mtxinit(&client->condMtx);
     LDi_createthread(&client->eventThread, LDi_bgeventsender, client);

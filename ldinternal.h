@@ -83,6 +83,9 @@ struct LDClient_i {
     ld_cond_t pollCond;
     ld_cond_t streamCond;
     ld_mutex_t condMtx;
+    /* streaming state */
+    int wantnewevent;
+    char eventtypebuf[256];
 };
 
 struct LDConfig_i {
