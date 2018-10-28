@@ -20,6 +20,14 @@ enum ld_log_level {
 };
 
 typedef enum {
+    LDStatusInitializing = 0,
+    LDStatusInitialized,
+    LDStatusFailed,
+    LDStatusShuttingdown,
+    LDStatusShutdown
+} LDStatus;
+
+typedef enum {
     LDNodeNone = 0,
     LDNodeString,
     LDNodeNumber,

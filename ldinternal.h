@@ -72,8 +72,7 @@ struct LDClient_i {
     LDNode *allFlags;
     bool offline;
     bool background;
-    bool dead;
-    bool isinit;
+    bool status;
     struct listener *listeners;
     /* thread management */
     unsigned int threads;
@@ -202,7 +201,7 @@ extern ld_once_t LDi_earlyonce;
 void LDi_earlyinit(void);
 
 /* expects caller to own LDi_clientlock */
-void LDi_updatestatus(struct LDClient_i *client, bool isinit);
+void LDi_updatestatus(struct LDClient_i *client, const LDStatus status);
 
 THREAD_RETURN LDi_bgeventsender(void *const v);
 THREAD_RETURN LDi_bgfeaturepoller(void *const v);

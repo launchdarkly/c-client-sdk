@@ -17,15 +17,14 @@
 THREAD_RETURN
 LDi_bgeventsender(void *const v)
 {
-    LDClient *const client = v;
+    LDClient *const client = v; bool finalflush = false;
 
     while (true) {
         LDi_rdlock(&LDi_clientlock);
 
-        if (client->dead) {
+        if (client->status == LDStatusFailed || finalflush) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender\n");
             client->threads--;
-            LDi_updatestatus(client, 0);
             LDi_rdunlock(&LDi_clientlock);
             return THREAD_RETURN_DEFAULT;
         }
@@ -46,7 +45,7 @@ LDi_bgeventsender(void *const v)
         if (!eventdata) { continue; }
 
         LDi_rdlock(&LDi_clientlock);
-        if (client->dead || client->offline) {
+        if (client->status != LDStatusInitialized || client->offline) {
             LDi_rdunlock(&LDi_clientlock);
             continue;
         }
@@ -60,7 +59,7 @@ LDi_bgeventsender(void *const v)
             LDi_sendevents(client, eventdata, &response);
             if (response == 401 || response == 403) {
                 LDi_wrlock(&LDi_clientlock);
-                client->dead = true;
+                LDi_updatestatus(client, LDStatusFailed);
                 LDi_wrunlock(&LDi_clientlock);
                 break;
             } else if (response == -1) {
@@ -86,6 +85,9 @@ LDi_bgeventsender(void *const v)
                 LDi_rdlock(&LDi_clientlock);
             }
         }
+        if (client->status == LDStatusShuttingdown) {
+            finalflush = true;
+        }
         free(eventdata);
     }
 }
@@ -101,7 +103,7 @@ LDi_bgfeaturepoller(void *const v)
     while (true) {
         LDi_rdlock(&LDi_clientlock);
 
-        if (client->dead) {
+        if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller\n");
             client->threads--;
             LDi_updatestatus(client, 0);
@@ -125,8 +127,9 @@ LDi_bgfeaturepoller(void *const v)
                 skippolling = skippolling || client->config->streaming;
             }
         }
+
         /* this triggers the first time the thread runs, so we don't have to wait */
-        if (!skippolling && !client->isinit) { ms = 0; }
+        if (!skippolling && client->status == LDStatusInitializing) { ms = 0; }
         LDi_rdunlock(&LDi_clientlock);
 
         if (ms > 0) {
@@ -137,7 +140,7 @@ LDi_bgfeaturepoller(void *const v)
         if (skippolling) { continue; }
 
         LDi_rdlock(&LDi_clientlock);
-        if (client->dead) {
+        if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_rdunlock(&LDi_clientlock);
             continue;
         }
@@ -149,7 +152,7 @@ LDi_bgfeaturepoller(void *const v)
 
         if (response == 401 || response == 403) {
             LDi_wrlock(&LDi_clientlock);
-            client->dead = true;
+            LDi_updatestatus(client, LDStatusFailed);
             LDi_wrunlock(&LDi_clientlock);
         }
         if (!data) { continue; }
@@ -242,7 +245,7 @@ onstreameventping(LDClient *const client)
 {
     LDi_rdlock(&LDi_clientlock);
 
-    if (client->dead) {
+    if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
         LDi_rdunlock(&LDi_clientlock);
         return;
     }
@@ -254,8 +257,7 @@ onstreameventping(LDClient *const client)
 
     if (response == 401 || response == 403) {
         LDi_wrlock(&LDi_clientlock);
-        client->dead = true;
-        LDi_updatestatus(client, 0);
+        LDi_updatestatus(client, LDStatusFailed);
         LDi_wrunlock(&LDi_clientlock);
     }
     if (!data) { return; }
@@ -365,7 +367,7 @@ LDi_bgfeaturestreamer(void *const v)
     while (true) {
         LDi_rdlock(&LDi_clientlock);
 
-        if (client->dead) {
+        if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer\n");
             client->threads--;
             LDi_updatestatus(client, 0);
@@ -390,7 +392,7 @@ LDi_bgfeaturestreamer(void *const v)
 
         if (response == 401 || response == 403) {
             LDi_wrlock(&LDi_clientlock);
-            client->dead = true;
+            LDi_updatestatus(client, LDStatusFailed);
             LDi_wrunlock(&LDi_clientlock);
             continue;
         } else if (response == -1) {

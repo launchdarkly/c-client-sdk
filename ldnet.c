@@ -166,7 +166,11 @@ progressinspector(void *const v, double dltotal, double dlnow, double ultotal, d
         return 1;
     }
 
-    if (streamdata->client->dead || streamdata->client->offline) {
+    const bool failed = streamdata->client->status == LDStatusFailed;
+    const bool stopping = streamdata->client->status == LDStatusShuttingdown;
+    const bool offline = streamdata->client->offline;
+
+    if ( failed || stopping || offline ) {
         return 1;
     }
 

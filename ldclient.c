@@ -186,10 +186,9 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     }
 
     client->user = user;
-    client->dead = false;
     client->offline = config->offline;
     client->background = false;
-    client->isinit = false;
+    client->status = LDStatusInitializing;
     client->allFlags = NULL;
     client->threads = 3;
 
@@ -225,7 +224,7 @@ LDClientSetOnline(LDClient *const client)
     LD_ASSERT(client);
     LDi_wrlock(&LDi_clientlock);
     client->offline = false;
-    client->isinit = false;
+    LDi_updatestatus(client, LDStatusInitializing);
     LDi_wrunlock(&LDi_clientlock);
 }
 
@@ -276,18 +275,35 @@ LDClientClose(LDClient *const client)
     LD_ASSERT(client);
 
     LDi_wrlock(&LDi_clientlock);
-    client->dead = true;
-    LDNode *const oldhash = client->allFlags;
-    client->allFlags = NULL;
-    freeconfig(client->config);
-    client->config = NULL;
-    LDi_freeuser(client->user);
-    client->user = NULL;
+    LDi_updatestatus(client, LDStatusShuttingdown);
     LDi_wrunlock(&LDi_clientlock);
 
-    LDi_freehash(oldhash);
+    /* wait for threads to die */
+    bool first = true;
+    while (true) {
+      if (first) {
+          LDi_mtxenter(&LDi_initcondmtx);
+      }
 
-    /* stop the threads */
+      if (!first) {
+          LDi_condwait(&LDi_initcond, &LDi_initcondmtx, 5);
+      }
+
+      LDi_rdlock(&LDi_clientlock);
+      if (client->threads == 0) {
+          LDi_updatestatus(client, LDStatusShutdown);
+          LDi_rdunlock(&LDi_clientlock);
+          break;
+      }
+      LDi_rdunlock(&LDi_clientlock);
+
+      first = false;
+    }
+    LDi_mtxleave(&LDi_initcondmtx);
+
+    freeconfig(client->config);
+    LDi_freeuser(client->user);
+    LDi_freehash(client->allFlags);
 }
 
 LDNode *
@@ -305,7 +321,7 @@ LDClientIsInitialized(LDClient *const client)
 {
     LD_ASSERT(client);
     LDi_rdlock(&LDi_clientlock);
-    bool isinit = client->isinit;
+    bool isinit = client->status == LDStatusInitialized;
     LDi_rdunlock(&LDi_clientlock);
     return isinit;
 }
@@ -316,7 +332,7 @@ LDClientAwaitInitialized(LDClient *const client, const unsigned int timeoutmilli
     LD_ASSERT(client);
     LDi_mtxenter(&LDi_initcondmtx);
     LDi_rdlock(&LDi_clientlock);
-    if (client->isinit) {
+    if (client->status == LDStatusInitialized) {
         LDi_rdunlock(&LDi_clientlock);
         LDi_mtxleave(&LDi_initcondmtx);
         return true;
@@ -327,7 +343,7 @@ LDClientAwaitInitialized(LDClient *const client, const unsigned int timeoutmilli
     LDi_mtxleave(&LDi_initcondmtx);
 
     LDi_rdlock(&LDi_clientlock);
-    bool isinit = client->isinit;
+    bool isinit = client->status == LDStatusInitialized;
     LDi_rdunlock(&LDi_clientlock);
     return isinit;
 }
@@ -382,14 +398,10 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
         LDi_wrlock(&LDi_clientlock);
     }
 
-    bool statuschange = client->isinit == false;
     LDNode *const oldhash = client->allFlags;
     client->allFlags = hash;
 
-    /* tell application we are ready to go */
-    if (statuschange) {
-        LDi_updatestatus(client, 1);
-    }
+    LDi_updatestatus(client, LDStatusInitialized);
 
     if (needlock) {
         LDi_wrunlock(&LDi_clientlock);
@@ -658,11 +670,13 @@ LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
 }
 
 void
-LDi_updatestatus(struct LDClient_i *const client, const bool isinit)
+LDi_updatestatus(struct LDClient_i *const client, const LDStatus status)
 {
-    client->isinit = isinit;
-    if (LDi_statuscallback) {
-        LDi_statuscallback(isinit);
-    }
-    LDi_condsignal(&LDi_initcond);
+    if (client->status != status) {
+        client->status = status;
+        if (LDi_statuscallback) {
+            LDi_statuscallback(status);
+        }
+   }
+   LDi_condsignal(&LDi_initcond);
 };
