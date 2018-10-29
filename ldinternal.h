@@ -72,7 +72,7 @@ struct LDClient_i {
     LDNode *allFlags;
     bool offline;
     bool background;
-    bool status;
+    LDStatus status;
     struct listener *listeners;
     /* thread management */
     unsigned int threads;

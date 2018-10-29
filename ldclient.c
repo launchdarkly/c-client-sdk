@@ -288,6 +288,13 @@ LDClientClose(LDClient *const client)
     LDi_updatestatus(client, LDStatusShuttingdown);
     LDi_wrunlock(&LDi_clientlock);
 
+    LDi_reinitializeconnection(client);
+
+    LDi_condsignal(&LDi_initcond);
+    LDi_condsignal(&client->eventCond);
+    LDi_condsignal(&client->pollCond);
+    LDi_condsignal(&client->streamCond);
+
     /* wait for threads to die */
     bool first = true;
     while (true) {
@@ -411,7 +418,9 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     LDNode *const oldhash = client->allFlags;
     client->allFlags = hash;
 
-    LDi_updatestatus(client, LDStatusInitialized);
+    if (client->status == LDStatusInitializing) {
+        LDi_updatestatus(client, LDStatusInitialized);
+    }
 
     if (needlock) {
         LDi_wrunlock(&LDi_clientlock);
