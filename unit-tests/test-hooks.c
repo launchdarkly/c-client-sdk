@@ -32,7 +32,7 @@ test1(void)
     LDSetLogFunction(1, logger);
 
     LDConfig *const config = LDConfigNew("authkey");
-    config->offline = true;
+    LDConfigSetOffline(config, true);
 
     LDUser *const user = LDUserNew("userX");
 

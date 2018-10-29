@@ -103,7 +103,7 @@ main(int argc, char **argv)
     LDUser *const user = LDUserNew("");
 
     LDConfig *const config = LDConfigNew("authkey");
-    config->offline = true;
+    LDConfigSetOffline(config, true);
 
     LDClient *const client = LDClientInit(config, user);
 

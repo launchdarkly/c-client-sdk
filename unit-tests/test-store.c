@@ -45,7 +45,7 @@ test1(void)
     LD_store_setfns(NULL, LD_store_fileopen, NULL /* no writer */, LD_store_fileread, LD_store_fileclose);
 
     LDConfig *const config = LDConfigNew("authkey");
-    config->offline = true;
+    LDConfigSetOffline(config, true);
 
     LDUser *const user = LDUserNew("fileuser");
 
@@ -84,7 +84,7 @@ test2(void)
     LD_store_setfns(NULL, fake_opener, fake_stringwriter, NULL, fake_closer);
 
     LDConfig *const config = LDConfigNew("authkey");
-    config->offline = true;
+    LDConfigSetOffline(config, true);
 
     LDUser *const user = LDUserNew("fakeuser");
 
