@@ -41,7 +41,7 @@ LDi_bgeventsender(void *const v)
         LDi_mtxleave(&client->condMtx);
         LDi_log(LD_LOG_TRACE, "bgsender running\n");
 
-        char *const eventdata = LDi_geteventdata();
+        char *const eventdata = LDi_geteventdata(client);
         if (!eventdata) { continue; }
 
         LDi_rdlock(&LDi_clientlock);

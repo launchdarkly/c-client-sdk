@@ -87,6 +87,12 @@ struct LDClient_i {
     int wantnewevent;
     char eventtypebuf[256];
     int streamhandle;
+    /* event state */
+    ld_rwlock_t eventLock;
+    cJSON *eventArray;
+    int numEvents;
+    LDNode *summaryEvent;
+    double summaryStart;
 };
 
 struct LDConfig_i {
@@ -145,7 +151,6 @@ char *LDi_hashtostring(LDNode *hash, bool versioned);
 cJSON *LDi_hashtojson(LDNode *hash);
 cJSON *LDi_arraytojson(LDNode *hash);
 LDNode *LDi_jsontohash(cJSON *json, int flavor);
-void LDi_initevents(int capacity);
 
 char *LDi_strdup(const char *src);
 
@@ -162,8 +167,8 @@ void LDi_recordidentify(LDClient *client, LDUser *lduser);
 void LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
     LDNode *, double defaultn, const char *defaults, LDNode *);
 void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data);
-char *LDi_geteventdata(void);
-void LDi_sendevents(LDClient *const client, const char *eventdata, int *response);
+char *LDi_geteventdata(LDClient *client);
+void LDi_sendevents(LDClient *client, const char *eventdata, int *response);
 
 void LDi_reinitializeconnection(LDClient *client);
 void LDi_startstopstreaming(LDClient *client, bool stopstreaming);

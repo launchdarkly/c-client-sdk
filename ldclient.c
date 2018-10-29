@@ -163,8 +163,6 @@ LDClientInit(LDConfig *const config, LDUser *const user)
 
     checkconfig(config);
 
-    LDi_initevents(config->eventsCapacity);
-
     LDi_wrlock(&LDi_clientlock);
 
     LDClient *const client = LDAlloc(sizeof(*client));
@@ -194,7 +192,17 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->wantnewevent = true;
     client->streamhandle = 0;
 
+    client->eventLock = (ld_rwlock_t)LD_RWLOCK_INIT;
+    client->eventArray = cJSON_CreateArray();
+    client->numEvents = 0;
+    client->summaryEvent = LDNodeCreateHash();
+    client->summaryStart = 0;
+
     LDi_mtxinit(&client->condMtx);
+    ld_cond_t eventCond = (ld_cond_t)LD_COND_INIT;
+    ld_cond_t pollCond = (ld_cond_t)LD_COND_INIT;
+    ld_cond_t streamCond = (ld_cond_t)LD_COND_INIT;
+
     LDi_createthread(&client->eventThread, LDi_bgeventsender, client);
     LDi_createthread(&client->pollingThread, LDi_bgfeaturepoller, client);
     LDi_createthread(&client->streamingThread, LDi_bgfeaturestreamer, client);
