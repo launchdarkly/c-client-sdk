@@ -300,23 +300,23 @@ LDClientClose(LDClient *const client)
     /* wait for threads to die */
     bool first = true;
     while (true) {
-      if (first) {
-          LDi_mtxenter(&LDi_initcondmtx);
-      }
+        if (first) {
+            LDi_mtxenter(&LDi_initcondmtx);
+        }
 
-      if (!first) {
-          LDi_condwait(&LDi_initcond, &LDi_initcondmtx, 5);
-      }
+        if (!first) {
+            LDi_condwait(&LDi_initcond, &LDi_initcondmtx, 5);
+        }
 
-      LDi_rdlock(&client->clientLock);
-      if (client->threads == 0) {
-          LDi_updatestatus(client, LDStatusShutdown);
-          LDi_rdunlock(&client->clientLock);
-          break;
-      }
-      LDi_rdunlock(&client->clientLock);
+        LDi_wrlock(&client->clientLock);
+        if (client->threads == 0) {
+            LDi_updatestatus(client, LDStatusShutdown);
+            LDi_wrunlock(&client->clientLock);
+            break;
+        }
+        LDi_wrunlock(&client->clientLock);
 
-      first = false;
+        first = false;
     }
     LDi_mtxleave(&LDi_initcondmtx);
 
