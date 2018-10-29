@@ -112,7 +112,6 @@ LDi_bgfeaturepoller(void *const v)
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller\n");
             client->threads--;
-            LDi_updatestatus(client, 0);
             LDi_rdunlock(&LDi_clientlock);
             return THREAD_RETURN_DEFAULT;
         }
@@ -383,7 +382,6 @@ LDi_bgfeaturestreamer(void *const v)
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer\n");
             client->threads--;
-            LDi_updatestatus(client, 0);
             LDi_rdunlock(&LDi_clientlock);
             return THREAD_RETURN_DEFAULT;
         }
