@@ -209,11 +209,11 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
 
     streamdata.callback = cbdata; streamdata.lastdatatime = time(NULL); streamdata.client = client;
 
-    LDi_rdlock(&LDi_clientlock);
+    LDi_rdlock(&client->clientLock);
 
     char *const jsonuser = LDi_usertojsontext(client, client->user, false);
     if (!jsonuser) {
-        LDi_rdunlock(&LDi_clientlock);
+        LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed\n");
         return;
     }
@@ -223,7 +223,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     char url[4096];
     if (usereport) {
         if (snprintf(url, sizeof(url), "%s/meval", client->config->streamURI) < 0) {
-            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+            LDi_rdunlock(&client->clientLock); free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return;
         }
     }
@@ -232,7 +232,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
-            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+            LDi_rdunlock(&client->clientLock); free(jsonuser);
             LDi_log(LD_LOG_ERROR, "LDi_base64_encode == NULL in LDi_readstream\n"); return;
         }
 
@@ -240,19 +240,19 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         free(b64text);
 
         if (status < 0) {
-            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+            LDi_rdunlock(&client->clientLock); free(jsonuser);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return;
         }
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
-        LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+        LDi_rdunlock(&client->clientLock); free(jsonuser);
         return;
     }
 
     free(jsonuser);
 
-    LDi_rdunlock(&LDi_clientlock);
+    LDi_rdunlock(&client->clientLock);
 
     if (usereport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
@@ -330,11 +330,11 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
-    LDi_rdlock(&LDi_clientlock);
+    LDi_rdlock(&client->clientLock);
 
     char *const jsonuser = LDi_usertojsontext(client, client->user, false);
     if (!jsonuser) {
-        LDi_rdunlock(&LDi_clientlock);
+        LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed\n");
         return NULL;
     }
@@ -344,7 +344,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
     char url[4096];
     if (usereport) {
         if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", client->config->appURI) < 0) {
-            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+            LDi_rdunlock(&client->clientLock); free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return NULL;
         }
     }
@@ -353,7 +353,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
-            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+            LDi_rdunlock(&client->clientLock); free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "LDi_base64_encode == NULL in LDi_fetchfeaturemap\n"); return NULL;
         }
 
@@ -361,19 +361,19 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         free(b64text);
 
         if (status < 0) {
-            LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+            LDi_rdunlock(&client->clientLock); free(jsonuser);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return NULL;
         }
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
-        LDi_rdunlock(&LDi_clientlock); free(jsonuser);
+        LDi_rdunlock(&client->clientLock); free(jsonuser);
         return NULL;
     }
 
     free(jsonuser);
 
-    LDi_rdunlock(&LDi_clientlock);
+    LDi_rdunlock(&client->clientLock);
 
     if (usereport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
@@ -421,21 +421,21 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
-    LDi_rdlock(&LDi_clientlock);
+    LDi_rdlock(&client->clientLock);
 
     char url[4096];
     if (snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI) < 0) {
-        LDi_rdunlock(&LDi_clientlock);
+        LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "snprintf config->eventsURI failed\n");
         return;
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
-        LDi_rdunlock(&LDi_clientlock);
+        LDi_rdunlock(&client->clientLock);
         return;
     }
 
-    LDi_rdunlock(&LDi_clientlock);
+    LDi_rdunlock(&client->clientLock);
 
     const char* const headermime = "Content-Type: application/json";
     if (!(headerlist = curl_slist_append(headerlist, headermime))) {

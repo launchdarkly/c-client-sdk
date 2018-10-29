@@ -70,6 +70,7 @@ struct LDClient_i {
     LDConfig *config;
     LDUser *user;
     LDNode *allFlags;
+    ld_rwlock_t clientLock;
     bool offline;
     bool background;
     LDStatus status;
@@ -203,8 +204,6 @@ char *LDi_loaddata(const char *dataname, const char *username);
 void LDi_condwait(ld_cond_t *cond, ld_mutex_t *mtx, int ms);
 void LDi_condsignal(ld_cond_t *cond);
 
-extern ld_rwlock_t LDi_clientlock;
-extern ld_cond_t LDi_bgeventcond;
 extern ld_mutex_t LDi_allocmtx;
 extern ld_once_t LDi_earlyonce;
 void LDi_earlyinit(void);
