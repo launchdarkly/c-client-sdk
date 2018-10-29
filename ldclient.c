@@ -15,8 +15,6 @@ ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 ld_cond_t LDi_initcond = LD_COND_INIT;
 ld_mutex_t LDi_initcondmtx;
 
-ld_rwlock_t LDi_clientlock = LD_RWLOCK_INIT;
-
 void (*LDi_statuscallback)(int);
 
 void
@@ -201,9 +199,9 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->summaryStart = 0;
 
     LDi_mtxinit(&client->condMtx);
-    ld_cond_t eventCond = (ld_cond_t)LD_COND_INIT;
-    ld_cond_t pollCond = (ld_cond_t)LD_COND_INIT;
-    ld_cond_t streamCond = (ld_cond_t)LD_COND_INIT;
+    client->eventCond = (ld_cond_t)LD_COND_INIT;
+    client->pollCond = (ld_cond_t)LD_COND_INIT;
+    client->streamCond = (ld_cond_t)LD_COND_INIT;
 
     LDi_createthread(&client->eventThread, LDi_bgeventsender, client);
     LDi_createthread(&client->pollingThread, LDi_bgfeaturepoller, client);
