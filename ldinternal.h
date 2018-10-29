@@ -94,6 +94,9 @@ struct LDClient_i {
     int numEvents;
     LDNode *summaryEvent;
     double summaryStart;
+    /* init cond */
+    ld_cond_t initCond;
+    ld_mutex_t initCondMtx;
 };
 
 struct LDConfig_i {

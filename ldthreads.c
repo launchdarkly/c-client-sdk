@@ -53,7 +53,7 @@ LDi_bgeventsender(void *const v)
         if (!eventdata) { continue; }
 
         LDi_rdlock(&client->clientLock);
-        if (client->status != LDStatusInitialized || client->offline) {
+        if (client->offline) {
             LDi_rdunlock(&client->clientLock);
             continue;
         }

@@ -12,16 +12,12 @@
 
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 
-ld_cond_t LDi_initcond = LD_COND_INIT;
-ld_mutex_t LDi_initcondmtx;
-
 void (*LDi_statuscallback)(int);
 
 void
 LDi_earlyinit(void)
 {
     LDi_mtxinit(&LDi_allocmtx);
-    LDi_mtxinit(&LDi_initcondmtx);
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
@@ -198,6 +194,9 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     client->summaryEvent = LDNodeCreateHash();
     client->summaryStart = 0;
 
+    LDi_mtxinit(&client->initCondMtx);
+    client->initCond = (ld_cond_t)LD_COND_INIT;
+
     LDi_mtxinit(&client->condMtx);
     client->eventCond = (ld_cond_t)LD_COND_INIT;
     client->pollCond = (ld_cond_t)LD_COND_INIT;
@@ -290,7 +289,7 @@ LDClientClose(LDClient *const client)
 
     LDi_reinitializeconnection(client);
 
-    LDi_condsignal(&LDi_initcond);
+    LDi_condsignal(&client->initCond);
     LDi_condsignal(&client->eventCond);
     LDi_condsignal(&client->pollCond);
     LDi_condsignal(&client->streamCond);
@@ -299,11 +298,11 @@ LDClientClose(LDClient *const client)
     bool first = true;
     while (true) {
         if (first) {
-            LDi_mtxenter(&LDi_initcondmtx);
+            LDi_mtxenter(&client->initCondMtx);
         }
 
         if (!first) {
-            LDi_condwait(&LDi_initcond, &LDi_initcondmtx, 5);
+            LDi_condwait(&client->initCond, &client->initCondMtx, 5);
         }
 
         LDi_wrlock(&client->clientLock);
@@ -316,7 +315,7 @@ LDClientClose(LDClient *const client)
 
         first = false;
     }
-    LDi_mtxleave(&LDi_initcondmtx);
+    LDi_mtxleave(&client->initCondMtx);
 
     freeconfig(client->config);
     LDi_freeuser(client->user);
@@ -347,17 +346,17 @@ bool
 LDClientAwaitInitialized(LDClient *const client, const unsigned int timeoutmilli)
 {
     LD_ASSERT(client);
-    LDi_mtxenter(&LDi_initcondmtx);
+    LDi_mtxenter(&client->initCondMtx);
     LDi_rdlock(&client->clientLock);
     if (client->status == LDStatusInitialized) {
         LDi_rdunlock(&client->clientLock);
-        LDi_mtxleave(&LDi_initcondmtx);
+        LDi_mtxleave(&client->initCondMtx);
         return true;
     }
     LDi_rdunlock(&client->clientLock);
 
-    LDi_condwait(&LDi_initcond, &LDi_initcondmtx, timeoutmilli);
-    LDi_mtxleave(&LDi_initcondmtx);
+    LDi_condwait(&client->initCond, &client->initCondMtx, timeoutmilli);
+    LDi_mtxleave(&client->initCondMtx);
 
     LDi_rdlock(&client->clientLock);
     bool isinit = client->status == LDStatusInitialized;
@@ -697,5 +696,5 @@ LDi_updatestatus(struct LDClient_i *const client, const LDStatus status)
             LDi_statuscallback(status);
         }
    }
-   LDi_condsignal(&LDi_initcond);
+   LDi_condsignal(&client->initCond);
 };
