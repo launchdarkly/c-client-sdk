@@ -261,18 +261,26 @@ void
 LDClientIdentify(LDClient *const client, LDUser *const user)
 {
     LD_ASSERT(client); LD_ASSERT(user);
+
     LDi_wrlock(&client->clientLock);
+
     if (user != client->user) {
         LDi_freeuser(client->user);
     }
+
     client->user = user;
     client->allFlags = NULL;
-    LDi_updatestatus(client, 0);
+
+    if (client->status == LDStatusInitialized) {
+        LDi_updatestatus(client, LDStatusInitializing);
+    }
+
     char *const flags = LDi_loaddata("features", client->user->key);
     if (flags) {
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
+
     LDi_reinitializeconnection(client);
     LDi_recordidentify(client, user);
     LDi_wrunlock(&client->clientLock);
