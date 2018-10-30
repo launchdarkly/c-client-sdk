@@ -319,6 +319,14 @@ LDClientClose(LDClient *const client)
     freeconfig(client->config);
     LDi_freeuser(client->user);
     LDi_freehash(client->allFlags);
+
+    for (struct listener *item = client->listeners; item;) {
+        struct listener *const next = item->next; //must record next to make delete safe
+        LDFree(item);
+        item = next;
+    }
+
+    LDFree(client);
 }
 
 LDNode *
