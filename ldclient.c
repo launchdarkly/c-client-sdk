@@ -293,9 +293,8 @@ LDClientClose(LDClient *const client)
 
     LDi_wrlock(&client->clientLock);
     LDi_updatestatus(client, LDStatusShuttingdown);
-    LDi_wrunlock(&client->clientLock);
-
     LDi_reinitializeconnection(client);
+    LDi_wrunlock(&client->clientLock);
 
     LDi_condsignal(&client->initCond);
     LDi_condsignal(&client->eventCond);

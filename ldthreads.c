@@ -293,14 +293,12 @@ LDi_updatehandle(LDClient *const client, const int handle)
 void
 LDi_reinitializeconnection(LDClient *const client)
 {
-    LDi_wrlock(&client->clientLock);
     if (client->streamhandle) {
         LDi_cancelread(client->streamhandle);
         client->streamhandle = 0;
     }
     LDi_condsignal(&client->pollCond);
     LDi_condsignal(&client->streamCond);
-    LDi_wrunlock(&client->clientLock);
 }
 
 /*
