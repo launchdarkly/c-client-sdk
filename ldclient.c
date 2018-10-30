@@ -320,6 +320,10 @@ LDClientClose(LDClient *const client)
     LDi_freeuser(client->user);
     LDi_freehash(client->allFlags);
 
+    cJSON_Delete(client->eventArray);
+    /* may exist if flush failed */
+    LDi_freehash(client->summaryEvent);
+
     for (struct listener *item = client->listeners; item;) {
         struct listener *const next = item->next; //must record next to make delete safe
         LDFree(item);
