@@ -175,7 +175,7 @@ LDClientInit(LDConfig *const config, LDUser *const user)
         LDi_freeuser(client->user);
     }
 
-    client->eventLock = (ld_rwlock_t)LD_RWLOCK_INIT;
+    client->clientLock = (ld_rwlock_t)LD_RWLOCK_INIT;
 
     LDi_wrlock(&client->clientLock);
 
