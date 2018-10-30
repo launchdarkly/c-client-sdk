@@ -172,9 +172,11 @@ progressinspector(void *const v, double dltotal, double dlnow, double ultotal, d
         return 1;
     }
 
+    LDi_rdlock(&streamdata->client->clientLock);
     const bool failed = streamdata->client->status == LDStatusFailed;
     const bool stopping = streamdata->client->status == LDStatusShuttingdown;
     const bool offline = streamdata->client->offline;
+    LDi_rdunlock(&streamdata->client->clientLock);
 
     if ( failed || stopping || offline ) {
         return 1;
