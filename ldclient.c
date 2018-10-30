@@ -295,16 +295,8 @@ LDClientClose(LDClient *const client)
     LDi_condsignal(&client->streamCond);
 
     /* wait for threads to die */
-    bool first = true;
+    LDi_mtxenter(&client->initCondMtx);
     while (true) {
-        if (first) {
-            LDi_mtxenter(&client->initCondMtx);
-        }
-
-        if (!first) {
-            LDi_condwait(&client->initCond, &client->initCondMtx, 5);
-        }
-
         LDi_wrlock(&client->clientLock);
         if (client->threads == 0) {
             LDi_updatestatus(client, LDStatusShutdown);
@@ -313,7 +305,7 @@ LDClientClose(LDClient *const client)
         }
         LDi_wrunlock(&client->clientLock);
 
-        first = false;
+        LDi_condwait(&client->initCond, &client->initCondMtx, 5);
     }
     LDi_mtxleave(&client->initCondMtx);
 
