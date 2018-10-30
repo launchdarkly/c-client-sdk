@@ -105,7 +105,7 @@ main(int argc, char **argv)
     LDConfig *const config = LDConfigNew("authkey");
     config->offline = true;
 
-    LDClient *const client = LDClientInit(config, user);
+    LDClient *const client = LDClientInit(config, user, 0);
 
     test1(client);
 

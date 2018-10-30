@@ -80,7 +80,7 @@ void LDConfigSetUseReport(LDConfig *config, bool report);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
 
-struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
+struct LDClient_i *LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 struct LDClient_i *LDClientGet(void);
 
 
@@ -195,7 +195,7 @@ typedef struct LDClient_i LDClient;
 class LDClient {
     public:
         static LDClient *Get(void);
-        static LDClient *Init(LDConfig *, LDUser *);
+        static LDClient *Init(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
         bool isInitialized(void);
 

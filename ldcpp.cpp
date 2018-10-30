@@ -9,9 +9,9 @@ LDClient *LDClient::Get(void)
     return &theClient;
 }
 
-LDClient *LDClient::Init(LDConfig *config, LDUser *user)
+LDClient *LDClient::Init(LDConfig *config, LDUser *user, unsigned int maxwaitmilli)
 {
-    theClient.client = LDClientInit(config, user);
+    theClient.client = LDClientInit(config, user, maxwaitmilli);
     return &theClient;
 }
 
