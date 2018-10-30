@@ -1,7 +1,7 @@
-LaunchDarkly SDK for C / C++ (BETA)
+LaunchDarkly SDK [BETA] for C / C++
 ===================================
 
-*Warning:* This software is beta software and should not be used in a production environment.
+*Warning:* This software is *beta* software and should not be used in a production environment until version 1.0.
 
 The LaunchDarkly C / C++ SDK is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
 
@@ -89,7 +89,7 @@ There are several unimplemented features and known bugs. We intend to address al
 Learn more
 -----------
 
-Check out our [documentation](http://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](http://docs.launchdarkly.com/v2.0/docs/go-sdk-reference).
+Check out our [documentation](http://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](http://docs.launchdarkly.com/v2.0/docs/c-sdk-reference).
 
 Testing
 -------
