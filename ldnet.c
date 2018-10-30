@@ -84,10 +84,10 @@ StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 }
 
 static curl_socket_t
-SocketCallback(void *c, curlsocktype type, struct curl_sockaddr *addr)
+SocketCallback(void *const c, curlsocktype type, struct curl_sockaddr *const addr)
 {
     struct cbhandlecontext *const ctx = c;
-    curl_socket_t fd = socket(addr->family, addr->socktype, addr->protocol);
+    const curl_socket_t fd = socket(addr->family, addr->socktype, addr->protocol);
     if (ctx) {
         LDi_log(LD_LOG_TRACE, "about to call connection handle callback \n");
         ctx->cb(ctx->client, fd);
