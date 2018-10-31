@@ -12,6 +12,8 @@
 
 #define ld_rwlock_t pthread_rwlock_t
 #define LD_RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
+#define LDi_rwlockinit(lk) pthread_rwlock_init(lk, NULL)
+#define LDi_rwlockdestroy(lk) pthread_rwlock_destroy(lk)
 #define LDi_rdlock(lk) pthread_rwlock_rdlock(lk)
 #define LDi_wrlock(lk) pthread_rwlock_wrlock(lk)
 #define LDi_rdunlock(lk) pthread_rwlock_unlock(lk)
@@ -19,11 +21,14 @@
 
 #define ld_mutex_t pthread_mutex_t
 #define LDi_mtxinit(mtx) pthread_mutex_init(mtx, NULL)
+#define LDi_mtxdestroy(mtx) pthread_mutex_destroy(mtx)
 #define LDi_mtxenter(mtx) pthread_mutex_lock(mtx)
 #define LDi_mtxleave(mtx) pthread_mutex_unlock(mtx)
 
 #define ld_cond_t pthread_cond_t
 #define LD_COND_INIT PTHREAD_COND_INITIALIZER
+#define LDi_condinit(cond) pthread_cond_init(cond, NULL)
+#define LDi_conddestroy(cond) pthread_cond_destroy(cond)
 
 #define ld_once_t pthread_once_t
 #define LD_ONCE_INIT PTHREAD_ONCE_INIT
@@ -34,6 +39,8 @@
 void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
 #define ld_rwlock_t SRWLOCK
 #define LD_RWLOCK_INIT SRWLOCK_INIT
+#define LDi_rwlockinit(lk) InitializeSRWLock(lk)
+#define LDi_rwlockdestroy(lk)
 #define LDi_rdlock(lk) AcquireSRWLockShared(lk)
 #define LDi_wrlock(lk) AcquireSRWLockExclusive(lk)
 #define LDi_rdunlock(lk) ReleaseSRWLockShared(lk)
@@ -41,11 +48,14 @@ void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
 
 #define ld_mutex_t CRITICAL_SECTION
 #define LDi_mtxinit(mtx) InitializeCriticalSection(mtx)
+#define LDi_mtxdestroy(mtx) DeleteCriticalSection(mtx)
 #define LDi_mtxenter(mtx) EnterCriticalSection(mtx)
 #define LDi_mtxleave(mtx) LeaveCriticalSection(mtx)
 
 #define ld_cond_t CONDITION_VARIABLE
 #define LD_COND_INIT CONDITION_VARIABLE_INIT
+#define LDi_condinit(cond) InitializeConditionVariable(cond)
+#define LDi_conddestroy(cond)
 
 #define ld_once_t INIT_ONCE
 #define LD_ONCE_INIT INIT_ONCE_STATIC_INIT

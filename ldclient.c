@@ -175,7 +175,7 @@ LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxw
         LDi_freeuser(client->user);
     }
 
-    client->clientLock = (ld_rwlock_t)LD_RWLOCK_INIT;
+    LDi_rwlockinit(&client->clientLock);
 
     LDi_wrlock(&client->clientLock);
 
@@ -190,19 +190,20 @@ LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxw
     client->databuffer = NULL;
     client->streamhandle = 0;
 
-    client->eventLock = (ld_rwlock_t)LD_RWLOCK_INIT;
+    LDi_rwlockinit(&client->eventLock);
     client->eventArray = cJSON_CreateArray();
     client->numEvents = 0;
     client->summaryEvent = LDNodeCreateHash();
     client->summaryStart = 0;
 
     LDi_mtxinit(&client->initCondMtx);
-    client->initCond = (ld_cond_t)LD_COND_INIT;
+    LDi_condinit(&client->initCond);
 
     LDi_mtxinit(&client->condMtx);
-    client->eventCond = (ld_cond_t)LD_COND_INIT;
-    client->pollCond = (ld_cond_t)LD_COND_INIT;
-    client->streamCond = (ld_cond_t)LD_COND_INIT;
+
+    LDi_condinit(&client->eventCond);
+    LDi_condinit(&client->pollCond);
+    LDi_condinit(&client->streamCond);
 
     LDi_createthread(&client->eventThread, LDi_bgeventsender, client);
     LDi_createthread(&client->pollingThread, LDi_bgfeaturepoller, client);
@@ -327,6 +328,16 @@ LDClientClose(LDClient *const client)
     cJSON_Delete(client->eventArray);
     /* may exist if flush failed */
     LDi_freehash(client->summaryEvent);
+
+    LDi_rwlockdestroy(&client->clientLock);
+    LDi_rwlockdestroy(&client->eventLock);
+
+    LDi_mtxdestroy(&client->initCondMtx);
+    LDi_mtxdestroy(&client->condMtx);
+
+    LDi_conddestroy(&client->initCond);
+    LDi_conddestroy(&client->eventCond);
+    LDi_conddestroy(&client->pollCond);
 
     free(client->databuffer);
 
