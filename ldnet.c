@@ -333,20 +333,20 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
     LDi_rdlock(&client->clientLock);
-
     char *const jsonuser = LDi_usertojsontext(client, client->user, false);
     if (!jsonuser) {
         LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed\n");
         return NULL;
     }
+    LDi_rdunlock(&client->clientLock);
 
     const bool usereport = client->config->useReport;
 
     char url[4096];
     if (usereport) {
         if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", client->config->appURI) < 0) {
-            LDi_rdunlock(&client->clientLock); free(jsonuser);
+            free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return NULL;
         }
     }
@@ -355,7 +355,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
-            LDi_rdunlock(&client->clientLock); free(jsonuser);
+            free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "LDi_base64_encode == NULL in LDi_fetchfeaturemap\n"); return NULL;
         }
 
@@ -363,19 +363,17 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         free(b64text);
 
         if (status < 0) {
-            LDi_rdunlock(&client->clientLock); free(jsonuser);
+            free(jsonuser);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return NULL;
         }
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
-        LDi_rdunlock(&client->clientLock); free(jsonuser);
+        free(jsonuser);
         return NULL;
     }
 
     free(jsonuser);
-
-    LDi_rdunlock(&client->clientLock);
 
     if (usereport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
@@ -423,21 +421,15 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
-    LDi_rdlock(&client->clientLock);
-
     char url[4096];
     if (snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI) < 0) {
-        LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "snprintf config->eventsURI failed\n");
         return;
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
-        LDi_rdunlock(&client->clientLock);
         return;
     }
-
-    LDi_rdunlock(&client->clientLock);
 
     const char* const headermime = "Content-Type: application/json";
     if (!(headerlist = curl_slist_append(headerlist, headermime))) {
