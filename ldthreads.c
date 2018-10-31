@@ -107,12 +107,12 @@ LDi_bgfeaturepoller(void *const v)
     LDClient *const client = v;
 
     while (true) {
-        LDi_rdlock(&client->clientLock);
+        LDi_wrlock(&client->clientLock);
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller\n");
             client->threads--;
-            LDi_rdunlock(&client->clientLock);
+            LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
 
@@ -135,7 +135,7 @@ LDi_bgfeaturepoller(void *const v)
 
         /* this triggers the first time the thread runs, so we don't have to wait */
         if (!skippolling && client->status == LDStatusInitializing) { ms = 0; }
-        LDi_rdunlock(&client->clientLock);
+        LDi_wrunlock(&client->clientLock);
 
         if (ms > 0) {
             LDi_mtxenter(&client->condMtx);
@@ -149,7 +149,6 @@ LDi_bgfeaturepoller(void *const v)
             LDi_rdunlock(&client->clientLock);
             continue;
         }
-
         LDi_rdunlock(&client->clientLock);
 
         int response = 0;
@@ -388,17 +387,17 @@ LDi_bgfeaturestreamer(void *const v)
 
     int retries = 0;
     while (true) {
-        LDi_rdlock(&client->clientLock);
+        LDi_wrlock(&client->clientLock);
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer\n");
             client->threads--;
-            LDi_rdunlock(&client->clientLock);
+            LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
 
         if (!client->config->streaming || client->offline || client->background) {
-            LDi_rdunlock(&client->clientLock);
+            LDi_wrunlock(&client->clientLock);
             int ms = 30000;
             LDi_mtxenter(&client->condMtx);
             LDi_condwait(&client->streamCond, &client->condMtx, ms);
