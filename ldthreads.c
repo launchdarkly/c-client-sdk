@@ -377,62 +377,70 @@ LDi_reinitializeconnection()
 
 /*
  * as far as event stream parsers go, this is pretty basic.
- * assumes that there's only one line of data following an event identifier line.
  * : -> comment gets eaten
- * event:type -> type is remembered for the next line
+ * event:type -> type is remembered for the next data lines
  * data:line -> line is processed according to last seen event type
  */
 static int
 streamcallback(const char *line)
 {
-    static int wantnewevent = 1;
-    static char eventtypebuf[256];
+    static char eventname[256] = { 0 };
+    static char *databuffer = NULL;
 
-    if (*line == ':') {
-        LDi_log(LD_LOG_TRACE, "i reject your comment\n");
-    } else if (wantnewevent) {
-        LDi_log(LD_LOG_TRACE, "this better be a new event...\n");
-        const char *const eventtype = strchr(line, ':');
-
-        if (!eventtype || eventtype[1] == 0) {
-            LDi_log(LD_LOG_TRACE, "unsure in streamcallback\n");
-            return 1;
-        }
-
-        if (snprintf(eventtypebuf, sizeof(eventtypebuf), "%s", eventtype + 1) < 0) {
-            LDi_log(LD_LOG_ERROR, "snprintf failed in streamcallback type processing\n");
-            return 1;
-        }
-
-        wantnewevent = 0;
-    } else if (*line == 0) {
-        LDi_log(LD_LOG_TRACE, "end of event\n");
-        wantnewevent = 1;
-    } else {
-        if (strncmp(line, "data:", 5) != 0) {
-            LDi_log(LD_LOG_ERROR, "not data\n");
-            return 1;
-        }
-        line += 5;
-        if (strcmp(eventtypebuf, "put") == 0) {
-            LDi_log(LD_LOG_TRACE, "PUT\n");
-            LDi_onstreameventput(line);
-        } else if (strcmp(eventtypebuf, "patch") == 0) {
-            LDi_log(LD_LOG_TRACE, "PATCH\n");
-            LDi_onstreameventpatch(line);
-        } else if (strcmp(eventtypebuf, "delete") == 0) {
-            LDi_log(LD_LOG_TRACE, "DELETE\n");
-            LDi_onstreameventdelete(line);
-        } else if (strcmp(eventtypebuf, "ping") == 0) {
-            LDi_log(LD_LOG_TRACE, "PING\n");
+    if (!line) {
+        //should not happen from the networking side but is not fatal
+        LDi_log(LD_LOG_ERROR, "streamcallback got NULL line\n");
+    } else if (line[0] == ':') {
+        //skip comment
+    } else if (line[0] == 0) {
+        if (eventname[0] == 0) {
+            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but type was never set\n");
+        } else if (strcmp(eventname, "ping") == 0) {
             onstreameventping();
+        } else if (databuffer == NULL) {
+            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but data was never set\n");
+        } else if (strcmp(eventname, "put") == 0) {
+            LDi_onstreameventput(databuffer);
+        } else if (strcmp(eventname, "patch") == 0) {
+            LDi_onstreameventpatch(databuffer);
+        } else if (strcmp(eventname, "delete") == 0) {
+            LDi_onstreameventdelete(databuffer);
+        } else {
+            LDi_log(LD_LOG_WARNING, "streamcallback unknown event name: %s\n", eventname);
         }
-        LDi_log(LD_LOG_TRACE, "here is data for the event %s\n", eventtypebuf);
-        LDi_log(LD_LOG_TRACE, "the data: %s\n", line);
+
+        free(databuffer); databuffer = NULL; eventname[0] = 0;
+    } else if (strncmp(line, "data:", 5) == 0) {
+        line += 5; line += line[0] == ' ';
+
+        const bool nempty = databuffer != NULL;
+
+        const size_t linesize = strlen(line);
+
+        size_t currentsize = 0;
+        if (nempty) { currentsize = strlen(databuffer); }
+
+        databuffer = realloc(databuffer, linesize + currentsize + nempty + 1);
+
+        if (nempty) { databuffer[currentsize] = '\n'; }
+
+        memcpy(databuffer + currentsize + nempty, line, linesize);
+
+        databuffer[currentsize + nempty + linesize] = 0;
+    } else if (strncmp(line, "event:", 6) == 0) {
+        line += 6; line += line[0] == ' ';
+
+        if (snprintf(eventname, sizeof(eventname), "%s", line) < 0) {
+            LDi_log(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing\n");
+            return 1;
+        }
     }
+
     if (shouldstopstreaming) {
+        free(databuffer); databuffer = NULL; eventname[0] = 0;
         return 1;
     }
+
     return 0;
 }
 
