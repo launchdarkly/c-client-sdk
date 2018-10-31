@@ -186,6 +186,7 @@ LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxw
     client->allFlags = NULL;
     client->threads = 3;
 
+    client->shouldstopstreaming = false;
     client->databuffer = NULL;
     client->streamhandle = 0;
 

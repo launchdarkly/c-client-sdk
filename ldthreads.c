@@ -273,12 +273,10 @@ onstreameventping(LDClient *const client)
     free(data);
 }
 
-static bool shouldstopstreaming;
-
 void
 LDi_startstopstreaming(LDClient *const client, bool stopstreaming)
 {
-    shouldstopstreaming = stopstreaming;
+    client->shouldstopstreaming = stopstreaming;
     LDi_condsignal(&client->pollCond);
     LDi_condsignal(&client->streamCond);
 }
@@ -313,7 +311,7 @@ streamcallback(LDClient *const client, const char *line)
 {
     LDi_wrlock(&client->clientLock);
 
-    if (shouldstopstreaming) {
+    if (client->shouldstopstreaming) {
         free(client->databuffer); client->databuffer = NULL; client->eventname[0] = 0;
         LDi_wrunlock(&client->clientLock);
         return 1;

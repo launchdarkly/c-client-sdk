@@ -85,6 +85,7 @@ struct LDClient_i {
     ld_cond_t streamCond;
     ld_mutex_t condMtx;
     /* streaming state */
+    bool shouldstopstreaming;
     char eventname[256];
     char *databuffer;
     int streamhandle;
