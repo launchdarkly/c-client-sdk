@@ -20,14 +20,14 @@ LDi_bgeventsender(void *const v)
     LDClient *const client = v; bool finalflush = false;
 
     while (true) {
-        LDi_rdlock(&client->clientLock);
+        LDi_wrlock(&client->clientLock);
 
         const LDStatus status = client->status;
 
         if (status == LDStatusFailed || finalflush) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender\n");
             client->threads--;
-            LDi_rdunlock(&client->clientLock);
+            LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
 
@@ -35,7 +35,7 @@ LDi_bgeventsender(void *const v)
         if (client->config) {
             ms = client->config->eventsFlushIntervalMillis;
         }
-        LDi_rdunlock(&client->clientLock);
+        LDi_wrunlock(&client->clientLock);
 
         if (status != LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "bg sender sleeping\n");
@@ -45,9 +45,11 @@ LDi_bgeventsender(void *const v)
         }
         LDi_log(LD_LOG_TRACE, "bgsender running\n");
 
+        LDi_rdlock(&client->clientLock);
         if (client->status == LDStatusShuttingdown) {
             finalflush = true;
         }
+        LDi_rdunlock(&client->clientLock);
 
         char *const eventdata = LDi_geteventdata(client);
         if (!eventdata) { continue; }
