@@ -212,20 +212,18 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     streamdata.callback = cbdata; streamdata.lastdatatime = time(NULL); streamdata.client = client;
 
     LDi_rdlock(&client->clientLock);
-
     char *const jsonuser = LDi_usertojsontext(client, client->user, false);
     if (!jsonuser) {
         LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed\n");
         return;
     }
-
-    const bool usereport = client->config->useReport;
+    LDi_rdunlock(&client->clientLock);
 
     char url[4096];
-    if (usereport) {
+    if (client->config->useReport) {
         if (snprintf(url, sizeof(url), "%s/meval", client->config->streamURI) < 0) {
-            LDi_rdunlock(&client->clientLock); free(jsonuser);
+            free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return;
         }
     }
@@ -234,7 +232,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
-            LDi_rdunlock(&client->clientLock); free(jsonuser);
+            free(jsonuser);
             LDi_log(LD_LOG_ERROR, "LDi_base64_encode == NULL in LDi_readstream\n"); return;
         }
 
@@ -242,21 +240,19 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         free(b64text);
 
         if (status < 0) {
-            LDi_rdunlock(&client->clientLock); free(jsonuser);
+            free(jsonuser);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed\n"); return;
         }
     }
 
     if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
-        LDi_rdunlock(&client->clientLock); free(jsonuser);
+        free(jsonuser);
         return;
     }
 
     free(jsonuser);
 
-    LDi_rdunlock(&client->clientLock);
-
-    if (usereport) {
+    if (client->config->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed\n");
             curl_easy_cleanup(curl); return;
@@ -341,10 +337,8 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
     }
     LDi_rdunlock(&client->clientLock);
 
-    const bool usereport = client->config->useReport;
-
     char url[4096];
-    if (usereport) {
+    if (client->config->useReport) {
         if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", client->config->appURI) < 0) {
             free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed\n"); return NULL;
@@ -375,7 +369,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
 
     free(jsonuser);
 
-    if (usereport) {
+    if (client->config->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed\n");
             curl_easy_cleanup(curl); return NULL;
