@@ -33,9 +33,9 @@ test1(void)
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;
     LDUser *user = LDUserNew("userX");
-    LDClient *client = LDClientInit(config, user);
+    LDClient *client = LDClientInit(config, user, 0);
     LDClientRegisterFeatureFlagListener(client, "bugcount", hook);
-    
+
     char *testflags = "{ \"bugcount\": 1 }";
     LDClientRestoreFlags(client, testflags);
 
@@ -62,4 +62,3 @@ main(int argc, char **argv)
     printf("Completed all tests\n");
     return 0;
 }
-

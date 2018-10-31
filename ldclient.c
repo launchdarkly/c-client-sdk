@@ -171,7 +171,7 @@ checkconfig(LDConfig *config)
 }
 
 LDClient *
-LDClientInit(LDConfig *const config, LDUser *const user)
+LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
 {
     LD_ASSERT(config); LD_ASSERT(user);
 
@@ -216,6 +216,10 @@ LDClientInit(LDConfig *const config, LDUser *const user)
     LDi_wrunlock(&LDi_clientlock);
 
     LDi_once(&LDi_threadsonce, threadsinit);
+
+    if (maxwaitmilli) {
+        LDClientAwaitInitialized(client, maxwaitmilli);
+    }
 
     return client;
 }

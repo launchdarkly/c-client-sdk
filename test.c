@@ -35,7 +35,7 @@ main(int argc, char **argv)
 
     LDUser *user = LDUserNew("user200");
 
-    LDClient *client = LDClientInit(config, user);
+    LDClient *client = LDClientInit(config, user, 0);
 
     char *testflags = "{ \"sort.order\": { \"value\": false}, \"bugcount\": { \"value\": 0} , \"jj\": { \"value\": { \"ii\": 7 }} }";
 
@@ -84,7 +84,7 @@ main(int argc, char **argv)
         printf("ERROR: found some unexpected json\n");
     }
     LDJSONRelease(jnode);
-    
+
     LDClientClose(client);
 
     printf("Completed all tests\n");
@@ -95,4 +95,3 @@ main(int argc, char **argv)
 
     return 0;
 }
-

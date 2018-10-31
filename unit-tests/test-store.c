@@ -47,8 +47,8 @@ test1(void)
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;
     LDUser *user = LDUserNew("fileuser");
-    LDClient *client = LDClientInit(config, user);
-    
+    LDClient *client = LDClientInit(config, user, 0);
+
     char buffer[256];
     LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
     if (strcmp(buffer, "as expected") != 0) {
@@ -84,7 +84,7 @@ test2(void)
     LDConfig *config = LDConfigNew("authkey");
     config->offline = true;
     LDUser *user = LDUserNew("fakeuser");
-    LDClient *client = LDClientInit(config, user);
+    LDClient *client = LDClientInit(config, user, 0);
     char *putflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 1 } }";
     LDi_onstreameventput(putflags);
 
@@ -110,4 +110,3 @@ main(int argc, char **argv)
     printf("Completed all tests\n");
     return 0;
 }
-
