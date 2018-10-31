@@ -156,15 +156,7 @@ LDClientGet()
     return globalClient;
 };
 
-LDClient *
-LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
-{
-    LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalClient);
-    globalClient = LDClientInitIsolated(config, user, maxwaitmilli);
-    return globalClient;
-};
-
-LDClient *
+static LDClient *
 LDClientInitIsolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
 {
     LD_ASSERT(config); LD_ASSERT(user);
@@ -239,6 +231,14 @@ LDClientInitIsolated(LDConfig *const config, LDUser *const user, const unsigned 
     }
 
     return client;
+}
+
+LDClient *
+LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
+{
+    LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalClient);
+    globalClient = LDClientInitIsolated(config, user, maxwaitmilli);
+    return globalClient;
 }
 
 void
@@ -364,6 +364,8 @@ LDClientClose(LDClient *const client)
     }
 
     LDFree(client);
+
+    globalClient = NULL;
 }
 
 LDNode *

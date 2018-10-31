@@ -19,7 +19,6 @@ EXPORTS
 
    LDClientGet
    LDClientInit
-   LDClientInitIsolated
    LDUserNew
    LDUserSetAnonymous
    LDUserSetIP

@@ -91,8 +91,6 @@ void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 struct LDClient_i *LDClientGet();
 /* create the global client singleton */
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
-/* creates a new client instance not connected to the global instance */
-struct LDClient_i *LDClientInitIsolated(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
 LDUser *LDUserNew(const char *);
 

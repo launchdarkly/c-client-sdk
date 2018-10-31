@@ -49,7 +49,7 @@ test1(void)
 
     LDUser *const user = LDUserNew("fileuser");
 
-    LDClient *const client = LDClientInitIsolated(config, user, 0);
+    LDClient *const client = LDClientInit(config, user, 0);
 
     char buffer[256];
     LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
@@ -72,7 +72,6 @@ test1(void)
     }
 
     LDClientClose(client);
-
 }
 
 /*
@@ -88,7 +87,7 @@ test2(void)
 
     LDUser *const user = LDUserNew("fakeuser");
 
-    LDClient *const client = LDClientInitIsolated(config, user, 0);
+    LDClient *const client = LDClientInit(config, user, 0);
 
     const char *const putflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 1 } }";
 
@@ -99,7 +98,6 @@ test2(void)
     }
 
     LDClientClose(client);
-
 }
 
 int
