@@ -87,7 +87,12 @@ void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
+/* must have already called LDClientInit to receive valid client */
+struct LDClient_i *LDClientGet();
+/* create the global client singleton */
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
+/* creates a new client instance not connected to the global instance */
+struct LDClient_i *LDClientInitIsolated(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
 LDUser *LDUserNew(const char *);
 

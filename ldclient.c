@@ -10,6 +10,8 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
+static LDClient *globalClient = NULL;
+
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 
 void (*LDi_statuscallback)(int);
@@ -149,7 +151,21 @@ checkconfig(LDConfig *config)
 }
 
 LDClient *
+LDClientGet()
+{
+    return globalClient;
+};
+
+LDClient *
 LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
+{
+    LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalClient);
+    globalClient = LDClientInitIsolated(config, user, maxwaitmilli);
+    return globalClient;
+};
+
+LDClient *
+LDClientInitIsolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
 {
     LD_ASSERT(config); LD_ASSERT(user);
 
