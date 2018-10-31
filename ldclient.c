@@ -185,7 +185,8 @@ LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxw
     client->status = LDStatusInitializing;
     client->allFlags = NULL;
     client->threads = 3;
-    client->wantnewevent = true;
+
+    client->databuffer = NULL;
     client->streamhandle = 0;
 
     client->eventLock = (ld_rwlock_t)LD_RWLOCK_INIT;
@@ -327,6 +328,8 @@ LDClientClose(LDClient *const client)
     cJSON_Delete(client->eventArray);
     /* may exist if flush failed */
     LDi_freehash(client->summaryEvent);
+
+    free(client->databuffer);
 
     for (struct listener *item = client->listeners; item;) {
         struct listener *const next = item->next; //must record next to make delete safe

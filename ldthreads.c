@@ -310,8 +310,13 @@ LDi_reinitializeconnection(LDClient *const client)
 static int
 streamcallback(LDClient *const client, const char *line)
 {
-    static char eventname[256] = { 0 };
-    static char *databuffer = NULL;
+    LDi_wrlock(&client->clientLock);
+
+    if (shouldstopstreaming) {
+        free(client->databuffer); client->databuffer = NULL; client->eventname[0] = 0;
+        LDi_wrunlock(&client->clientLock);
+        return 1;
+    }
 
     if (!line) {
         //should not happen from the networking side but is not fatal
@@ -319,53 +324,59 @@ streamcallback(LDClient *const client, const char *line)
     } else if (line[0] == ':') {
         //skip comment
     } else if (line[0] == 0) {
-        if (eventname[0] == 0) {
+        if (client->eventname[0] == 0) {
             LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but type was never set\n");
-        } else if (strcmp(eventname, "ping") == 0) {
-            onstreameventping();
-        } else if (databuffer == NULL) {
+        } else if (strcmp(client->eventname, "ping") == 0) {
+            LDi_wrunlock(&client->clientLock);
+            onstreameventping(client);
+            LDi_wrlock(&client->clientLock);
+        } else if (client->databuffer == NULL) {
             LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but data was never set\n");
-        } else if (strcmp(eventname, "put") == 0) {
-            LDi_onstreameventput(databuffer);
-        } else if (strcmp(eventname, "patch") == 0) {
-            LDi_onstreameventpatch(databuffer);
-        } else if (strcmp(eventname, "delete") == 0) {
-            LDi_onstreameventdelete(databuffer);
+        } else if (strcmp(client->eventname, "put") == 0) {
+            LDi_wrunlock(&client->clientLock);
+            LDi_onstreameventput(client, client->databuffer);
+            LDi_wrlock(&client->clientLock);
+        } else if (strcmp(client->eventname, "patch") == 0) {
+            LDi_wrunlock(&client->clientLock);
+            LDi_onstreameventpatch(client, client->databuffer);
+            LDi_wrlock(&client->clientLock);
+        } else if (strcmp(client->eventname, "delete") == 0) {
+            LDi_wrunlock(&client->clientLock);
+            LDi_onstreameventdelete(client, client->databuffer);
+            LDi_wrlock(&client->clientLock);
         } else {
-            LDi_log(LD_LOG_WARNING, "streamcallback unknown event name: %s\n", eventname);
+            LDi_log(LD_LOG_WARNING, "streamcallback unknown event name: %s\n", client->eventname);
         }
 
-        free(databuffer); databuffer = NULL; eventname[0] = 0;
+        free(client->databuffer); client->databuffer = NULL; client->eventname[0] = 0;
     } else if (strncmp(line, "data:", 5) == 0) {
         line += 5; line += line[0] == ' ';
 
-        const bool nempty = databuffer != NULL;
+        const bool nempty = client->databuffer != NULL;
 
         const size_t linesize = strlen(line);
 
         size_t currentsize = 0;
-        if (nempty) { currentsize = strlen(databuffer); }
+        if (nempty) { currentsize = strlen(client->databuffer); }
 
-        databuffer = realloc(databuffer, linesize + currentsize + nempty + 1);
+        client->databuffer = realloc(client->databuffer, linesize + currentsize + nempty + 1);
 
-        if (nempty) { databuffer[currentsize] = '\n'; }
+        if (nempty) { client->databuffer[currentsize] = '\n'; }
 
-        memcpy(databuffer + currentsize + nempty, line, linesize);
+        memcpy(client->databuffer + currentsize + nempty, line, linesize);
 
-        databuffer[currentsize + nempty + linesize] = 0;
+        client->databuffer[currentsize + nempty + linesize] = 0;
     } else if (strncmp(line, "event:", 6) == 0) {
         line += 6; line += line[0] == ' ';
 
-        if (snprintf(eventname, sizeof(eventname), "%s", line) < 0) {
+        if (snprintf(client->eventname, sizeof(client->eventname), "%s", line) < 0) {
+            LDi_wrunlock(&client->clientLock);
             LDi_log(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing\n");
             return 1;
         }
     }
 
-    if (shouldstopstreaming) {
-        free(databuffer); databuffer = NULL; eventname[0] = 0;
-        return 1;
-    }
+    LDi_wrunlock(&client->clientLock);
 
     return 0;
 }

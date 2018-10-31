@@ -85,8 +85,8 @@ struct LDClient_i {
     ld_cond_t streamCond;
     ld_mutex_t condMtx;
     /* streaming state */
-    int wantnewevent;
-    char eventtypebuf[256];
+    char eventname[256];
+    char *databuffer;
     int streamhandle;
     /* event state */
     ld_rwlock_t eventLock;
