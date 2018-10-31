@@ -36,7 +36,7 @@ test1(void)
 
     LDUser *const user = LDUserNew("userX");
 
-    LDClient *const client = LDClientInit(config, user);
+    LDClient *const client = LDClientInit(config, user, 0);
     LDClientRegisterFeatureFlagListener(client, "bugcount", hook);
 
     const char *const testflags = "{ \"bugcount\": 1 }";

@@ -303,67 +303,69 @@ LDi_reinitializeconnection(LDClient *const client)
 
 /*
  * as far as event stream parsers go, this is pretty basic.
- * assumes that there's only one line of data following an event identifier line.
  * : -> comment gets eaten
- * event:type -> type is remembered for the next line
+ * event:type -> type is remembered for the next data lines
  * data:line -> line is processed according to last seen event type
  */
 static int
 streamcallback(LDClient *const client, const char *line)
 {
-    LDi_wrlock(&client->clientLock);
-    if (*line == ':') {
-        LDi_log(LD_LOG_TRACE, "i reject your comment\n");
-    } else if (client->wantnewevent) {
-        LDi_log(LD_LOG_TRACE, "this better be a new event...\n");
-        const char *const eventtype = strchr(line, ':');
+    static char eventname[256] = { 0 };
+    static char *databuffer = NULL;
 
-        if (!eventtype || eventtype[1] == 0) {
-            LDi_log(LD_LOG_TRACE, "unsure in streamcallback\n");
-            LDi_wrunlock(&client->clientLock); return 1;
+    if (!line) {
+        //should not happen from the networking side but is not fatal
+        LDi_log(LD_LOG_ERROR, "streamcallback got NULL line\n");
+    } else if (line[0] == ':') {
+        //skip comment
+    } else if (line[0] == 0) {
+        if (eventname[0] == 0) {
+            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but type was never set\n");
+        } else if (strcmp(eventname, "ping") == 0) {
+            onstreameventping();
+        } else if (databuffer == NULL) {
+            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but data was never set\n");
+        } else if (strcmp(eventname, "put") == 0) {
+            LDi_onstreameventput(databuffer);
+        } else if (strcmp(eventname, "patch") == 0) {
+            LDi_onstreameventpatch(databuffer);
+        } else if (strcmp(eventname, "delete") == 0) {
+            LDi_onstreameventdelete(databuffer);
+        } else {
+            LDi_log(LD_LOG_WARNING, "streamcallback unknown event name: %s\n", eventname);
         }
 
-        if (snprintf(client->eventtypebuf, sizeof(client->eventtypebuf), "%s", eventtype + 1) < 0) {
-            LDi_log(LD_LOG_ERROR, "snprintf failed in streamcallback type processing\n");
-            LDi_wrunlock(&client->clientLock); return 1;
-        }
+        free(databuffer); databuffer = NULL; eventname[0] = 0;
+    } else if (strncmp(line, "data:", 5) == 0) {
+        line += 5; line += line[0] == ' ';
 
-        client->wantnewevent = 0;
-    } else if (*line == 0) {
-        LDi_log(LD_LOG_TRACE, "end of event\n");
-        client->wantnewevent = 1;
-    } else {
-        if (strncmp(line, "data:", 5) != 0) {
-            LDi_log(LD_LOG_ERROR, "not data\n");
-            LDi_wrunlock(&client->clientLock); return 1;
-        }
-        line += 5;
-        if (strcmp(client->eventtypebuf, "put") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            LDi_log(LD_LOG_TRACE, "PUT\n");
-            LDi_onstreameventput(client, line);
-            LDi_wrlock(&client->clientLock);
-        } else if (strcmp(client->eventtypebuf, "patch") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            LDi_log(LD_LOG_TRACE, "PATCH\n");
-            LDi_onstreameventpatch(client, line);
-            LDi_wrlock(&client->clientLock);
-        } else if (strcmp(client->eventtypebuf, "delete") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            LDi_log(LD_LOG_TRACE, "DELETE\n");
-            LDi_onstreameventdelete(client, line);
-            LDi_wrlock(&client->clientLock);
-        } else if (strcmp(client->eventtypebuf, "ping") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            LDi_log(LD_LOG_TRACE, "PING\n");
-            onstreameventping(client);
-            LDi_wrlock(&client->clientLock);
+        const bool nempty = databuffer != NULL;
+
+        const size_t linesize = strlen(line);
+
+        size_t currentsize = 0;
+        if (nempty) { currentsize = strlen(databuffer); }
+
+        databuffer = realloc(databuffer, linesize + currentsize + nempty + 1);
+
+        if (nempty) { databuffer[currentsize] = '\n'; }
+
+        memcpy(databuffer + currentsize + nempty, line, linesize);
+
+        databuffer[currentsize + nempty + linesize] = 0;
+    } else if (strncmp(line, "event:", 6) == 0) {
+        line += 6; line += line[0] == ' ';
+
+        if (snprintf(eventname, sizeof(eventname), "%s", line) < 0) {
+            LDi_log(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing\n");
+            return 1;
         }
     }
 
-    LDi_wrunlock(&client->clientLock);
-
-    if (shouldstopstreaming) { return 1; }
+    if (shouldstopstreaming) {
+        free(databuffer); databuffer = NULL; eventname[0] = 0;
+        return 1;
+    }
 
     return 0;
 }

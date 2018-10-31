@@ -43,9 +43,10 @@ Once integrated, you can follow these steps to initialize a client instance:
 2. Create a new LDClient instance and user with your SDK key:
 
 ```C
+    unsigned int maxwaitmilliseconds = 10 * 1000;
     LDConfig *config = LDConfigNew("YOUR_CLIENT_SIDE_KEY");
     LDUser *user = LDUserNew("YOUR_USER_KEY");
-    LDClient *client = LDClientInit(config, user);
+    LDClient *client = LDClientInit(config, user, maxwaitmilliseconds);
 ```
 
 In most cases, you should create a single `LDClient` instance for the lifecycle of your program (a singleton pattern can be helpful here). When finished with the client (or prior to program exit), you should close the client:
