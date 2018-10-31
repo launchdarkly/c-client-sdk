@@ -27,6 +27,7 @@ LDi_bgeventsender(void *const v)
         if (status == LDStatusFailed || finalflush) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender\n");
             client->threads--;
+            if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
@@ -114,6 +115,7 @@ LDi_bgfeaturepoller(void *const v)
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller\n");
             client->threads--;
+            if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
@@ -392,6 +394,7 @@ LDi_bgfeaturestreamer(void *const v)
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer\n");
             client->threads--;
+            if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
