@@ -12,16 +12,22 @@ milliTimestamp(void)
     return (double)time(NULL) * 1000.0;
 }
 
-void
-LDi_recordidentify(LDClient *const client, LDUser *const lduser)
+static void
+enqueueEvent(LDClient *const client, cJSON *const event)
 {
-    LDi_wrlock(&client->eventLock);
     if (client->numEvents >= client->config->eventsCapacity) {
-        LDi_wrunlock(&client->eventLock);
         LDi_log(LD_LOG_WARNING, "event capacity exceeded\n");
+        cJSON_Delete(event);
         return;
     }
 
+    cJSON_AddItemToArray(client->eventArray, event);
+    client->numEvents++;
+}
+
+void
+LDi_recordidentify(LDClient *const client, LDUser *const lduser)
+{
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "identify");
     cJSON_AddStringToObject(json, "key", lduser->key);
@@ -197,8 +203,8 @@ collectSummary(LDClient *const client)
     LDNodeFree(&client->summaryEvent);
     client->summaryStart = 0;
 
-    cJSON_AddItemToArray(client->eventArray, json);
-    client->numEvents++;
+    enqueueEvent(client, json);
+
     LDi_wrunlock(&client->eventLock);
 }
 
@@ -210,13 +216,6 @@ LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const re
     summarizeEvent(client, lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
 
     if (!res || res->track == 0 || (res->track > 1 && res->track < milliTimestamp())) {
-        return;
-    }
-
-    LDi_wrlock(&client->eventLock);
-    if (client->numEvents >= client->config->eventsCapacity) {
-        LDi_wrunlock(&client->eventLock);
-        LDi_log(LD_LOG_WARNING, "LDi_recordfeature event capacity exceeded\n");
         return;
     }
 
@@ -248,21 +247,16 @@ LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const re
     cJSON *const juser = LDi_usertojson(client, lduser, true);
     cJSON_AddItemToObject(json, "user", juser);
 
-    cJSON_AddItemToArray(client->eventArray, json);
-    client->numEvents++;
+    LDi_wrlock(&client->eventLock);
+
+    enqueueEvent(client, json);
+
     LDi_wrunlock(&client->eventLock);
 }
 
 void
 LDi_recordtrack(LDClient *const client, LDUser *const user, const char *const name, LDNode *const data)
 {
-    LDi_wrlock(&client->eventLock);
-    if (client->numEvents >= client->config->eventsCapacity) {
-        LDi_wrunlock(&client->eventLock);
-        LDi_log(LD_LOG_WARNING, "event capacity exceeded\n");
-        return;
-    }
-
     cJSON *const json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "custom");
     cJSON_AddStringToObject(json, "key", name);
@@ -275,8 +269,10 @@ LDi_recordtrack(LDClient *const client, LDUser *const user, const char *const na
         cJSON_AddItemToObject(json, "data", LDi_hashtojson(data));
     }
 
-    cJSON_AddItemToArray(client->eventArray, json);
-    client->numEvents++;
+    LDi_wrlock(&client->eventLock);
+
+    enqueueEvent(client, json);
+
     LDi_wrunlock(&client->eventLock);
 }
 
