@@ -303,8 +303,6 @@ LDClientClose(LDClient *const client)
 
     LDi_condsignal(&client->initCond);
     LDi_condsignal(&client->eventCond);
-    LDi_condsignal(&client->pollCond);
-    LDi_condsignal(&client->streamCond);
 
     /* wait for threads to die */
     LDi_mtxenter(&client->initCondMtx);
