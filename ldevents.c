@@ -35,8 +35,10 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
     cJSON *const juser = LDi_usertojson(client, lduser, true);
     cJSON_AddItemToObject(json, "user", juser);
 
-    cJSON_AddItemToArray(client->eventArray, json);
-    client->numEvents++;
+    LDi_wrlock(&client->eventLock);
+
+    enqueueEvent(client, json);
+
     LDi_wrunlock(&client->eventLock);
 }
 
