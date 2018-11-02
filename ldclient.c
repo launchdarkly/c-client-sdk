@@ -178,6 +178,7 @@ LDClientInitIsolated(LDConfig *const config, LDUser *const user, const unsigned 
 
     LDi_wrlock(&client->clientLock);
 
+    client->config = config;
     client->user = user;
     client->offline = config->offline;
     client->background = false;
