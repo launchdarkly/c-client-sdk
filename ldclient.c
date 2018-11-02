@@ -174,15 +174,6 @@ LDClientInitIsolated(LDConfig *const config, LDUser *const user, const unsigned 
 
     memset(client, 0, sizeof(*client));
 
-    if (client->config != config) {
-        freeconfig(client->config);
-    }
-
-    client->config = config;
-    if (client->user != user) {
-        LDi_freeuser(client->user);
-    }
-
     LDi_rwlockinit(&client->clientLock);
 
     LDi_wrlock(&client->clientLock);
