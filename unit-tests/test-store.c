@@ -34,6 +34,7 @@ bool
 fake_stringwriter(void *const handle, const char *const data)
 {
     gotcallback = true;
+    return true;
 }
 
 /*
@@ -49,7 +50,7 @@ test1(void)
 
     LDUser *const user = LDUserNew("fileuser");
 
-    LDClient *const client = LDClientInit(config, user, 0);
+    LDClient *const client = LDi_clientinitisolated(config, user, 0);
 
     char buffer[256];
     LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
@@ -87,7 +88,7 @@ test2(void)
 
     LDUser *const user = LDUserNew("fakeuser");
 
-    LDClient *const client = LDClientInit(config, user, 0);
+    LDClient *const client = LDi_clientinitisolated(config, user, 0);
 
     const char *const putflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 1 } }";
 
@@ -103,14 +104,11 @@ test2(void)
 int
 main(int argc, char **argv)
 {
-    printf("Beginning tests\n");
-
     LDSetLogFunction(1, logger);
 
     test1();
 
     test2();
 
-    printf("Completed all tests\n");
     return 0;
 }

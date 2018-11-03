@@ -19,7 +19,7 @@ logger(const char *s)
  * Test that turning a user into json looks like we expect.
  */
 void
-test1(LDClient *const client)
+test1()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -30,7 +30,7 @@ test1(LDClient *const client)
     LDNodeAddBool(&user->custom, "bossmode", true);
     LDNodeAddString(&user->custom, "species", "krell");
 
-    cJSON *const json = LDi_usertojson(client, user, true);
+    cJSON *const json = LDi_usertojson(NULL, user, true);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -47,7 +47,7 @@ test1(LDClient *const client)
  * test setting json directly. also has a list of custom attributes.
  */
 void
-test2(LDClient *const client)
+test2()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -55,7 +55,8 @@ test2(LDClient *const client)
     LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
 
-    cJSON *const json = LDi_usertojson(client, user, true);
+
+    cJSON *const json = LDi_usertojson(NULL, user, true);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
@@ -72,7 +73,7 @@ test2(LDClient *const client)
  * Test private attributes
  */
 void
-test3(LDClient *const client)
+test3()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -81,7 +82,7 @@ test3(LDClient *const client)
     LDUserAddPrivateAttribute(user, "count");
     LDUserAddPrivateAttribute(user, "avatar");
 
-    cJSON *const json = LDi_usertojson(client, user, true);
+    cJSON *const json = LDi_usertojson(NULL, user, true);
     const char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"custom\":{\"food\":[\"apple\"]},\"privateAttrs\":[\"avatar\",\"count\"]}";
@@ -96,27 +97,16 @@ test3(LDClient *const client)
 int
 main(int argc, char **argv)
 {
-    printf("Beginning tests\n");
-
     LDSetLogFunction(1, logger);
 
-    LDUser *const user = LDUserNew("");
+    test1();
 
-    LDConfig *const config = LDConfigNew("authkey");
-    LDConfigSetOffline(config, true);
+    test2();
 
-    LDClient *const client = LDClientInit(config, user, 0);
-
-    test1(client);
-
-    test2(client);
-
-    test3(client);
+    test3();
 
     extern unsigned long long LD_allocations, LD_frees;
 
     // printf("Memory consumed: %lld allocs %lld frees\n", LD_allocations, LD_frees);
-
-    printf("Completed all tests\n");
     return 0;
 }
