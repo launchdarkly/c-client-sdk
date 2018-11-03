@@ -9,14 +9,15 @@
 #include "ldinternal.h"
 
 void
-logger(const char *s)
+logger(const char *const s)
 {
     printf("LD: %s", s);
 }
 
 bool fixed = false;
+
 void
-hook(const char *name, int change)
+hook(const char *const name, const int change)
 {
     fixed = true;
 }
@@ -30,26 +31,29 @@ test1(void)
 {
     LDSetLogFunction(1, logger);
 
-    LDConfig *config = LDConfigNew("authkey");
-    config->offline = true;
-    LDUser *user = LDUserNew("userX");
-    LDClient *client = LDClientInit(config, user, 0);
+    LDConfig *const config = LDConfigNew("authkey");
+    LDConfigSetOffline(config, true);
+
+    LDUser *const user = LDUserNew("userX");
+
+    LDClient *const client = LDClientInit(config, user, 0);
     LDClientRegisterFeatureFlagListener(client, "bugcount", hook);
 
-    char *testflags = "{ \"bugcount\": 1 }";
+    const char *const testflags = "{ \"bugcount\": 1 }";
+
     LDClientRestoreFlags(client, testflags);
 
     fixed = false;
 
-    char *patch = "{ \"key\": \"bugcount\", \"value\": 0 } }";
-    LDi_onstreameventpatch(patch);
+    const char *const patch = "{ \"key\": \"bugcount\", \"value\": 0 } }";
+
+    LDi_onstreameventpatch(client, patch);
 
     if (!fixed) {
         printf("ERROR: bugcount wasn't fixed\n");
     }
 
     LDClientClose(client);
-
 }
 
 int

@@ -17,8 +17,8 @@ EXPORTS
    LDConfigSetUseReport
    LDConfigAddPrivateAttribute
 
-   LDClientInit
    LDClientGet
+   LDClientInit
    LDUserNew
    LDUserSetAnonymous
    LDUserSetIP

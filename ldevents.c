@@ -12,40 +12,22 @@ milliTimestamp(void)
     return (double)time(NULL) * 1000.0;
 }
 
-static cJSON *eventarray;
-static int numevents;
-static int eventscapacity;
-static ld_rwlock_t eventlock = LD_RWLOCK_INIT;
-static LDNode *summaryEvent;
-static double summaryStart;
-
 static void
-initevents(int capacity)
+enqueueEvent(LDClient *const client, cJSON *const event)
 {
-    if (!eventarray) {
-        eventarray = cJSON_CreateArray();
+    if (client->numEvents >= client->config->eventsCapacity) {
+        LDi_log(LD_LOG_WARNING, "event capacity exceeded\n");
+        cJSON_Delete(event);
+        return;
     }
-    eventscapacity = capacity;
-}
 
-void
-LDi_initevents(int capacity)
-{
-    LDi_wrlock(&eventlock);
-    initevents(capacity);
-    LDi_wrunlock(&eventlock);
+    cJSON_AddItemToArray(client->eventArray, event);
+    client->numEvents++;
 }
 
 void
 LDi_recordidentify(LDClient *const client, LDUser *const lduser)
 {
-    LDi_wrlock(&eventlock);
-    if (numevents >= eventscapacity) {
-        LDi_wrunlock(&eventlock);
-        LDi_log(LD_LOG_WARNING, "event capacity exceeded\n");
-        return;
-    }
-
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "identify");
     cJSON_AddStringToObject(json, "key", lduser->key);
@@ -53,9 +35,11 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
     cJSON *const juser = LDi_usertojson(client, lduser, true);
     cJSON_AddItemToObject(json, "user", juser);
 
-    cJSON_AddItemToArray(eventarray, json);
-    numevents++;
-    LDi_wrunlock(&eventlock);
+    LDi_wrlock(&client->eventLock);
+
+    enqueueEvent(client, json);
+
+    LDi_wrunlock(&client->eventLock);
 }
 
 /*
@@ -65,7 +49,8 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
  */
 
 static LDNode*
-addValueToHash(LDNode **hash, const char *name, int type, double n, const char *s, LDNode *m)
+addValueToHash(LDNode **hash, const char *const name, const int type,
+    const double n, const char *const s, LDNode *const m)
 {
     switch (type) {
     case LDNodeString:
@@ -87,7 +72,7 @@ addValueToHash(LDNode **hash, const char *name, int type, double n, const char *
 };
 
 static void
-addNodeToJSONObject(cJSON *obj, const char *key, LDNode *node)
+addNodeToJSONObject(cJSON *const obj, const char *const key, LDNode *const node)
 {
     switch (node->type) {
     case LDNodeNumber:
@@ -106,25 +91,26 @@ addNodeToJSONObject(cJSON *obj, const char *key, LDNode *node)
 };
 
 static void
-summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
-    LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
+summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *feature,
+    const int type, const double n, const char *const s, LDNode *const m,
+    const double defaultn, const char *const defaults, LDNode *const defaultm)
 {
     LDi_log(LD_LOG_TRACE, "updating summary for %s\n", feature);
 
-    LDi_wrlock(&eventlock);
+    LDi_wrlock(&client->eventLock);
 
-    LDNode *summary = LDNodeLookup(summaryEvent, feature);
+    LDNode *summary = LDNodeLookup(client->summaryEvent, feature);
 
     if (!summary) {
         summary = LDNodeCreateHash();
 
         addValueToHash(&summary, "default", type, defaultn, defaults, defaultm);
 
-        summary = LDNodeAddHash(&summaryEvent, feature, summary);
+        summary = LDNodeAddHash(&client->summaryEvent, feature, summary);
     }
 
-    if (summaryStart == 0) {
-        summaryStart = milliTimestamp();
+    if (client->summaryStart == 0) {
+        client->summaryStart = milliTimestamp();
     }
 
     char countername[128]; int keystatus;
@@ -142,7 +128,7 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
 
     if (keystatus < 0) {
         LDi_log(LD_LOG_CRITICAL, "preparing key failed in summarizeEvent\n");
-        LDi_wrunlock(&eventlock); return;
+        LDi_wrunlock(&client->eventLock); return;
     }
 
     LDNode *counter = LDNodeLookup(summary->h, countername);
@@ -160,24 +146,27 @@ summarizeEvent(LDUser *lduser, LDNode *res, const char *feature, int type, doubl
 
     counter->track++;
 
-    LDi_wrunlock(&eventlock);
+    LDi_wrunlock(&client->eventLock);
 }
 
 static void
-collectSummary()
+collectSummary(LDClient *const client)
 {
-    if (summaryStart == 0) { return; }
+    LDi_wrlock(&client->eventLock);
 
-    LDi_wrlock(&eventlock);
+    if (client->summaryStart == 0) {
+        LDi_wrunlock(&client->eventLock);
+        return;
+    }
 
     cJSON *const json = cJSON_CreateObject();
     cJSON *const features = cJSON_CreateObject();
 
-    cJSON_AddNumberToObject(json, "startDate", summaryStart);
+    cJSON_AddNumberToObject(json, "startDate", client->summaryStart);
     cJSON_AddNumberToObject(json, "endDate", milliTimestamp());
 
     LDNode *feature, *tmp;
-    HASH_ITER(hh, summaryEvent, feature, tmp) {
+    HASH_ITER(hh, client->summaryEvent, feature, tmp) {
         cJSON *const jfeature = cJSON_CreateObject();
         cJSON *const counterarray = cJSON_CreateArray();
 
@@ -213,28 +202,22 @@ collectSummary()
 
     cJSON_AddItemToObject(json, "features", features);
     cJSON_AddStringToObject(json, "kind", "summary");
-    LDNodeFree(&summaryEvent);
-    summaryStart = 0;
+    LDNodeFree(&client->summaryEvent);
+    client->summaryStart = 0;
 
-    cJSON_AddItemToArray(eventarray, json);
-    numevents++;
-    LDi_wrunlock(&eventlock);
+    enqueueEvent(client, json);
+
+    LDi_wrunlock(&client->eventLock);
 }
 
 void
-LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature,
-    int type, double n, const char *s, LDNode *m, double defaultn, const char *defaults, LDNode *defaultm)
+LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const res,
+    const char *const feature, const int type, const double n, const char *const s, LDNode *const m,
+    const double defaultn, const char *const defaults, LDNode *const defaultm)
 {
-    summarizeEvent(lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
+    summarizeEvent(client, lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
 
     if (!res || res->track == 0 || (res->track > 1 && res->track < milliTimestamp())) {
-        return;
-    }
-
-    LDi_wrlock(&eventlock);
-    if (numevents >= eventscapacity) {
-        LDi_wrunlock(&eventlock);
-        LDi_log(LD_LOG_WARNING, "LDi_recordfeature event capacity exceeded\n");
         return;
     }
 
@@ -266,21 +249,16 @@ LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *fea
     cJSON *const juser = LDi_usertojson(client, lduser, true);
     cJSON_AddItemToObject(json, "user", juser);
 
-    cJSON_AddItemToArray(eventarray, json);
-    numevents++;
-    LDi_wrunlock(&eventlock);
+    LDi_wrlock(&client->eventLock);
+
+    enqueueEvent(client, json);
+
+    LDi_wrunlock(&client->eventLock);
 }
 
 void
-LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
+LDi_recordtrack(LDClient *const client, LDUser *const user, const char *const name, LDNode *const data)
 {
-    LDi_wrlock(&eventlock);
-    if (numevents >= eventscapacity) {
-        LDi_wrunlock(&eventlock);
-        LDi_log(LD_LOG_WARNING, "event capacity exceeded\n");
-        return;
-    }
-
     cJSON *const json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "custom");
     cJSON_AddStringToObject(json, "key", name);
@@ -293,28 +271,30 @@ LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data)
         cJSON_AddItemToObject(json, "data", LDi_hashtojson(data));
     }
 
-    cJSON_AddItemToArray(eventarray, json);
-    numevents++;
-    LDi_wrunlock(&eventlock);
+    LDi_wrlock(&client->eventLock);
+
+    enqueueEvent(client, json);
+
+    LDi_wrunlock(&client->eventLock);
 }
 
 char *
-LDi_geteventdata(void)
+LDi_geteventdata(LDClient *const client)
 {
-    collectSummary();
+    collectSummary(client);
 
-    LDi_wrlock(&eventlock);
-    cJSON *const events = eventarray;
-    eventarray = NULL;
-    const int hadevents = numevents;
-    numevents = 0;
-    initevents(eventscapacity);
-    LDi_wrunlock(&eventlock);
+    LDi_wrlock(&client->eventLock);
+    cJSON *const events = client->eventArray;
+    client->eventArray = cJSON_CreateArray();
+    const int hadevents = client->numEvents;
+    client->numEvents = 0;
+    LDi_wrunlock(&client->eventLock);
 
-    char *data = NULL;
     if (hadevents) {
-        data = cJSON_PrintUnformatted(events);
+        char *const data = cJSON_PrintUnformatted(events);
+        cJSON_Delete(events);
+        return data;
+    } else {
+        return NULL;
     }
-    cJSON_Delete(events);
-    return data;
 }

@@ -20,6 +20,14 @@ enum ld_log_level {
 };
 
 typedef enum {
+    LDStatusInitializing = 0,
+    LDStatusInitialized,
+    LDStatusFailed,
+    LDStatusShuttingdown,
+    LDStatusShutdown
+} LDStatus;
+
+typedef enum {
     LDNodeNone = 0,
     LDNodeString,
     LDNodeNumber,
@@ -79,10 +87,10 @@ void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
-
+/* must have already called LDClientInit to receive valid client */
+struct LDClient_i *LDClientGet();
+/* create the global client singleton */
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
-struct LDClient_i *LDClientGet(void);
-
 
 LDUser *LDUserNew(const char *);
 
