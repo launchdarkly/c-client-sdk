@@ -83,13 +83,16 @@ test3()
     LDUserAddPrivateAttribute(user, "avatar");
 
     cJSON *const json = LDi_usertojson(NULL, user, true);
-    const char *const str = cJSON_PrintUnformatted(json);
+    char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"custom\":{\"food\":[\"apple\"]},\"privateAttrs\":[\"avatar\",\"count\"]}";
 
     if (strcmp(str, expected) != 0) {
         printf("ERROR: User json %s was not expected\n", str);
     }
+
+    cJSON_Delete(json);
+    free(str);
 
     LDi_freeuser(user);
 }
