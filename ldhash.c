@@ -151,6 +151,9 @@ LDi_hashtoversionedjson(LDNode *hash)
     HASH_ITER(hh, hash, node, tmp) {
         cJSON *val = cJSON_CreateObject();
         switch (node->type) {
+        case LDNodeNone:
+            cJSON_AddNullToObject(val, "value");
+            break;
         case LDNodeBool:
             cJSON_AddBoolToObject(val, "value", (int)node->b);
             break;
@@ -187,6 +190,9 @@ LDi_hashtojson(LDNode *hash)
     LDNode *node, *tmp;
     HASH_ITER(hh, hash, node, tmp) {
         switch (node->type) {
+        case LDNodeNone:
+            cJSON_AddNullToObject(json, node->key);
+            break;
         case LDNodeBool:
             cJSON_AddBoolToObject(json, node->key, (int)node->b);
             break;
@@ -214,6 +220,9 @@ LDi_arraytojson(LDNode *hash)
     LDNode *node, *tmp;
     HASH_ITER(hh, hash, node, tmp) {
         switch (node->type) {
+        case LDNodeNone:
+            cJSON_AddItemToArray(json, cJSON_CreateNull());
+            break;
         case LDNodeBool:
             cJSON_AddItemToArray(json, cJSON_CreateBool((int)node->b));
             break;
@@ -422,6 +431,10 @@ LDNodeToJSON(LDNode *node)
         break;
     case LDNodeHash:
         json = LDi_hashtojson(node);
+        break;
+    default:
+        LDi_log(LD_LOG_FATAL, "LDNodeToJSON not Array or Object\n");
+        abort();
         break;
     }
     if (json) {

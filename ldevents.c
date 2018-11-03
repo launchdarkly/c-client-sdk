@@ -66,7 +66,8 @@ addValueToHash(LDNode **hash, const char *const name, const int type,
         return LDNodeAddHash(hash, name, m);
         break;
     default:
-        return LDNodeAddString(hash, name, "");
+        LDi_log(LD_LOG_FATAL, "addValueToHash unhandled case\n");
+        abort();
         break;
     }
 };
@@ -86,6 +87,10 @@ addNodeToJSONObject(cJSON *const obj, const char *const key, LDNode *const node)
         break;
     case LDNodeHash:
         cJSON_AddItemToObject(obj, key, LDi_hashtojson(node->h));
+        break;
+    default:
+        LDi_log(LD_LOG_FATAL, "addNodeToJSONObject unhandled case\n");
+        abort();
         break;
     }
 };

@@ -229,7 +229,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     }
     else {
         size_t b64len;
-        char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
+        unsigned char *const b64text = LDi_base64_encode((unsigned char*)jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
             free(jsonuser);
@@ -346,7 +346,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
     }
     else {
         size_t b64len;
-        char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
+        unsigned char *const b64text = LDi_base64_encode((unsigned char*)jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
             free(jsonuser);
