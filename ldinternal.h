@@ -155,6 +155,8 @@ struct FeatureRequestEvent {
     LDNode Default;
 };
 
+LDClient *LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli);
+
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
 void LDi_freehash(LDNode *hash);

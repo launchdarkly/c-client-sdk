@@ -156,8 +156,8 @@ LDClientGet()
     return globalClient;
 };
 
-static LDClient *
-LDClientInitIsolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
+LDClient *
+LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
 {
     LD_ASSERT(config); LD_ASSERT(user);
 
@@ -229,7 +229,7 @@ LDClient *
 LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
 {
     LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalClient);
-    globalClient = LDClientInitIsolated(config, user, maxwaitmilli);
+    globalClient = LDi_clientinitisolated(config, user, maxwaitmilli);
     return globalClient;
 }
 
