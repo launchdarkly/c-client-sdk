@@ -55,9 +55,8 @@ test2()
     LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
 
-
     cJSON *const json = LDi_usertojson(NULL, user, true);
-    const char *const str = cJSON_PrintUnformatted(json);
+    char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
         "\"avatar\":\"pirate\",\"custom\":{\"toppings\":[\"pineapple\",\"ham\"]}}";
@@ -65,6 +64,9 @@ test2()
     if (strcmp(str, expected) != 0) {
         printf("ERROR: User json %s was not expected\n", str);
     }
+
+    cJSON_Delete(json);
+    free(str);
 
     LDi_freeuser(user);
 }
