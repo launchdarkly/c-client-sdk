@@ -351,7 +351,7 @@ LDClientClose(LDClient *const client)
 
     for (struct listener *item = client->listeners; item;) {
         struct listener *const next = item->next; //must record next to make delete safe
-        LDFree(item);
+        LDFree(item->key); LDFree(item);
         item = next;
     }
 
