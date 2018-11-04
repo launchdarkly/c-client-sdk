@@ -467,19 +467,94 @@ LDNodeFromJSON(const char *text)
     return output;
 }
 
+/*
+static LDNode *
+newnode(LDNode **hash, const char *key, LDNodeType type)
+{
+    LDNode *node = LDAlloc(sizeof(*node));
+    memset(node, 0, sizeof(*node));
+    node->key = LDi_strdup(key);
+    node->type = type;
+    HASH_ADD_KEYPTR(hh, *hash, node->key, strlen(node->key), node);
+    return node;
+}
+*/
+
+LDNode*
+clonenode(LDNode *original)
+{
+    LDNode *const clone = LDAlloc(sizeof(*original));
+
+    memcpy(clone, original, sizeof(*original));
+
+    clone->key = NULL;
+
+    if (original->type == LDNodeString) {
+        clone->s = LDi_strdup(original->s);
+    }
+
+    if (original->type == LDNodeHash) {
+        clone->h = LDCloneHash(original->h);
+    }
+
+    if (original->type == LDNodeArray) {
+        clone->a = LDCloneArray(original->a);
+    }
+
+    return clone;
+}
+
+LDNode*
+LDCloneHash(LDNode *original)
+{
+    LDNode *result = LDNodeCreateHash();
+
+    LDNode *node, *tmp;
+    HASH_ITER(hh, original, node, tmp) {
+        LDNode *const clone = clonenode(node);
+        clone->key = LDi_strdup(node->key);
+        HASH_ADD_KEYPTR(hh, result, clone->key, strlen(clone->key), clone);
+    }
+
+    return result;
+}
+
+LDNode*
+LDCloneArray(LDNode *original)
+{
+    LDNode *result = LDNodeCreateArray();
+
+    LDNode *node, *tmp;
+    HASH_ITER(hh, original, node, tmp) {
+        LDNode *const clone = clonenode(node);
+        clone->idx = node->idx;
+        HASH_ADD_INT(result, idx, clone);
+    }
+
+    return result;
+}
+
 static void freehash(LDNode *node, bool);
 
 static void
 freenode(LDNode *node, bool freekey)
 {
-    if (freekey)
+    if (freekey) {
         LDFree(node->key);
-    if (node->type == LDNodeString)
+    }
+
+    if (node->type == LDNodeString) {
         LDFree(node->s);
-    if (node->type == LDNodeHash)
+    }
+
+    if (node->type == LDNodeHash) {
         freehash(node->h, true);
-    if (node->type == LDNodeArray)
+    }
+
+    if (node->type == LDNodeArray) {
         freehash(node->a, false);
+    }
+
     LDFree(node);
 }
 

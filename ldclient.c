@@ -331,6 +331,7 @@ LDClientClose(LDClient *const client)
 
     freeconfig(client->config);
     LDi_freeuser(client->user);
+
     LDi_freehash(client->allFlags);
 
     cJSON_Delete(client->eventArray);
@@ -426,7 +427,7 @@ LDClientRestoreFlags(LDClient *const client, const char *const data)
 {
     LD_ASSERT(client); LD_ASSERT(data);
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_savedata("features", client->user->key, data);
+        //LDi_savedata("features", client->user->key, data);
     }
 }
 
@@ -446,6 +447,11 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     if (payload->type == cJSON_Object) {
         hash = LDi_jsontohash(payload, flavor);
     }
+    else {
+        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags not object\n");
+        abort();
+    }
+
     cJSON_Delete(payload);
 
     if (needlock) {
@@ -623,9 +629,9 @@ LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fal
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
     if (node && node->type == LDNodeHash) {
-        result = node->h;
+        result = LDCloneHash(node->h);
     } else {
-        result = fallback;
+        result = LDCloneHash(fallback);
     }
 
     LDi_recordfeature(client, client->user, node, key, LDNodeHash,

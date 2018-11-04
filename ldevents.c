@@ -63,7 +63,7 @@ addValueToHash(LDNode **hash, const char *const name, const int type,
         return LDNodeAddBool(hash, name, n);
         break;
     case LDNodeHash:
-        return LDNodeAddHash(hash, name, m);
+        return LDNodeAddHash(hash, name, LDCloneHash(m));
         break;
     default:
         LDi_log(LD_LOG_FATAL, "addValueToHash unhandled case\n");

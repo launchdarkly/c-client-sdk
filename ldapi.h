@@ -29,11 +29,11 @@ typedef enum {
 
 typedef enum {
     LDNodeNone = 0,
-    LDNodeString,
-    LDNodeNumber,
-    LDNodeBool,
-    LDNodeHash,
-    LDNodeArray,
+    LDNodeString = 1,
+    LDNodeNumber = 2,
+    LDNodeBool = 3,
+    LDNodeHash = 4,
+    LDNodeArray = 5,
 } LDNodeType;
 
 typedef struct LDNode_i {
@@ -151,12 +151,14 @@ LDNode * LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
 LDNode *LDNodeLookup(LDNode *hash, const char *key);
 void LDNodeFree(LDNode **hash);
 unsigned int LDNodeCount(LDNode *hash);
+LDNode *LDCloneHash(LDNode *original);
 /* functions for treating nodes as arrays */
 LDNode *LDNodeCreateArray(void);
 LDNode * LDNodeAppendBool(LDNode **array, bool b);
 LDNode * LDNodeAppendNumber(LDNode **array, double n);
 LDNode * LDNodeAppendString(LDNode **array, const char *s);
 LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
+LDNode *LDCloneArray(LDNode *original);
 /* functions for converting nodes to / from JSON */
 char *LDNodeToJSON(LDNode* node);
 LDNode *LDNodeFromJSON(const char *json);
