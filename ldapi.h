@@ -148,19 +148,19 @@ LDNode * LDNodeAddNumber(LDNode **hash, const char *key, double n);
 LDNode * LDNodeAddString(LDNode **hash, const char *key, const char *s);
 LDNode * LDNodeAddHash(LDNode **hash, const char *key, LDNode *h);
 LDNode * LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
-LDNode *LDNodeLookup(LDNode *hash, const char *key);
+LDNode *LDNodeLookup(const LDNode *hash, const char *key);
 void LDNodeFree(LDNode **hash);
-unsigned int LDNodeCount(LDNode *hash);
+unsigned int LDNodeCount(const LDNode *hash);
 LDNode *LDCloneHash(const LDNode *original);
 /* functions for treating nodes as arrays */
 LDNode *LDNodeCreateArray(void);
 LDNode * LDNodeAppendBool(LDNode **array, bool b);
 LDNode * LDNodeAppendNumber(LDNode **array, double n);
 LDNode * LDNodeAppendString(LDNode **array, const char *s);
-LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
+LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
 LDNode *LDCloneArray(const LDNode *original);
 /* functions for converting nodes to / from JSON */
-char *LDNodeToJSON(LDNode* node);
+char *LDNodeToJSON(const LDNode* node);
 LDNode *LDNodeFromJSON(const char *json);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
