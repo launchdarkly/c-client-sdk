@@ -151,14 +151,14 @@ LDNode * LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
 LDNode *LDNodeLookup(LDNode *hash, const char *key);
 void LDNodeFree(LDNode **hash);
 unsigned int LDNodeCount(LDNode *hash);
-LDNode *LDCloneHash(LDNode *original);
+LDNode *LDCloneHash(const LDNode *original);
 /* functions for treating nodes as arrays */
 LDNode *LDNodeCreateArray(void);
 LDNode * LDNodeAppendBool(LDNode **array, bool b);
 LDNode * LDNodeAppendNumber(LDNode **array, double n);
 LDNode * LDNodeAppendString(LDNode **array, const char *s);
 LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
-LDNode *LDCloneArray(LDNode *original);
+LDNode *LDCloneArray(const LDNode *original);
 /* functions for converting nodes to / from JSON */
 char *LDNodeToJSON(LDNode* node);
 LDNode *LDNodeFromJSON(const char *json);
