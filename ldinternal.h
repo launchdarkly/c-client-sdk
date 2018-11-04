@@ -68,7 +68,7 @@ struct FeatureRequestEvent {
     LDNode Default;
 };
 
-unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
+char * LDi_base64_encode(const char *const, size_t len,
 	size_t *out_len);
 void LDi_freehash(LDNode *hash);
 void LDi_freenode(LDNode *node);

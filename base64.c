@@ -62,11 +62,11 @@ static const unsigned char base64_table[65] =
  * not included in out_len.
  */
  /* new lines are disabled */
-unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
+char * LDi_base64_encode(const char *const src, size_t len,
 			      size_t *out_len)
 {
-	unsigned char *out, *pos;
-	const unsigned char *end, *in;
+	char *out, *pos;
+	const char *end, *in;
 	size_t olen;
 	int line_len;
 
