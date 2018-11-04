@@ -1,3 +1,5 @@
+#ifndef C_CLIENT_LDINTERNAL_H
+#define C_CLIENT_LDINTERNAL_H
 
 #include "cJSON.h"
 #ifndef _WINDOWS
@@ -187,3 +189,5 @@ void LDi_earlyinit(void);
 
 /* expects caller to own LDi_clientlock */
 void LDi_updatestatus(struct LDClient_i *client, bool isinit);
+
+#endif // C_CLIENT_LDINTERNAL_H
