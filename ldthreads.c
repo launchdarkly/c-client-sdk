@@ -63,7 +63,6 @@ LDi_bgeventsender(void *const v)
         bool sent = false;
         int retries = 0;
         while (!sent) {
-            LDi_rdunlock(&client->clientLock);
             /* unlocked while sending; will relock if retry needed */
             int response = 0;
             LDi_sendevents(client, eventdata, &response);
@@ -92,7 +91,6 @@ LDi_bgeventsender(void *const v)
                 }
 
                 LDi_millisleep(backoff);
-                LDi_rdlock(&client->clientLock);
             }
         }
 
