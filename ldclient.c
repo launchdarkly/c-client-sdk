@@ -427,7 +427,7 @@ LDClientRestoreFlags(LDClient *const client, const char *const data)
 {
     LD_ASSERT(client); LD_ASSERT(data);
     if (LDi_clientsetflags(client, true, data, 1)) {
-        //LDi_savedata("features", client->user->key, data);
+        LDi_savedata("features", client->user->key, data);
     }
 }
 
