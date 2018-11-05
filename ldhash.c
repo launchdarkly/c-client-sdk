@@ -491,17 +491,17 @@ clonenode(const LDNode *const original)
 
     switch (original->type) {
     case LDNodeString:
-      clone->s = LDi_strdup(original->s);
-      break;
+        clone->s = LDi_strdup(original->s);
+        break;
     case LDNodeHash:
-      clone->h = LDCloneHash(original->h);
-      break;
+        clone->h = LDCloneHash(original->h);
+        break;
     case LDNodeArray:
-      clone->a = LDCloneArray(original->a);
-      break;
+        clone->a = LDCloneArray(original->a);
+        break;
     default:
-      /* other cases have no dynamic memory */
-      break;
+        /* other cases have no dynamic memory */
+        break;
     }
 
     return clone;
@@ -544,16 +544,19 @@ freenode(LDNode *const node, const bool freekey)
         LDFree(node->key);
     }
 
-    if (node->type == LDNodeString) {
+    switch (node->type) {
+    case LDNodeString:
         LDFree(node->s);
-    }
-
-    if (node->type == LDNodeHash) {
+        break;
+    case LDNodeHash:
         freehash(node->h, true);
-    }
-
-    if (node->type == LDNodeArray) {
+        break;
+    case LDNodeArray:
         freehash(node->a, false);
+        break;
+    default:
+        /* other cases have no dynamic memory */
+        break;
     }
 
     LDFree(node);
