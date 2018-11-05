@@ -36,7 +36,7 @@ test1(void)
 
     LDUser *const user = LDUserNew("userX");
 
-    LDClient *const client = LDClientInit(config, user, 0);
+    LDClient *const client = LDi_clientinitisolated(config, user, 0);
     LDClientRegisterFeatureFlagListener(client, "bugcount", hook);
 
     const char *const testflags = "{ \"bugcount\": 1 }";
@@ -59,10 +59,7 @@ test1(void)
 int
 main(int argc, char **argv)
 {
-    printf("Beginning tests\n");
-
     test1();
 
-    printf("Completed all tests\n");
     return 0;
 }

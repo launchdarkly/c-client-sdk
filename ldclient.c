@@ -156,8 +156,8 @@ LDClientGet()
     return globalClient;
 };
 
-static LDClient *
-LDClientInitIsolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
+LDClient *
+LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
 {
     LD_ASSERT(config); LD_ASSERT(user);
 
@@ -229,7 +229,7 @@ LDClient *
 LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
 {
     LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalClient);
-    globalClient = LDClientInitIsolated(config, user, maxwaitmilli);
+    globalClient = LDi_clientinitisolated(config, user, maxwaitmilli);
     return globalClient;
 }
 
@@ -331,6 +331,7 @@ LDClientClose(LDClient *const client)
 
     freeconfig(client->config);
     LDi_freeuser(client->user);
+
     LDi_freehash(client->allFlags);
 
     cJSON_Delete(client->eventArray);
@@ -351,7 +352,7 @@ LDClientClose(LDClient *const client)
 
     for (struct listener *item = client->listeners; item;) {
         struct listener *const next = item->next; //must record next to make delete safe
-        LDFree(item);
+        LDFree(item->key); LDFree(item);
         item = next;
     }
 
@@ -446,6 +447,11 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     if (payload->type == cJSON_Object) {
         hash = LDi_jsontohash(payload, flavor);
     }
+    else {
+        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags not object\n");
+        abort();
+    }
+
     cJSON_Delete(payload);
 
     if (needlock) {
@@ -623,9 +629,9 @@ LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fal
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
     if (node && node->type == LDNodeHash) {
-        result = node->h;
+        result = LDCloneHash(node->h);
     } else {
-        result = fallback;
+        result = LDCloneHash(fallback);
     }
 
     LDi_recordfeature(client, client->user, node, key, LDNodeHash,

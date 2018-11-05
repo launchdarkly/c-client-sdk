@@ -1,4 +1,4 @@
-CC=gcc -fPIC -std=c99 -D_XOPEN_SOURCE=600 -I..
+CC=gcc -fPIC -std=c99 -D_XOPEN_SOURCE=600 -I.. -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
 CXX=g++ -fPIC -D_XOPEN_SOURCE=600
 UPCSRCS=ldclient.c ldutil.c lduser.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c ldstore.c base64.c cJSON.c
 CSRCS=$(addprefix ../,$(UPCSRCS))
@@ -17,4 +17,4 @@ clean:
 	$(CC) -o $@ $< $(COBJS) $(LIBS)
 
 run-tests: $(TESTS)
-	for t in $(TESTS) ; do ./$$t || echo FAIL: $$t ; done
+	for t in $(TESTS) ; do echo "Running: $$t" && ./$$t || echo FAIL: $$t ; done

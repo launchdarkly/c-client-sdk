@@ -50,16 +50,15 @@ LDi_bgeventsender(void *const v)
         if (client->status == LDStatusShuttingdown) {
             finalflush = true;
         }
-        LDi_rdunlock(&client->clientLock);
 
-        char *const eventdata = LDi_geteventdata(client);
-        if (!eventdata) { continue; }
-
-        LDi_rdlock(&client->clientLock);
         if (client->offline) {
             LDi_rdunlock(&client->clientLock);
             continue;
         }
+        LDi_rdunlock(&client->clientLock);
+
+        char *const eventdata = LDi_geteventdata(client);
+        if (!eventdata) { continue; }
 
         bool sent = false;
         int retries = 0;

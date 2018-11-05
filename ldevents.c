@@ -63,10 +63,11 @@ addValueToHash(LDNode **hash, const char *const name, const int type,
         return LDNodeAddBool(hash, name, n);
         break;
     case LDNodeHash:
-        return LDNodeAddHash(hash, name, m);
+        return LDNodeAddHash(hash, name, LDCloneHash(m));
         break;
     default:
-        return LDNodeAddString(hash, name, "");
+        LDi_log(LD_LOG_FATAL, "addValueToHash unhandled case\n");
+        abort();
         break;
     }
 };
@@ -87,12 +88,16 @@ addNodeToJSONObject(cJSON *const obj, const char *const key, LDNode *const node)
     case LDNodeHash:
         cJSON_AddItemToObject(obj, key, LDi_hashtojson(node->h));
         break;
+    default:
+        LDi_log(LD_LOG_FATAL, "addNodeToJSONObject unhandled case\n");
+        abort();
+        break;
     }
 };
 
 static void
 summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *feature,
-    const int type, const double n, const char *const s, LDNode *const m,
+    const LDNodeType type, const double n, const char *const s, LDNode *const m,
     const double defaultn, const char *const defaults, LDNode *const defaultm)
 {
     LDi_log(LD_LOG_TRACE, "updating summary for %s\n", feature);
@@ -212,7 +217,7 @@ collectSummary(LDClient *const client)
 
 void
 LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const res,
-    const char *const feature, const int type, const double n, const char *const s, LDNode *const m,
+    const char *const feature, const LDNodeType type, const double n, const char *const s, LDNode *const m,
     const double defaultn, const char *const defaults, LDNode *const defaultm)
 {
     summarizeEvent(client, lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);

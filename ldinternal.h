@@ -155,6 +155,8 @@ struct FeatureRequestEvent {
     LDNode Default;
 };
 
+LDClient *LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli);
+
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
 void LDi_freehash(LDNode *hash);
@@ -162,10 +164,10 @@ void LDi_freenode(LDNode *node);
 
 void LDi_freeuser(LDUser *user);
 
-char *LDi_hashtostring(LDNode *hash, bool versioned);
-cJSON *LDi_hashtojson(LDNode *hash);
-cJSON *LDi_arraytojson(LDNode *hash);
-LDNode *LDi_jsontohash(cJSON *json, int flavor);
+char *LDi_hashtostring(const LDNode *hash, bool versioned);
+cJSON *LDi_hashtojson(const LDNode *hash);
+cJSON *LDi_arraytojson(const LDNode *hash);
+LDNode *LDi_jsontohash(const cJSON *json, int flavor);
 
 char *LDi_strdup(const char *src);
 
@@ -179,7 +181,7 @@ void LDi_readstream(LDClient *const client, int *response,
     int cbdata(LDClient *client, const char *line), void cbhandle(LDClient *client, int handle));
 
 void LDi_recordidentify(LDClient *client, LDUser *lduser);
-void LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature, int type, double n, const char *s,
+void LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature, LDNodeType type, double n, const char *s,
     LDNode *, double defaultn, const char *defaults, LDNode *);
 void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data);
 char *LDi_geteventdata(LDClient *client);

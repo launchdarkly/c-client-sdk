@@ -155,7 +155,7 @@ LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
         ts.tv_nsec -= 1000 * 1000 * 1000;
     }
 
-    int rv = pthread_cond_timedwait(cond, mtx, &ts);
+    pthread_cond_timedwait(cond, mtx, &ts);
 }
 
 void

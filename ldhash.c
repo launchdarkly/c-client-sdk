@@ -13,7 +13,7 @@ LDNodeCreateHash()
 }
 
 static LDNode *
-newnode(LDNode **hash, const char *key, LDNodeType type)
+newnode(LDNode **const hash, const char *const key, const LDNodeType type)
 {
     LDNode *node = LDAlloc(sizeof(*node));
     memset(node, 0, sizeof(*node));
@@ -24,48 +24,47 @@ newnode(LDNode **hash, const char *key, LDNodeType type)
 }
 
 LDNode *
-LDNodeAddNone(LDNode **hash, const char *key)
+LDNodeAddNone(LDNode **const hash, const char *const key)
 {
-    LDNode *node = newnode(hash, key, LDNodeNone);
-    return node;
+    return newnode(hash, key, LDNodeNone);
 }
 
 LDNode *
-LDNodeAddBool(LDNode **hash, const char *key, bool b)
+LDNodeAddBool(LDNode **const hash, const char *const key, const bool b)
 {
-    LDNode *node = newnode(hash, key, LDNodeBool);
+    LDNode *const node = newnode(hash, key, LDNodeBool);
     node->b = b;
     return node;
 }
 
 LDNode *
-LDNodeAddNumber(LDNode **hash, const char *key, double n)
+LDNodeAddNumber(LDNode **const hash, const char *const key, const double n)
 {
-    LDNode *node = newnode(hash, key, LDNodeNumber);
+    LDNode *const node = newnode(hash, key, LDNodeNumber);
     node->n = n;
     return node;
 }
 
 LDNode *
-LDNodeAddString(LDNode **hash, const char *key, const char *s)
+LDNodeAddString(LDNode **const hash, const char *const key, const char *const s)
 {
-    LDNode *node = newnode(hash, key, LDNodeString);
+    LDNode *const node = newnode(hash, key, LDNodeString);
     node->s = LDi_strdup(s);
     return node;
 }
 
 LDNode *
-LDNodeAddHash(LDNode **hash, const char *key, LDNode *h)
+LDNodeAddHash(LDNode **const hash, const char *const key, LDNode *const h)
 {
-    LDNode *node = newnode(hash, key, LDNodeHash);
+    LDNode *const node = newnode(hash, key, LDNodeHash);
     node->h = h;
     return node;
 }
 
 LDNode *
-LDNodeAddArray(LDNode **hash, const char *key, LDNode *a)
+LDNodeAddArray(LDNode **const hash, const char *const key, LDNode *const a)
 {
-    LDNode *node = newnode(hash, key, LDNodeArray);
+    LDNode *const node = newnode(hash, key, LDNodeArray);
     node->a = a;
     return node;
 }
@@ -78,9 +77,9 @@ LDNodeCreateArray()
 }
 
 static LDNode *
-appendnode(LDNode **array, LDNodeType type)
+appendnode(LDNode **const array, const LDNodeType type)
 {
-    LDNode *node = LDAlloc(sizeof(*node));
+    LDNode *const node = LDAlloc(sizeof(*node));
     memset(node, 0, sizeof(*node));
     node->idx = HASH_COUNT(*array);
     node->type = type;
@@ -89,31 +88,31 @@ appendnode(LDNode **array, LDNodeType type)
 }
 
 LDNode *
-LDNodeAppendBool(LDNode **array, bool b)
+LDNodeAppendBool(LDNode **const array, const bool b)
 {
-    LDNode *node = appendnode(array, LDNodeBool);
+    LDNode *const node = appendnode(array, LDNodeBool);
     node->b = b;
     return node;
 }
 
 LDNode *
-LDNodeAppendNumber(LDNode **array, double n)
+LDNodeAppendNumber(LDNode **const array, const double n)
 {
-    LDNode *node = appendnode(array, LDNodeNumber);
+    LDNode *const node = appendnode(array, LDNodeNumber);
     node->n = n;
     return node;
 }
 
 LDNode *
-LDNodeAppendString(LDNode **array, const char *s)
+LDNodeAppendString(LDNode **const array, const char *const s)
 {
-    LDNode *node = appendnode(array, LDNodeString);
+    LDNode *const node = appendnode(array, LDNodeString);
     node->s = LDi_strdup(s);
     return node;
 }
 
 LDNode *
-LDNodeLookup(LDNode *hash, const char *key)
+LDNodeLookup(const LDNode *const hash, const char *const key)
 {
     LDNode *res = NULL;
     if (hash) {
@@ -123,7 +122,7 @@ LDNodeLookup(LDNode *hash, const char *key)
 }
 
 LDNode *
-LDNodeIndex(LDNode *array, unsigned int idx)
+LDNodeIndex(const LDNode *const array, const unsigned int idx)
 {
     LDNode *res = NULL;
     HASH_FIND_INT(array, &idx, res);
@@ -131,26 +130,30 @@ LDNodeIndex(LDNode *array, unsigned int idx)
 }
 
 unsigned int
-LDNodeCount(LDNode *hash)
+LDNodeCount(const LDNode *const hash)
 {
     return HASH_COUNT(hash);
 }
 
 void
-LDNodeFree(LDNode **hash)
+LDNodeFree(LDNode **const hash)
 {
     LDi_freehash(*hash);
     *hash = NULL;
 }
 
 cJSON *
-LDi_hashtoversionedjson(LDNode *hash)
+LDi_hashtoversionedjson(const LDNode *const hash)
 {
-    cJSON *json = cJSON_CreateObject();
-    LDNode *node, *tmp;
-    HASH_ITER(hh, hash, node, tmp) {
-        cJSON *val = cJSON_CreateObject();
+    cJSON *const json = cJSON_CreateObject();
+
+    for (const LDNode *node = hash; node; node=node->hh.next) {
+        cJSON *const val = cJSON_CreateObject();
+
         switch (node->type) {
+        case LDNodeNone:
+            cJSON_AddNullToObject(val, "value");
+            break;
         case LDNodeBool:
             cJSON_AddBoolToObject(val, "value", (int)node->b);
             break;
@@ -167,26 +170,35 @@ LDi_hashtoversionedjson(LDNode *hash)
             cJSON_AddItemToObject(val, "value", LDi_arraytojson(node->a));
             break;
         }
-        if (node->version)
+
+        if (node->version) {
             cJSON_AddNumberToObject(val, "version", node->version);
-        if (node->variation)
+        }
+
+        if (node->variation) {
             cJSON_AddNumberToObject(val, "variation", node->variation);
-        if (node->flagversion)
+        }
+
+        if (node->flagversion) {
             cJSON_AddNumberToObject(val, "flagVersion", node->flagversion);
+        }
 
         cJSON_AddItemToObject(json, node->key, val);
-
     }
+
     return json;
 }
 
 cJSON *
-LDi_hashtojson(LDNode *hash)
+LDi_hashtojson(const LDNode *const hash)
 {
-    cJSON *json = cJSON_CreateObject();
-    LDNode *node, *tmp;
-    HASH_ITER(hh, hash, node, tmp) {
+    cJSON *const json = cJSON_CreateObject();
+
+    for (const LDNode *node = hash; node; node=node->hh.next) {
         switch (node->type) {
+        case LDNodeNone:
+            cJSON_AddNullToObject(json, node->key);
+            break;
         case LDNodeBool:
             cJSON_AddBoolToObject(json, node->key, (int)node->b);
             break;
@@ -204,16 +216,20 @@ LDi_hashtojson(LDNode *hash)
             break;
         }
     }
+
     return json;
 }
 
 cJSON *
-LDi_arraytojson(LDNode *hash)
+LDi_arraytojson(const LDNode *const hash)
 {
-    cJSON *json = cJSON_CreateArray();
-    LDNode *node, *tmp;
-    HASH_ITER(hh, hash, node, tmp) {
+    cJSON *const json = cJSON_CreateArray();
+
+    for (const LDNode *node = hash; node; node=node->hh.next) {
         switch (node->type) {
+        case LDNodeNone:
+            cJSON_AddItemToArray(json, cJSON_CreateNull());
+            break;
         case LDNodeBool:
             cJSON_AddItemToArray(json, cJSON_CreateBool((int)node->b));
             break;
@@ -231,6 +247,7 @@ LDi_arraytojson(LDNode *hash)
             break;
         }
     }
+
     return json;
 }
 
@@ -242,7 +259,7 @@ LDi_arraytojson(LDNode *hash)
  */
 
 char *
-LDi_hashtostring(LDNode *hash, bool versioned)
+LDi_hashtostring(const LDNode *const hash, const bool versioned)
 {
     cJSON *json;
     if (versioned) {
@@ -250,20 +267,19 @@ LDi_hashtostring(LDNode *hash, bool versioned)
     } else {
         json = LDi_hashtojson(hash);
     }
-    char *tmp = cJSON_PrintUnformatted(json);
+    char *const tmp = cJSON_PrintUnformatted(json); LD_ASSERT(tmp);
     cJSON_Delete(json);
-    char *s = LDi_strdup(tmp);
+    char *const s = LDi_strdup(tmp); LD_ASSERT(s);
     free(tmp);
     return s;
 }
 
 LDNode *
-jsontoarray(cJSON *json)
+jsontoarray(const cJSON *const json)
 {
     LDNode *array = NULL;
 
-    cJSON *item;
-    for (item = json->child; item; item = item->next) {
+    for (cJSON *item = json->child; item; item = item->next) {
         switch (item->type) {
         case cJSON_False:
             LDNodeAppendBool(&array, false);
@@ -280,19 +296,21 @@ jsontoarray(cJSON *json)
             LDNodeAppendString(&array, item->valuestring);
             break;
         default:
+            LDi_log(LD_LOG_FATAL, "jsontoarray unhandled case\n");
+            abort();
             break;
         }
     }
+
     return array;
 }
 
 LDNode *
-LDi_jsontohash(cJSON *json, int flavor)
+LDi_jsontohash(const cJSON *const json, const int flavor)
 {
     LDNode *hash = NULL;
 
-    cJSON *item;
-    for (item = json->child; item; item = item->next) {
+    for (const cJSON *item = json->child; item; item = item->next) {
         if (flavor == 2) {
             /* super gross, go back up a level */
             item = json;
@@ -303,7 +321,7 @@ LDi_jsontohash(cJSON *json, int flavor)
         double track = 0;
         int flagversion = 0;
 
-        cJSON *valueitem = item;
+        const cJSON *valueitem = item;
         switch (flavor) {
         case 0:
             /* plain json, no special handling */
@@ -413,7 +431,7 @@ LDi_jsontohash(cJSON *json, int flavor)
 }
 
 char *
-LDNodeToJSON(LDNode *node)
+LDNodeToJSON(const LDNode *const node)
 {
     cJSON *json = NULL;
     switch (node->type) {
@@ -423,9 +441,13 @@ LDNodeToJSON(LDNode *node)
     case LDNodeHash:
         json = LDi_hashtojson(node);
         break;
+    default:
+        LDi_log(LD_LOG_FATAL, "LDNodeToJSON not Array or Object\n");
+        abort();
+        break;
     }
     if (json) {
-        char *text = cJSON_PrintUnformatted(json);
+        char *const text = cJSON_PrintUnformatted(json); LD_ASSERT(text);
         cJSON_Delete(json);
         return text;
     }
@@ -435,13 +457,12 @@ LDNodeToJSON(LDNode *node)
 }
 
 LDNode *
-LDNodeFromJSON(const char *text)
+LDNodeFromJSON(const char *const text)
 {
-    cJSON *json = cJSON_Parse(text);
-    if (!json) {
-        return NULL;
-    }
+    cJSON *const json = cJSON_Parse(text); LD_ASSERT(json);
+
     LDNode *output = NULL;
+
     switch (json->type) {
     case cJSON_Array:
         output = jsontoarray(json);
@@ -449,29 +470,100 @@ LDNodeFromJSON(const char *text)
     case cJSON_Object:
         output = LDi_jsontohash(json, 0);
         break;
+    default:
+        LDi_log(LD_LOG_FATAL, "LDNodeFromJSON not Array or Object\n");
+        abort();
+        break;
     }
+
     cJSON_Delete(json);
     return output;
+}
+
+LDNode*
+clonenode(const LDNode *const original)
+{
+    LDNode *const clone = LDAlloc(sizeof(*original));
+
+    memcpy(clone, original, sizeof(*original));
+
+    clone->key = NULL;
+
+    switch (original->type) {
+    case LDNodeString:
+        clone->s = LDi_strdup(original->s);
+        break;
+    case LDNodeHash:
+        clone->h = LDCloneHash(original->h);
+        break;
+    case LDNodeArray:
+        clone->a = LDCloneArray(original->a);
+        break;
+    default:
+        /* other cases have no dynamic memory */
+        break;
+    }
+
+    return clone;
+}
+
+LDNode*
+LDCloneHash(const LDNode *const original)
+{
+    LDNode *result = LDNodeCreateHash();
+
+    for (const LDNode *node = original; node; node=node->hh.next) {
+        LDNode *const clone = clonenode(node);
+        clone->key = LDi_strdup(node->key);
+        HASH_ADD_KEYPTR(hh, result, clone->key, strlen(clone->key), clone);
+    }
+
+    return result;
+}
+
+LDNode*
+LDCloneArray(const LDNode *const original)
+{
+    LDNode *result = LDNodeCreateArray();
+
+    for (const LDNode *node = original; node; node=node->hh.next) {
+        LDNode *const clone = clonenode(node);
+        clone->idx = node->idx;
+        HASH_ADD_INT(result, idx, clone);
+    }
+
+    return result;
 }
 
 static void freehash(LDNode *node, bool);
 
 static void
-freenode(LDNode *node, bool freekey)
+freenode(LDNode *const node, const bool freekey)
 {
-    if (freekey)
+    if (freekey) {
         LDFree(node->key);
-    if (node->type == LDNodeString)
+    }
+
+    switch (node->type) {
+    case LDNodeString:
         LDFree(node->s);
-    if (node->type == LDNodeHash)
+        break;
+    case LDNodeHash:
         freehash(node->h, true);
-    if (node->type == LDNodeArray)
+        break;
+    case LDNodeArray:
         freehash(node->a, false);
+        break;
+    default:
+        /* other cases have no dynamic memory */
+        break;
+    }
+
     LDFree(node);
 }
 
 static void
-freehash(LDNode *hash, bool freekey)
+freehash(LDNode *hash, const bool freekey)
 {
     LDNode *node, *tmp;
     HASH_ITER(hh, hash, node, tmp) {
@@ -481,13 +573,13 @@ freehash(LDNode *hash, bool freekey)
 }
 
 void
-LDi_freenode(LDNode *node)
+LDi_freenode(LDNode *const node)
 {
     freenode(node, true);
 }
 
 void
-LDi_freehash(LDNode *hash)
+LDi_freehash(LDNode *const hash)
 {
     freehash(hash, true);
 }

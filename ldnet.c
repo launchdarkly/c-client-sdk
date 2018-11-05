@@ -229,7 +229,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     }
     else {
         size_t b64len;
-        char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
+        unsigned char *const b64text = LDi_base64_encode((unsigned char*)jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
             free(jsonuser);
@@ -346,7 +346,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
     }
     else {
         size_t b64len;
-        char *const b64text = LDi_base64_encode(jsonuser, strlen(jsonuser), &b64len);
+        unsigned char *const b64text = LDi_base64_encode((unsigned char*)jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
             free(jsonuser);
@@ -375,7 +375,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
             curl_easy_cleanup(curl); return NULL;
         }
 
-        const char* const headermime = "Content-Type: application/json";
+        const char *const headermime = "Content-Type: application/json";
         if (!(headerlist = curl_slist_append(headerlist, headermime))) {
             LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headermime\n");
             curl_easy_cleanup(curl); return NULL;
@@ -425,13 +425,13 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
         return;
     }
 
-    const char* const headermime = "Content-Type: application/json";
+    const char *const headermime = "Content-Type: application/json";
     if (!(headerlist = curl_slist_append(headerlist, headermime))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headermime\n");
         curl_easy_cleanup(curl); return;
     }
 
-    const char* const headerschema = "X-LaunchDarkly-Event-Schema: 3";
+    const char *const headerschema = "X-LaunchDarkly-Event-Schema: 3";
     if (!(headerlist = curl_slist_append(headerlist, headerschema))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headerschema\n");
         curl_easy_cleanup(curl); return;
