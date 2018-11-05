@@ -63,7 +63,6 @@ LDi_bgeventsender(void *const v)
         bool sent = false;
         int retries = 0;
         while (!sent) {
-            /* unlocked while sending; will relock if retry needed */
             int response = 0;
             LDi_sendevents(client, eventdata, &response);
             if (response == 401 || response == 403) {
