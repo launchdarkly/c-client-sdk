@@ -29,11 +29,11 @@ typedef enum {
 
 typedef enum {
     LDNodeNone = 0,
-    LDNodeString = 1,
-    LDNodeNumber = 2,
-    LDNodeBool = 3,
-    LDNodeHash = 4,
-    LDNodeArray = 5,
+    LDNodeString,
+    LDNodeNumber,
+    LDNodeBool,
+    LDNodeHash,
+    LDNodeArray,
 } LDNodeType;
 
 typedef struct LDNode_i {
