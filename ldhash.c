@@ -489,16 +489,19 @@ clonenode(const LDNode *const original)
 
     clone->key = NULL;
 
-    if (original->type == LDNodeString) {
-        clone->s = LDi_strdup(original->s);
-    }
-
-    if (original->type == LDNodeHash) {
-        clone->h = LDCloneHash(original->h);
-    }
-
-    if (original->type == LDNodeArray) {
-        clone->a = LDCloneArray(original->a);
+    switch (original->type) {
+    case LDNodeString:
+      clone->s = LDi_strdup(original->s);
+      break;
+    case LDNodeHash:
+      clone->h = LDCloneHash(original->h);
+      break;
+    case LDNodeArray:
+      clone->a = LDCloneArray(original->a);
+      break;
+    default:
+      /* other cases have no dynamic memory */
+      break;
     }
 
     return clone;
