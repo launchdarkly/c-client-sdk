@@ -431,6 +431,7 @@ LDClientRestoreFlags(LDClient *const client, const char *const data)
     }
 }
 
+
 bool
 LDi_clientsetflags(LDClient *const client, const bool needlock, const char *const data, const int flavor)
 {
@@ -443,14 +444,13 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
         return false;
     }
 
-    LDNode *hash = NULL;
-    if (payload->type == cJSON_Object) {
-        hash = LDi_jsontohash(payload, flavor);
+    if (payload->type != cJSON_Object) {
+        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags did not get object\n");
+        cJSON_Delete(payload);
+        return false;
     }
-    else {
-        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags not object\n");
-        abort();
-    }
+
+    LDNode *const newhash = LDi_jsontohash(payload, flavor);
 
     cJSON_Delete(payload);
 
@@ -459,7 +459,22 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     }
 
     LDNode *const oldhash = client->allFlags;
-    client->allFlags = hash;
+
+    LDNode *oldnode, *tmp;
+    HASH_ITER(hh, oldhash, oldnode, tmp) {
+        LDNode *newnode = NULL;
+        HASH_FIND_STR(newhash, oldnode->key, newnode);
+
+        for (struct listener *list = client->listeners; list; list = list->next) {
+            if (strcmp(list->key, oldnode->key) == 0) {
+                LDi_wrunlock(&client->clientLock);
+                list->fn(oldnode->key, newnode == NULL);
+                LDi_wrlock(&client->clientLock);
+            }
+        }
+    }
+
+    client->allFlags = newhash;
 
     if (client->status == LDStatusInitializing) {
         LDi_updatestatus(client, LDStatusInitialized);
