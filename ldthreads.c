@@ -205,7 +205,9 @@ applypatch(LDClient *const client, cJSON *const payload, const bool isdelete)
         }
         for (struct listener *list = client->listeners; list; list = list->next) {
             if (strcmp(list->key, node->key) == 0) {
+                LDi_wrunlock(&client->clientLock);
                 list->fn(node->key, isdelete ? 1 : 0);
+                LDi_wrlock(&client->clientLock);
             }
         }
     }
