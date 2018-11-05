@@ -752,7 +752,9 @@ LDi_updatestatus(struct LDClient_i *const client, const LDStatus status)
     if (client->status != status) {
         client->status = status;
         if (LDi_statuscallback) {
+            LDi_wrunlock(&client->clientLock);
             LDi_statuscallback(status);
+            LDi_wrlock(&client->clientLock);
         }
    }
    LDi_condsignal(&client->initCond);
