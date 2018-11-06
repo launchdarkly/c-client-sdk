@@ -260,11 +260,24 @@ LDi_deviceid()
         return NULL;
     }
   #elif _WIN32
-    DWORD buffersize = sizeof(buffer);
+    DWORD buffersize = sizeof(buffer); HKEY hkey; DWORD regtype = REG_SZ;
 
-    const LSTATUS status = RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", "MachineGuid", RRF_RT_REG_SZ, NULL, buffer, &buffersize);
+    const LSTATUS openstatus = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &hkey)
 
-    if (status != 0) { return NULL; }
+    if (openstatus != ERROR_SUCCESS) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegOpenKeyExA got %u\n", openstatus);
+        return NULL;
+    }
+
+    const LSTATUS querystatus = RegQueryValueExA(hkey, "MachineGuid", NULL, &regtype, buffer, &buffersize);
+
+    if (querystatus != ERROR_SUCCESS) {
+        RegCloseKey(hkey);
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegGetValueA got %u\n", openstatus);
+        return NULL;
+    }
+
+    RegCloseKey(hkey);
   #elif __APPLE__
     io_registry_entry_t entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
 
