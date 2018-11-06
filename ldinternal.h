@@ -212,6 +212,8 @@ void LDi_initializerng();
 bool LDi_random(unsigned int *result);
 /* returns true on success, may leave buffer dirty */
 bool LDi_randomhex(char *buffer, size_t buffersize);
+/* returns a unique device identifier, returns NULL on failure */
+char *LDi_deviceid();
 
 /* calls into the store interface */
 void LDi_savedata(const char *dataname, const char *username, const char *data);

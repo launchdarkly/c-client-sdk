@@ -6,6 +6,8 @@
 #else
 /* required for rng setup on windows must be before stdlib */
 #define _CRT_RAND_S
+/* required for device id */
+#include <winreg.h>
 #endif
 
 #include <stdlib.h>
@@ -220,3 +222,72 @@ LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact
 
     return textuser;
 }
+
+/* -1 on error, otherwise read size */
+static int
+readfile(const char *const path, unsigned char *const buffer, size_t const buffersize)
+{
+    FILE *const handle = fopen(path, "rb");
+
+    if (!handle) { return -1; };
+
+    if (fseek(handle, 0, SEEK_END)) { fclose(handle); return -1; }
+
+    const long int filesize = ftell(handle);
+
+    if (filesize == -1) { fclose(handle); return -1; }
+
+    if ((size_t)filesize > buffersize) { fclose(handle); return -1; }
+
+    if (fseek(handle, 0, SEEK_SET)) { fclose(handle); return -1; }
+
+    if (fread(buffer, 1, filesize, handle) != (size_t)filesize) {
+        fclose(handle); return -1;
+    }
+
+    fclose(handle);
+
+    return filesize;
+}
+
+char *
+LDi_deviceid()
+{
+  char buffer[256]; memset(buffer, 0, sizeof(buffer));
+
+  #ifdef __linux__
+    if (readfile("/var/lib/dbus/machine-id", (unsigned char*)buffer, sizeof(buffer)) == -1) {
+        return NULL;
+    }
+  #elif _WIN32
+    DWORD buffersize = sizeof(buffer);
+
+    const LSTATUS status = RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", "MachineGuid", RRF_RT_REG_SZ, NULL, buffer, &buffersize);
+
+    if (status != 0) { return NULL; }
+  #elif __APPLE__
+    io_registry_entry_t entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+
+    if (!entry) { return NULL; }
+
+    CFStringRef uuid = (CFStringRef)IORegistryEntryCreateCFProperty(entry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
+
+    IOObjectRelease(entry);
+
+    if (!uuid) { return NULL; }
+
+    if (!CFStringGetCString(uuid, buffer, sizeof(buffer), kCFStringEncodingASCII)) {
+        CFRelease(uuid); return NULL;
+    }
+
+    CFRelease(uuid);
+  #elif __FreeBSD__
+    if (readfile("/etc/hostid", (unsigned char*)buffer, sizeof(buffer)) == -1) {
+        return NULL;
+    }
+  #else
+    return NULL;
+  #endif
+
+    return LDi_strdup(buffer);
+};
