@@ -8,6 +8,11 @@
 #define _CRT_RAND_S
 #endif
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
+#endif
+
 #include <stdlib.h>
 
 #include "ldapi.h"
