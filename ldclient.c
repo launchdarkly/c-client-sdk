@@ -500,6 +500,16 @@ LDi_savehash(LDClient *const client)
     LDFree(serialized);
 }
 
+LDNode *
+LDAllFlags(LDClient *const client)
+{
+    LD_ASSERT(client);
+    LDi_rdlock(&client->clientLock);
+    LDNode *const clone = LDCloneHash(client->allFlags);
+    LDi_rdunlock(&client->clientLock);
+    return clone;
+}
+
 /*
  * a block of functions to look up feature flags
  */

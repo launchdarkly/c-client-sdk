@@ -130,6 +130,9 @@ LDNode *LDClientGetLockedFlags(struct LDClient_i *client);
 void LDClientTrack(struct LDClient_i *client, const char *name);
 void LDClientTrackData(struct LDClient_i *client, const char *name, LDNode *data);
 
+/* returns a hash table of existing flags, must be freed with LDNodeFree */
+LDNode *LDAllFlags(struct LDClient_i *const client);
+
 bool LDBoolVariation(struct LDClient_i *, const char *, bool);
 int LDIntVariation(struct LDClient_i *, const char *, int);
 double LDDoubleVariation(struct LDClient_i *, const char *, double);
