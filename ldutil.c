@@ -255,6 +255,7 @@ LDi_deviceid()
 
   #ifdef __linux__
     if (readfile("/var/lib/dbus/machine-id", (unsigned char*)buffer, sizeof(buffer)) == -1) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /var/lib/dbus/machine-id\n");
         return NULL;
     }
   #elif _WIN32
@@ -279,21 +280,29 @@ LDi_deviceid()
   #elif __APPLE__
     io_registry_entry_t entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
 
-    if (!entry) { return NULL; }
+    if (!entry) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryFromPath failed\n");
+        return NULL;
+    }
 
     CFStringRef uuid = (CFStringRef)IORegistryEntryCreateCFProperty(entry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
 
     IOObjectRelease(entry);
 
-    if (!uuid) { return NULL; }
+    if (!uuid) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryCreateCFProperty failed\n");
+        return NULL;
+    }
 
     if (!CFStringGetCString(uuid, buffer, sizeof(buffer), kCFStringEncodingASCII)) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid CFStringGetCString failed\n");
         CFRelease(uuid); return NULL;
     }
 
     CFRelease(uuid);
   #elif __FreeBSD__
     if (readfile("/etc/hostid", (unsigned char*)buffer, sizeof(buffer)) == -1) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /etc/hostid\n");
         return NULL;
     }
   #else
