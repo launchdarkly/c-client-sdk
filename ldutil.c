@@ -6,8 +6,6 @@
 #else
 /* required for rng setup on windows must be before stdlib */
 #define _CRT_RAND_S
-/* required for device id */
-#include <winreg.h>
 #endif
 
 #include <stdlib.h>
@@ -262,7 +260,7 @@ LDi_deviceid()
   #elif _WIN32
     DWORD buffersize = sizeof(buffer); HKEY hkey; DWORD regtype = REG_SZ;
 
-    const LSTATUS openstatus = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &hkey)
+    const LSTATUS openstatus = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
 
     if (openstatus != ERROR_SUCCESS) {
         LDi_log(LD_LOG_ERROR, "LDi_deviceid RegOpenKeyExA got %u\n", openstatus);
