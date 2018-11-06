@@ -8,6 +8,12 @@ CXXOBJS=$(CXXSRCS:.cpp=.o)
 
 LIBS=-lcurl -lpthread -lm
 
+UNAME := $(shell uname)
+
+ifeq ($(UNAME),Darwin)
+	LIBS+= -framework CoreFoundation -framework IOKit
+endif
+
 all: libldapi.so libldapiplus.so libldapi.a  test
 
 clean:
