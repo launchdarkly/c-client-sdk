@@ -103,7 +103,7 @@ Determines whether the `REPORT` or `GET` verb is used for calls to LaunchDarkly.
 LDUser *LDUserNew(const char *key);
 ```
 
-Allocate a new user. The user may be modified *until* it is passed to the `LdClientIdentify` or `LDClientInit`. The `key` argument is required.
+Allocate a new user. The user may be modified *until* it is passed to the `LdClientIdentify` or `LDClientInit`. The `key` argument is not required. When `key` is `NULL` then a device specific ID is used. If a device specific ID cannot be obtained then a random fallback is generated.
 
 ```C
 void LDUserSetAnonymous(LDUser *user, bool anon);
