@@ -264,7 +264,7 @@ LDi_deviceid()
         return NULL;
     }
   #elif _WIN32
-    DWORD buffersize = sizeof(buffer); HKEY hkey; DWORD regtype = REG_SZ;
+    DWORD buffersize = sizeof(buffer) - 1; HKEY hkey; DWORD regtype = REG_SZ;
 
     const LSTATUS openstatus = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
 
