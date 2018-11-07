@@ -306,7 +306,7 @@ LDi_deviceid()
 
     CFRelease(uuid);
   #elif __FreeBSD__
-    if (readfile("/etc/hostid", (unsigned char*)buffer, sizeof(buffer - 1)) == -1) {
+    if (readfile("/etc/hostid", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
         LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /etc/hostid\n");
         return NULL;
     }
