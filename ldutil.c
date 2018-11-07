@@ -259,7 +259,7 @@ LDi_deviceid()
   char buffer[256]; memset(buffer, 0, sizeof(buffer));
 
   #ifdef __linux__
-    if (readfile("/var/lib/dbus/machine-id", (unsigned char*)buffer, sizeof(buffer - 1)) == -1) {
+    if (readfile("/var/lib/dbus/machine-id", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
         LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /var/lib/dbus/machine-id\n");
         return NULL;
     }
