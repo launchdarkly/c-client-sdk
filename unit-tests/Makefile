@@ -6,7 +6,7 @@ COBJS=$(CSRCS:.c=.o)
 
 LIBS=-lcurl -lpthread -lm
 
-TESTS=test-store.test test-hooks.test test-userencoding.test
+TESTS=test-store.test test-hooks.test test-userencoding.test test-deviceid.test
 
 all: run-tests
 

@@ -8,6 +8,11 @@
 #define _CRT_RAND_S
 #endif
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
+#endif
+
 #include <stdlib.h>
 
 #include "ldapi.h"
@@ -220,3 +225,94 @@ LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact
 
     return textuser;
 }
+
+/* -1 on error, otherwise read size */
+static int
+readfile(const char *const path, unsigned char *const buffer, size_t const buffersize)
+{
+    FILE *const handle = fopen(path, "rb");
+
+    if (!handle) { return -1; };
+
+    if (fseek(handle, 0, SEEK_END)) { fclose(handle); return -1; }
+
+    const long int filesize = ftell(handle);
+
+    if (filesize == -1) { fclose(handle); return -1; }
+
+    if ((size_t)filesize > buffersize) { fclose(handle); return -1; }
+
+    if (fseek(handle, 0, SEEK_SET)) { fclose(handle); return -1; }
+
+    if (fread(buffer, 1, filesize, handle) != (size_t)filesize) {
+        fclose(handle); return -1;
+    }
+
+    fclose(handle);
+
+    return filesize;
+}
+
+char *
+LDi_deviceid()
+{
+  char buffer[256]; memset(buffer, 0, sizeof(buffer));
+
+  #ifdef __linux__
+    if (readfile("/var/lib/dbus/machine-id", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /var/lib/dbus/machine-id\n");
+        return NULL;
+    }
+  #elif _WIN32
+    DWORD buffersize = sizeof(buffer) - 1; HKEY hkey; DWORD regtype = REG_SZ;
+
+    const LSTATUS openstatus = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
+
+    if (openstatus != ERROR_SUCCESS) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegOpenKeyExA got %u\n", openstatus);
+        return NULL;
+    }
+
+    const LSTATUS querystatus = RegQueryValueExA(hkey, "MachineGuid", NULL, &regtype, buffer, &buffersize);
+
+    if (querystatus != ERROR_SUCCESS) {
+        RegCloseKey(hkey);
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegGetValueA got %u\n", openstatus);
+        return NULL;
+    }
+
+    RegCloseKey(hkey);
+  #elif __APPLE__
+    io_registry_entry_t entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+
+    if (!entry) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryFromPath failed\n");
+        return NULL;
+    }
+
+    CFStringRef uuid = (CFStringRef)IORegistryEntryCreateCFProperty(entry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
+
+    IOObjectRelease(entry);
+
+    if (!uuid) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryCreateCFProperty failed\n");
+        return NULL;
+    }
+
+    if (!CFStringGetCString(uuid, buffer, sizeof(buffer), kCFStringEncodingASCII)) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid CFStringGetCString failed\n");
+        CFRelease(uuid); return NULL;
+    }
+
+    CFRelease(uuid);
+  #elif __FreeBSD__
+    if (readfile("/etc/hostid", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /etc/hostid\n");
+        return NULL;
+    }
+  #else
+    return NULL;
+  #endif
+
+    return LDi_strdup(buffer);
+};
