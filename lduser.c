@@ -15,12 +15,12 @@ LDUserNew(const char *const key)
             LDSetString(&user->key, deviceid);
             LDFree(deviceid);
         } else {
-            LDi_log(LD_LOG_WARNING, "Failed to get device ID falling back to random ID\n");
+            LDi_log(LD_LOG_WARNING, "Failed to get device ID falling back to random ID");
             char randomkey[32 + 1] = { 0 };
             LDi_randomhex(randomkey, sizeof(randomkey) - 1);
             LDSetString(&user->key, randomkey);
         }
-        LDi_log(LD_LOG_INFO, "Setting user key to: %s\n", user->key);
+        LDi_log(LD_LOG_INFO, "Setting user key to: %s", user->key);
         user->anonymous = true;
     }
     else {
