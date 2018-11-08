@@ -296,7 +296,7 @@ jsontoarray(const cJSON *const json)
             LDNodeAppendString(&array, item->valuestring);
             break;
         default:
-            LDi_log(LD_LOG_FATAL, "jsontoarray unhandled case\n");
+            LDi_log(LD_LOG_FATAL, "jsontoarray unhandled case");
             abort();
             break;
         }
@@ -442,7 +442,7 @@ LDNodeToJSON(const LDNode *const node)
         json = LDi_hashtojson(node);
         break;
     default:
-        LDi_log(LD_LOG_FATAL, "LDNodeToJSON not Array or Object\n");
+        LDi_log(LD_LOG_FATAL, "LDNodeToJSON not Array or Object");
         abort();
         break;
     }
@@ -471,7 +471,7 @@ LDNodeFromJSON(const char *const text)
         output = LDi_jsontohash(json, 0);
         break;
     default:
-        LDi_log(LD_LOG_FATAL, "LDNodeFromJSON not Array or Object\n");
+        LDi_log(LD_LOG_FATAL, "LDNodeFromJSON not Array or Object");
         abort();
         break;
     }

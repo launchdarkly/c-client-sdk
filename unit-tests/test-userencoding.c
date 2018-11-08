@@ -10,9 +10,9 @@
 #include "ldinternal.h"
 
 void
-logger(const char *s)
+logger(const char *const s)
 {
-    printf("LD: %s", s);
+    printf("LD: %s\n", s);
 }
 
 /*

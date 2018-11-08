@@ -25,7 +25,7 @@ LDi_bgeventsender(void *const v)
         const LDStatus status = client->status;
 
         if (status == LDStatusFailed || finalflush) {
-            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender\n");
+            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender");
             client->threads--;
             if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
@@ -39,12 +39,12 @@ LDi_bgeventsender(void *const v)
         LDi_wrunlock(&client->clientLock);
 
         if (status != LDStatusShuttingdown) {
-            LDi_log(LD_LOG_TRACE, "bg sender sleeping\n");
+            LDi_log(LD_LOG_TRACE, "bg sender sleeping");
             LDi_mtxenter(&client->condMtx);
             LDi_condwait(&client->eventCond, &client->condMtx, ms);
             LDi_mtxleave(&client->condMtx);
         }
-        LDi_log(LD_LOG_TRACE, "bgsender running\n");
+        LDi_log(LD_LOG_TRACE, "bgsender running");
 
         LDi_rdlock(&client->clientLock);
         if (client->status == LDStatusShuttingdown) {
@@ -79,7 +79,7 @@ LDi_bgeventsender(void *const v)
             if (retries) {
                 unsigned int rng = 0;
                 if (!LDi_random(&rng)) {
-                    LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender\n");
+                    LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender");
                 }
 
                 int backoff = 1000 * pow(2, retries - 2);
@@ -109,7 +109,7 @@ LDi_bgfeaturepoller(void *const v)
         LDi_wrlock(&client->clientLock);
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
-            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller\n");
+            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller");
             client->threads--;
             if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
@@ -224,7 +224,7 @@ LDi_onstreameventpatch(LDClient *const client, const char *const data)
     cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
-        LDi_log(LD_LOG_ERROR, "parsing patch failed\n");
+        LDi_log(LD_LOG_ERROR, "parsing patch failed");
         return;
     }
 
@@ -238,7 +238,7 @@ LDi_onstreameventdelete(LDClient *const client, const char *const data)
     cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
-        LDi_log(LD_LOG_ERROR, "parsing delete patch failed\n");
+        LDi_log(LD_LOG_ERROR, "parsing delete patch failed");
         return;
     }
 
@@ -319,18 +319,18 @@ streamcallback(LDClient *const client, const char *line)
 
     if (!line) {
         //should not happen from the networking side but is not fatal
-        LDi_log(LD_LOG_ERROR, "streamcallback got NULL line\n");
+        LDi_log(LD_LOG_ERROR, "streamcallback got NULL line");
     } else if (line[0] == ':') {
         //skip comment
     } else if (line[0] == 0) {
         if (client->eventname[0] == 0) {
-            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but type was never set\n");
+            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but type was never set");
         } else if (strcmp(client->eventname, "ping") == 0) {
             LDi_wrunlock(&client->clientLock);
             onstreameventping(client);
             LDi_wrlock(&client->clientLock);
         } else if (client->databuffer == NULL) {
-            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but data was never set\n");
+            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but data was never set");
         } else if (strcmp(client->eventname, "put") == 0) {
             LDi_wrunlock(&client->clientLock);
             LDi_onstreameventput(client, client->databuffer);
@@ -344,7 +344,7 @@ streamcallback(LDClient *const client, const char *line)
             LDi_onstreameventdelete(client, client->databuffer);
             LDi_wrlock(&client->clientLock);
         } else {
-            LDi_log(LD_LOG_WARNING, "streamcallback unknown event name: %s\n", client->eventname);
+            LDi_log(LD_LOG_WARNING, "streamcallback unknown event name: %s", client->eventname);
         }
 
         free(client->databuffer); client->databuffer = NULL; client->eventname[0] = 0;
@@ -370,7 +370,7 @@ streamcallback(LDClient *const client, const char *line)
 
         if (snprintf(client->eventname, sizeof(client->eventname), "%s", line) < 0) {
             LDi_wrunlock(&client->clientLock);
-            LDi_log(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing\n");
+            LDi_log(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing");
             return 1;
         }
     }
@@ -390,7 +390,7 @@ LDi_bgfeaturestreamer(void *const v)
         LDi_wrlock(&client->clientLock);
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
-            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer\n");
+            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer");
             client->threads--;
             if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
@@ -425,7 +425,7 @@ LDi_bgfeaturestreamer(void *const v)
         if (retries) {
             unsigned int rng = 0;
             if (!LDi_random(&rng)) {
-                LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender\n");
+                LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender");
             }
 
             int backoff = 1000 * pow(2, retries - 2);

@@ -11,7 +11,7 @@
 void
 logger(const char *const s)
 {
-    printf("LD: %s", s);
+    printf("LD: %s\n", s);
 }
 
 bool fixed = false;

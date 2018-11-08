@@ -48,7 +48,7 @@ LDi_loaddata(const char *dataname, const char *username)
         return NULL;
     char fullname[1024];
     snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username);
-    LDi_log(LD_LOG_INFO, "About to open abstract file %s\n", fullname);
+    LDi_log(LD_LOG_INFO, "About to open abstract file %s", fullname);
     void *handle = store_open(store_ctx, fullname, "r", 0);
     if (!handle)
         return NULL;
@@ -78,7 +78,7 @@ LD_store_fileopen(void *context, const char *name, const char *mode, size_t len)
     snprintf(filename, sizeof(filename), "LD-%s.txt", name);
     handle->fp = fopen(filename, mode);
     if (!handle->fp) {
-        LDi_log(LD_LOG_ERROR, "Failed to open %s\n", filename);
+        LDi_log(LD_LOG_ERROR, "Failed to open %s", filename);
         LDFree(handle);
         return NULL;
     }

@@ -211,7 +211,7 @@ LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact
     cJSON *const jsonuser = LDi_usertojson(client, user, redact);
 
     if (!jsonuser) {
-        LDi_log(LD_LOG_ERROR, "LDi_usertojson failed in LDi_usertojsontext\n");
+        LDi_log(LD_LOG_ERROR, "LDi_usertojson failed in LDi_usertojsontext");
         return NULL;
     }
 
@@ -219,7 +219,7 @@ LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact
     cJSON_Delete(jsonuser);
 
     if (!textuser) {
-        LDi_log(LD_LOG_ERROR, "cJSON_PrintUnformatted failed in LDi_usertojsontext\n");
+        LDi_log(LD_LOG_ERROR, "cJSON_PrintUnformatted failed in LDi_usertojsontext");
         return NULL;
     }
 
@@ -260,7 +260,7 @@ LDi_deviceid()
 
   #ifdef __linux__
     if (readfile("/var/lib/dbus/machine-id", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
-        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /var/lib/dbus/machine-id\n");
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /var/lib/dbus/machine-id");
         return NULL;
     }
   #elif _WIN32
@@ -269,7 +269,7 @@ LDi_deviceid()
     const LSTATUS openstatus = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
 
     if (openstatus != ERROR_SUCCESS) {
-        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegOpenKeyExA got %u\n", openstatus);
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegOpenKeyExA got %u", openstatus);
         return NULL;
     }
 
@@ -277,7 +277,7 @@ LDi_deviceid()
 
     if (querystatus != ERROR_SUCCESS) {
         RegCloseKey(hkey);
-        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegGetValueA got %u\n", openstatus);
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid RegGetValueA got %u", openstatus);
         return NULL;
     }
 
@@ -286,7 +286,7 @@ LDi_deviceid()
     io_registry_entry_t entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
 
     if (!entry) {
-        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryFromPath failed\n");
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryFromPath failed");
         return NULL;
     }
 
@@ -295,19 +295,19 @@ LDi_deviceid()
     IOObjectRelease(entry);
 
     if (!uuid) {
-        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryCreateCFProperty failed\n");
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryCreateCFProperty failed");
         return NULL;
     }
 
     if (!CFStringGetCString(uuid, buffer, sizeof(buffer), kCFStringEncodingASCII)) {
-        LDi_log(LD_LOG_ERROR, "LDi_deviceid CFStringGetCString failed\n");
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid CFStringGetCString failed");
         CFRelease(uuid); return NULL;
     }
 
     CFRelease(uuid);
   #elif __FreeBSD__
     if (readfile("/etc/hostid", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
-        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /etc/hostid\n");
+        LDi_log(LD_LOG_ERROR, "LDi_deviceid failed to read /etc/hostid");
         return NULL;
     }
   #else

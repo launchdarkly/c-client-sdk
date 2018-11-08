@@ -168,7 +168,7 @@ LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigne
     LDClient *const client = LDAlloc(sizeof(*client));
 
     if (!client) {
-        LDi_log(LD_LOG_CRITICAL, "no memory for the client\n");
+        LDi_log(LD_LOG_CRITICAL, "no memory for the client");
         return NULL;
     }
 
@@ -440,12 +440,12 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
-        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags parsing failed\n");
+        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags parsing failed");
         return false;
     }
 
     if (payload->type != cJSON_Object) {
-        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags did not get object\n");
+        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags did not get object");
         cJSON_Delete(payload);
         return false;
     }
