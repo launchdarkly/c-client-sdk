@@ -84,6 +84,7 @@ void LDConfigSetOffline(LDConfig *config, bool offline);
 void LDConfigSetStreaming(LDConfig *config, bool streaming);
 void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 void LDConfigSetStreamURI(LDConfig *config, const char *uri);
+void LDConfigSetProxyURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 

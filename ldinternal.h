@@ -126,6 +126,7 @@ struct LDConfig_i {
     bool streaming;
     char *streamURI;
     bool useReport;
+    char *proxyURI;
 };
 
 struct LDUser_i {
