@@ -166,6 +166,8 @@ LDi_hashtoversionedjson(LDNode *hash)
         case LDNodeArray:
             cJSON_AddItemToObject(val, "value", LDi_arraytojson(node->a));
             break;
+        case LDNodeNone:
+            break;
         }
         if (node->version)
             cJSON_AddNumberToObject(val, "version", node->version);
@@ -202,6 +204,8 @@ LDi_hashtojson(LDNode *hash)
         case LDNodeArray:
             cJSON_AddItemToObject(json, node->key, LDi_arraytojson(node->a));
             break;
+        case LDNodeNone:
+            break;
         }
     }
     return json;
@@ -228,6 +232,8 @@ LDi_arraytojson(LDNode *hash)
             break;
         case LDNodeArray:
             cJSON_AddItemToArray(json, LDi_arraytojson(node->a));
+            break;
+        case LDNodeNone:
             break;
         }
     }
@@ -422,6 +428,8 @@ LDNodeToJSON(LDNode *node)
         break;
     case LDNodeHash:
         json = LDi_hashtojson(node);
+        break;
+    default:
         break;
     }
     if (json) {

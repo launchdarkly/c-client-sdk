@@ -102,6 +102,10 @@ addNodeToJSONObject(cJSON *obj, const char *key, LDNode *node)
     case LDNodeHash:
         cJSON_AddItemToObject(obj, key, LDi_hashtojson(node->h));
         break;
+    case LDNodeArray:
+        cJSON_AddItemToObject(obj, key, LDi_arraytojson(node->a));
+    default:
+        break;
     }
 };
 
