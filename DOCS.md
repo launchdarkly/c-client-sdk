@@ -97,6 +97,12 @@ void LDConfigSetUseReport(LDConfig *config, bool report);
 
 Determines whether the `REPORT` or `GET` verb is used for calls to LaunchDarkly. Do not use unless advised by LaunchDarkly.
 
+```C
+void LDConfigSetProxyURI(LDConfig *config, const char *uri);
+```
+
+Set the proxy server used for connecting to LaunchDarkly. By default no proxy is used. The URI string should be of the form `socks5://127.0.0.1:9050`. You may read more about how this SDK handles proxy servers by reading the [libcurl](https://curl.haxx.se) documentation on the subject [here](https://ec.haxx.se/libcurl-proxies.html).
+
 ## Users
 
 ```C
