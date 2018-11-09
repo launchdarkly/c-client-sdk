@@ -1,3 +1,5 @@
+#ifndef C_CLIENT_LDINTERNAL_H
+#define C_CLIENT_LDINTERNAL_H
 
 #include "cJSON.h"
 #ifndef _WINDOWS
@@ -234,3 +236,5 @@ void LDi_updatestatus(struct LDClient_i *client, const LDStatus status);
 THREAD_RETURN LDi_bgeventsender(void *const v);
 THREAD_RETURN LDi_bgfeaturepoller(void *const v);
 THREAD_RETURN LDi_bgfeaturestreamer(void *const v);
+
+#endif /* C_CLIENT_LDINTERNAL_H */

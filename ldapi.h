@@ -1,3 +1,5 @@
+#ifndef C_CLIENT_LDIAPI_H
+#define C_CLIENT_LDIAPI_H
 
 #include <stdbool.h>
 
@@ -244,3 +246,5 @@ class LDClient {
 };
 
 #endif
+
+#endif /* C_CLIENT_LDIAPI_H */
