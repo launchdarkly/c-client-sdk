@@ -190,4 +190,4 @@ void LDi_earlyinit(void);
 /* expects caller to own LDi_clientlock */
 void LDi_updatestatus(struct LDClient_i *client, bool isinit);
 
-#endif // C_CLIENT_LDINTERNAL_H
+#endif /* C_CLIENT_LDINTERNAL_H */

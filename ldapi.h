@@ -235,4 +235,4 @@ class LDClient {
 
 #endif
 
-#endif // C_CLIENT_LDIAPI_H
+#endif /* C_CLIENT_LDIAPI_H */
