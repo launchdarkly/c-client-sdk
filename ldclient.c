@@ -56,6 +56,7 @@ LDConfigNew(const char *const mobileKey)
     config->privateAttributeNames = NULL;
     config->streaming = true;
     config->useReport = false;
+    config->proxyURI = NULL;
 
     return config;
 }
@@ -130,6 +131,11 @@ void LDConfigSetUseReport(LDConfig *const config, const bool report)
     LD_ASSERT(config); config->useReport = report;
 }
 
+void LDConfigSetProxyURI(LDConfig *const config, const char *const uri)
+{
+    LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->proxyURI, uri));
+}
+
 static void
 freeconfig(LDConfig *const config)
 {
@@ -138,6 +144,7 @@ freeconfig(LDConfig *const config)
     LDFree(config->eventsURI);
     LDFree(config->mobileKey);
     LDFree(config->streamURI);
+    LDFree(config->proxyURI);
     LDi_freehash(config->privateAttributeNames);
     LDFree(config);
 }

@@ -98,7 +98,7 @@ SocketCallback(void *const c, curlsocktype type, struct curl_sockaddr *const add
 
 /* returns false on failure, results left in clean state */
 static bool
-prepareShared(const char *const url, const char *const authkey, CURL **r_curl, struct curl_slist **r_headers,
+prepareShared(const char *const url, LDConfig *const config, CURL **r_curl, struct curl_slist **r_headers,
     WriteCB headercb, void *const headerdata, WriteCB datacb, void *const data)
 {
     CURL *const curl = curl_easy_init();
@@ -112,7 +112,7 @@ prepareShared(const char *const url, const char *const authkey, CURL **r_curl, s
     }
 
     char headerauth[256];
-    if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s", authkey) < 0) {
+    if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s", config->mobileKey) < 0) {
         LDi_log(LD_LOG_CRITICAL, "snprintf during Authorization header creation failed"); goto error;
     }
 
@@ -140,6 +140,12 @@ prepareShared(const char *const url, const char *const authkey, CURL **r_curl, s
 
     if (curl_easy_setopt(curl, CURLOPT_WRITEDATA, data) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_WRITEDATA failed"); goto error;
+    }
+
+    if (config->proxyURI) {
+        if (curl_easy_setopt(curl, CURLOPT_PROXY, config->proxyURI) != CURLE_OK) {
+          LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_PROXY failed"); goto error;
+        }
     }
 
     *r_curl = curl; *r_headers = headers;
@@ -245,7 +251,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         }
     }
 
-    if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
+    if (!prepareShared(url, client->config, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
         free(jsonuser);
         return;
     }
@@ -362,7 +368,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         }
     }
 
-    if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    if (!prepareShared(url, client->config, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
         free(jsonuser);
         return NULL;
     }
@@ -421,7 +427,7 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
         return;
     }
 
-    if (!prepareShared(url, client->config->mobileKey, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    if (!prepareShared(url, client->config, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
         return;
     }
 
