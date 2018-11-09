@@ -16,6 +16,7 @@ EXPORTS
    LDConfigSetStreamURI
    LDConfigSetUseReport
    LDConfigAddPrivateAttribute
+   LDConfigSetProxyURI
 
    LDClientGet
    LDClientInit
