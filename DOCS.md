@@ -201,6 +201,12 @@ bool LDClientIsInitialized(LDClient *);
 Returns true if the client has been initialized.
 
 ```C
+bool LDClientAwaitInitialized(LDClient *client, unsigned int timeoutmilli);
+```
+
+Block until initialized up to timeout, returns true if initialized.
+
+```C
 void LDClientFlush(LDClient *client);
 ```
 
@@ -344,6 +350,12 @@ void LDNodeAppendString(LDNode **array, const char *s);
 ```
 
 Add a bool, number, or string to an array.
+
+```C
+LDNode *LDCloneHash(const LDNode *hash);
+LDNode *LDCloneArray(const LDNode *array);
+```
+Return a deep copy of the originals.
 
 ```C
 LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
