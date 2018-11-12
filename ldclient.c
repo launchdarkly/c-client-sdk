@@ -651,7 +651,7 @@ LDStringVariationAlloc(LDClient *const client, const char *const key, const char
 }
 
 LDNode *
-LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fallback)
+LDJSONVariation(LDClient *const client, const char *const key, const LDNode *const fallback)
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
