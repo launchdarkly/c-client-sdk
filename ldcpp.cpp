@@ -81,11 +81,6 @@ LDNode * LDNode::index(unsigned int idx)
     return LDNodeIndex(this, idx);
 }
 
-void LDNode::release(void)
-{
-    LDJSONRelease(this);
-}
-
 void LDClient::setOffline(void)
 {
     LDClientSetOffline(this->client);

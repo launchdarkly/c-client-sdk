@@ -86,7 +86,7 @@ main(int argc, char **argv)
     }
 
     {
-        LDNode *const jnode = LDJSONVariation(client, "jj", NULL);
+        LDNode *jnode = LDJSONVariation(client, "jj", NULL);
 
         if (!jnode) {
             printf("ERROR: node empty 1\n"); abort();
@@ -98,11 +98,11 @@ main(int argc, char **argv)
             printf("ERROR: the json was not as expected: %p\n", ii); abort();
         }
 
-        LDJSONRelease(jnode);
+        LDNodeFree(&jnode);
     }
 
     {
-        LDNode *const jnode = LDJSONVariation(client, "missing", NULL);
+        LDNode *jnode = LDJSONVariation(client, "missing", NULL);
 
         LDNode *const ii = LDNodeLookup(jnode, "ii");
 
@@ -110,7 +110,7 @@ main(int argc, char **argv)
             printf("ERROR: found some unexpected json\n"); abort();
         }
 
-        LDJSONRelease(jnode);
+        LDNodeFree(&jnode);
     }
 
 

@@ -651,7 +651,7 @@ LDStringVariationAlloc(LDClient *const client, const char *const key, const char
 }
 
 LDNode *
-LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fallback)
+LDJSONVariation(LDClient *const client, const char *const key, const LDNode *const fallback)
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
@@ -672,12 +672,6 @@ LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fal
     LDi_rdunlock(&client->clientLock);
 
     return result;
-}
-
-void
-LDJSONRelease(LDNode *const node)
-{
-    LDi_freehash(node);
 }
 
 void

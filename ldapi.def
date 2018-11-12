@@ -61,7 +61,6 @@ EXPORTS
    LDStringVariationAlloc
    LDStringVariation
    LDJSONVariation
-   LDJSONRelease
 
    LDFree
    LDAlloc

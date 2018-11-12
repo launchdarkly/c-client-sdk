@@ -50,7 +50,7 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
 
 static LDNode*
 addValueToHash(LDNode **hash, const char *const name, const int type,
-    const double n, const char *const s, LDNode *const m)
+    const double n, const char *const s, const LDNode *const m)
 {
     switch (type) {
     case LDNodeString:
@@ -98,7 +98,7 @@ addNodeToJSONObject(cJSON *const obj, const char *const key, LDNode *const node)
 static void
 summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *feature,
     const LDNodeType type, const double n, const char *const s, LDNode *const m,
-    const double defaultn, const char *const defaults, LDNode *const defaultm)
+    const double defaultn, const char *const defaults, const LDNode *const defaultm)
 {
     LDi_log(LD_LOG_TRACE, "updating summary for %s", feature);
 
@@ -218,7 +218,7 @@ collectSummary(LDClient *const client)
 void
 LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const res,
     const char *const feature, const LDNodeType type, const double n, const char *const s, LDNode *const m,
-    const double defaultn, const char *const defaults, LDNode *const defaultm)
+    const double defaultn, const char *const defaults, const LDNode *const defaultm)
 {
     summarizeEvent(client, lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
 

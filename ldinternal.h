@@ -183,7 +183,7 @@ void LDi_readstream(LDClient *const client, int *response,
 
 void LDi_recordidentify(LDClient *client, LDUser *lduser);
 void LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res, const char *feature, LDNodeType type, double n, const char *s,
-    LDNode *, double defaultn, const char *defaults, LDNode *);
+    LDNode *, double defaultn, const char *defaults, const LDNode *);
 void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data);
 char *LDi_geteventdata(LDClient *client);
 void LDi_sendevents(LDClient *client, const char *eventdata, int *response);
