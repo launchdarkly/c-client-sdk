@@ -270,7 +270,7 @@ size bytes will be copied into buffer, truncating if necessary.
 Both functions return a pointer.
 
 ```C
-LDNode *LDJSONVariation(LDClient *client, const char *name, LDNode *default);
+LDNode *LDJSONVariation(LDClient *client, const char *name, const LDNode *default);
 ```
 
 Ask for a JSON variation, returned as a parsed tree of LDNodes. You must free the result with `LDNodeFree`. See also `LDNodeLookup`.
