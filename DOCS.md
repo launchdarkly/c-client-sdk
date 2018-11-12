@@ -452,7 +452,19 @@ void LD_store_fileclose(void *h);
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *))
 ```
 
-Set the log function and log level. Increasing log levels result in increasing output.
+Set the log function and log level. Increasing log levels result in increasing output. The current log levels are:
+
+```C
+enum ld_log_level {
+    LD_LOG_FATAL = 0,
+    LD_LOG_CRITICAL,
+    LD_LOG_ERROR,
+    LD_LOG_WARNING,
+    LD_LOG_INFO,
+    LD_LOG_DEBUG,
+    LD_LOG_TRACE
+};
+```
 
 ## Other utilities
 
