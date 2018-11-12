@@ -109,7 +109,7 @@ Set the proxy server used for connecting to LaunchDarkly. By default no proxy is
 LDUser *LDUserNew(const char *key);
 ```
 
-Allocate a new user. The user may be modified *until* it is passed to the `LdClientIdentify` or `LDClientInit`. The `key` argument is not required. When `key` is `NULL` then a device specific ID is used. If a device specific ID cannot be obtained then a random fallback is generated.
+Allocate a new user. The user may be modified *until* it is passed to the `LDClientIdentify` or `LDClientInit`. The `key` argument is not required. When `key` is `NULL` then a device specific ID is used. If a device specific ID cannot be obtained then a random fallback is generated.
 
 ```C
 void LDUserSetAnonymous(LDUser *user, bool anon);
@@ -177,10 +177,10 @@ Update the client with a new user. The old user is freed. This will re-fetch fea
 ## Client lifecycle management
 
 ```C
-LDClient *LDClientInit(LDConfig *config, LDUser *user);
+LDClient *LDClientInit(LDConfig *config, LDUser *user, unsigned int maxwaitmilli);
 ```
 
-Initialize the client with the config and user. After this call, the `config` and `user` must not be modified. May be called more than once to change `config`, in which case the previous `config` is freed. There is only ever one `LDClient`.
+Initialize the client with the config and user. After this call, the `config` and `user` must not be modified. There is only ever one `LDClient`. The parameter `maxwaitmilli` indicates the maximumum amount of time the client will wait to be fully initialized. If the timeout is hit the client will be available for feature flag evaluation but the results will be fallbacks. The client will continue attempting to connect to LaunchDarkly in the background. If `maxwaitmilli` is set to `0` then `LDClientInit` will wait indefinitely.
 
 ```C
 LDClient *LDClientGet(void);
@@ -204,8 +204,7 @@ Returns true if the client has been initialized.
 void LDClientFlush(LDClient *client);
 ```
 
-Send any pending events to the server. They will normally be flushed after a
-timeout, but may also be flushed manually.
+Send any pending events to the server. They will normally be flushed after a timeout, but may also be flushed manually. This operation does not block.
 
 ```C
 void LDClientSetOffline(LDClient *);
@@ -226,15 +225,19 @@ bool LDClientIsOffline(void);
 Returns the offline status of the client.
 
 ```C
-void LDSetClientStatusCallback(void (callback)(int status));
+void LDSetClientStatusCallback(void (callback)(LDStatus status));
 ```
 
-Set a callback function for client status changes. These are major
-status changes only, not updates to the feature Node.
-Current status code:
-0 - Offline. The client has been shut down, likely due to a permission failure.
-1 - Ready. The client has received an initial feature Node from the server
-    and is ready to proceed.
+Set a callback function for client status changes. These are major status changes only, not updates to the feature Node. Current status codes:
+
+```c
+typedef enum {
+    LDStatusInitializing, //Initializing. Flags may be evaluated at this time
+    LDStatusInitialized, //Ready. The client has received an initial feature Node from the server and is ready to proceed
+    LDStatusFailed, //Offline. The client has been shut down, likely due to a permission failure
+    LDStatusShuttingdown, //In the process of shutting down. Flags should not be evaluated at this time
+    LDStatusShutdown //The client has fully shutdown. Interacting with the client object is not safe
+} LDStatus;
 
 ## Feature flags
 
