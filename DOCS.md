@@ -273,10 +273,7 @@ Both functions return a pointer.
 LDNode *LDJSONVariation(LDClient *client, const char *name, LDNode *default);
 ```
 
-Ask for a JSON variation, returned as a parsed tree of LDNodes.
-The node returned is an internal data structure of the client. After examination,
-it must be released by calling `LDJSONRelease()` which will unlock the client.
-See also `LDNodeLookup`.
+Ask for a JSON variation, returned as a parsed tree of LDNodes. You must free the result with `LDNodeFree`. See also `LDNodeLookup`.
 
 ```C
 typedef void (*LDlistenerfn)(const char *name, int update);

@@ -140,7 +140,6 @@ double LDDoubleVariation(struct LDClient_i *, const char *, double);
 char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
 char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
 LDNode *LDJSONVariation(struct LDClient_i *client, const char *key, LDNode *);
-void LDJSONRelease(LDNode *m);
 
 void LDFree(void *);
 void *LDAlloc(size_t amt);

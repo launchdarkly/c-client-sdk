@@ -675,12 +675,6 @@ LDJSONVariation(LDClient *const client, const char *const key, LDNode *const fal
 }
 
 void
-LDJSONRelease(LDNode *const node)
-{
-    LDi_freehash(node);
-}
-
-void
 LDClientTrack(LDClient *const client, const char *const name)
 {
     LD_ASSERT(client); LD_ASSERT(name);
