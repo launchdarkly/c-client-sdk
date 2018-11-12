@@ -238,6 +238,7 @@ typedef enum {
     LDStatusShuttingdown, //In the process of shutting down. Flags should not be evaluated at this time
     LDStatusShutdown //The client has fully shutdown. Interacting with the client object is not safe
 } LDStatus;
+```
 
 ## Feature flags
 
