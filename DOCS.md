@@ -321,7 +321,7 @@ Memory ownership: The string `s` will be duplicated internally. The Node m
 is _not_ duplicated. It will be owned by the containing hash.
 
 ```C
-LDNode *LDNodeLookup(LDNode *hash, const char *key);
+LDNode *LDNodeLookup(const LDNode *hash, const char *key);
 ```
 
 Find a node in a hash. See below for structure.
@@ -355,13 +355,13 @@ LDNode *LDCloneArray(const LDNode *array);
 Return a deep copy of the originals.
 
 ```C
-LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
+LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
 ```
 
 Retrieve the element at index idx.
 
 ```C
-unsigned int LDNodeCount(LDNode *hash);
+unsigned int LDNodeCount(const LDNode *hash);
 ```
 
 Return the number of elements in a hash or array.
