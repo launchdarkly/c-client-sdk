@@ -291,7 +291,7 @@ void LDClientPutLockedFlags(LDClient *client, LDNode *flags);
 Directly access all flags. This locks the client until the flags are put back.
 
 ```C
-LDNode *LDAllFlags(struct LDClient_i *const client);
+LDNode *LDAllFlags(LDClient *client);
 ```
 
 Returns a hash table of all flags. This must be freed with `LDNodeFree`.
