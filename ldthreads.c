@@ -60,38 +60,33 @@ LDi_bgeventsender(void *const v)
         char *const eventdata = LDi_geteventdata(client);
         if (!eventdata) { continue; }
 
-        bool sent = false;
-        int retries = 0;
-        while (!sent) {
+        bool sendfailed = false;
+        while (true) {
             int response = 0;
+
             LDi_sendevents(client, eventdata, &response);
+
             if (response == 401 || response == 403) {
                 LDi_wrlock(&client->clientLock);
                 LDi_updatestatus(client, LDStatusFailed);
                 LDi_wrunlock(&client->clientLock);
-                break;
+		sendfailed = true; break;
             } else if (response == -1) {
-                retries++;
+	        if (sendfailed) {
+		    break;
+		} else {
+                    sendfailed = true;
+		}
             } else {
-                sent = true;
-                retries = 0;
+	        sendfailed = false;  break;
             }
-            if (retries) {
-                unsigned int rng = 0;
-                if (!LDi_random(&rng)) {
-                    LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender");
-                }
-
-                int backoff = 1000 * pow(2, retries - 2);
-                backoff += rng % backoff;
-                if (backoff > 3600 * 1000) {
-                    backoff = 3600 * 1000;
-                    retries--; /* avoid excessive incrementing */
-                }
-
-                LDi_millisleep(backoff);
-            }
+            
+	    LDi_millisleep(1000);
         }
+
+	if (sendfailed) {
+            LDi_log(LD_LOG_WARNING, "sending events failed deleting event batch");
+	}
 
         free(eventdata);
     }
