@@ -285,10 +285,10 @@ Register and unregister callbacks when features change. The name argument indica
 
 ```C
 LDNode *LDClientGetLockedFlags(LDClient *client);
-void LDClientPutLockedFlags(LDClient *client, LDNode *flags);
+void LDClientUnlockFlags(LDClient *client);
 ```
 
-Directly access all flags. This locks the client until the flags are put back.
+Directly access all flags. This locks the client until the flags are unlocked.
 
 ```C
 LDNode *LDAllFlags(LDClient *client);
@@ -496,9 +496,11 @@ Return the LDClient singleton.
 
 ```C++
         static LDClient *Init(LDConfig *, LDUser *);
+        bool isInitialized(void);
+        bool awaitInitialized(unsigned int timeoutmilli);
 ```
 
-Initialize the client.
+Initialize the client and functions to check the initialization status.
 
 ```C++
         bool boolVariation(const std::string &, bool);
@@ -510,10 +512,24 @@ Initialize the client.
 Functions to ask for variations.
 
 ```C++
-        LDNode *JSONVariation(const std::string &, LDNode *);
+        LDNode *JSONVariation(const std::string &, const LDNode *);
 ```
 
 Request a JSON variation. It must be released.
+
+```C++
+        LDNode *getLockedFlags();
+        void unlockFlags();
+        LDNode *getAllFlags();
+```
+
+Functions to access or copy the flag store.
+
+```C++
+        void identify(LDUser *);
+```
+
+Switch user and generate identify event.
 
 ```C++
         void setOffline();

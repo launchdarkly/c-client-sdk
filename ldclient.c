@@ -442,7 +442,6 @@ LDClientRestoreFlags(LDClient *const client, const char *const data)
     }
 }
 
-
 bool
 LDi_clientsetflags(LDClient *const client, const bool needlock, const char *const data, const int flavor)
 {
