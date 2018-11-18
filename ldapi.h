@@ -125,8 +125,9 @@ void LDClientClose(struct LDClient_i *);
 
 void LDSetClientStatusCallback(void (callback)(int));
 
-/* must be released via LDJSONRelease */
+/* Access the flag store must unlock with LDClientUnlockFlags */
 LDNode *LDClientGetLockedFlags(struct LDClient_i *client);
+void LDClientUnlockFlags(struct LDClient_i *client);
 
 void LDClientTrack(struct LDClient_i *client, const char *name);
 void LDClientTrackData(struct LDClient_i *client, const char *name, LDNode *data);
@@ -204,7 +205,6 @@ typedef struct LDClient_i LDClient;
 #ifdef __cplusplus
 }
 
-
 class LDClient {
     public:
         static LDClient *Get(void);
@@ -222,6 +222,8 @@ class LDClient {
         LDNode *JSONVariation(const std::string &, const LDNode *);
 
         LDNode *getLockedFlags();
+        void unlockFlags();
+
         LDNode *getAllFlags();
 
         void setOffline();
@@ -246,6 +248,5 @@ class LDClient {
     private:
         struct LDClient_i *client;
 };
-
 
 #endif

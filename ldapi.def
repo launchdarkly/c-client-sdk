@@ -48,6 +48,7 @@ EXPORTS
    LDSetClientStatusCallback
 
    LDClientGetLockedFlags
+   LDClientUnlockFlags
 
    LDClientTrack
    LDClientTrackData

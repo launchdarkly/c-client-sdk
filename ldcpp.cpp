@@ -63,6 +63,11 @@ LDNode *LDClient::getLockedFlags()
     return LDClientGetLockedFlags(this->client);
 }
 
+void LDClient::unlockFlags()
+{
+    LDClientUnlockFlags(this->client);
+}
+
 LDNode *LDClient::getAllFlags()
 {
     return LDAllFlags(this->client);

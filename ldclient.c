@@ -373,9 +373,13 @@ LDClientGetLockedFlags(LDClient *const client)
 {
     LD_ASSERT(client);
     LDi_rdlock(&client->clientLock);
-    LDNode *const flags = client->allFlags;
+    return client->allFlags;
+}
+
+void LDClientUnlockFlags(struct LDClient_i *const client)
+{
+    LD_ASSERT(client);
     LDi_rdunlock(&client->clientLock);
-    return flags;
 }
 
 bool
