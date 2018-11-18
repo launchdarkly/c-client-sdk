@@ -211,6 +211,7 @@ class LDClient {
         static LDClient *Init(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
         bool isInitialized(void);
+        bool awaitInitialized(unsigned int timeoutmilli);
 
         bool boolVariation(const std::string &, bool);
         int intVariation(const std::string &, int);
@@ -218,9 +219,10 @@ class LDClient {
         std::string stringVariation(const std::string &, const std::string &);
         char *stringVariation(const std::string &, const std::string &, char *, size_t);
 
-        LDNode *JSONVariation(const std::string &, LDNode *);
+        LDNode *JSONVariation(const std::string &, const LDNode *);
 
         LDNode *getLockedFlags();
+        LDNode *getAllFlags();
 
         void setOffline();
         void setOnline();
@@ -229,6 +231,8 @@ class LDClient {
 
         std::string saveFlags();
         void restoreFlags(const std::string &);
+
+        void identify(LDUser *);
 
         void track(const std::string &name);
         void track(const std::string &name, LDNode *data);
