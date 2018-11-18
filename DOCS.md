@@ -515,7 +515,7 @@ Functions to ask for variations.
         LDNode *JSONVariation(const std::string &, const LDNode *);
 ```
 
-Request a JSON variation. It must be released.
+Request a JSON variation. It must be freed.
 
 ```C++
         LDNode *getLockedFlags();
@@ -562,12 +562,6 @@ class LDNode {
 ```
 
 Find a subnode.
-
-```C++
-    void release(void);
-```
-
-Release a node, as returned from LDClient::JSONVariation.
 
 ```C++
 }
