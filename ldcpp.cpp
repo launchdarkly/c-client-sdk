@@ -27,7 +27,7 @@ bool LDClient::awaitInitialized(const unsigned int timeoutmilli)
 
 bool LDClient::boolVariation(const std::string &key, const bool def)
 {
-	return LDBoolVariation(this->client, key.c_str(), def);
+	  return LDBoolVariation(this->client, key.c_str(), def);
 }
 
 int LDClient::intVariation(const std::string &key, const int def)
@@ -42,7 +42,7 @@ double LDClient::doubleVariation(const std::string &key, const double def)
 
 std::string LDClient::stringVariation(const std::string &key, const std::string &def)
 {
-    char *s = LDStringVariationAlloc(this->client, key.c_str(), def.c_str());
+    char *const s = LDStringVariationAlloc(this->client, key.c_str(), def.c_str());
     std::string res(s);
     free(s);
     return res;
@@ -70,13 +70,13 @@ LDNode *LDClient::getAllFlags()
 
 void LDClient::flush(void)
 {
-    return LDClientFlush(this->client);
+    LDClientFlush(this->client);
 }
 
 void LDClient::close(void)
 {
     LDClientClose(this->client);
-    this->client = 0;
+    this->client = NULL;
 }
 
 LDNode * LDNode::lookup(const std::string &key)
@@ -141,6 +141,7 @@ void LDClient::registerFeatureFlagListener(const std::string &name, LDlistenerfn
 {
     LDClientRegisterFeatureFlagListener(this->client, name.c_str(), fn);
 }
+
 bool LDClient::unregisterFeatureFlagListener(const std::string &name, LDlistenerfn fn)
 {
     return LDClientUnregisterFeatureFlagListener(this->client, name.c_str(), fn);
