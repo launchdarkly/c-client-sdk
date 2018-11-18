@@ -564,5 +564,11 @@ class LDNode {
 Find a subnode.
 
 ```C++
+    LDNode *index(unsigned int idx);
+```
+
+Retrieve the element at index idx.
+
+```C++
 }
 ```
