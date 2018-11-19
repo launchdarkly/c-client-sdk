@@ -70,23 +70,23 @@ LDi_bgeventsender(void *const v)
                 LDi_wrlock(&client->clientLock);
                 LDi_updatestatus(client, LDStatusFailed);
                 LDi_wrunlock(&client->clientLock);
-		sendfailed = true; break;
+                sendfailed = true; break;
             } else if (response == -1) {
-	        if (sendfailed) {
-		    break;
-		} else {
+                if (sendfailed) {
+                    break;
+                } else {
                     sendfailed = true;
-		}
+                }
             } else {
-	        sendfailed = false;  break;
+                sendfailed = false;  break;
             }
-            
-	    LDi_millisleep(1000);
+
+            LDi_millisleep(1000);
         }
 
-	if (sendfailed) {
+        if (sendfailed) {
             LDi_log(LD_LOG_WARNING, "sending events failed deleting event batch");
-	}
+        }
 
         free(eventdata);
     }
