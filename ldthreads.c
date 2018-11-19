@@ -78,7 +78,7 @@ LDi_bgeventsender(void *const v)
                     sendfailed = true;
                 }
             } else {
-                sendfailed = false;  break;
+                sendfailed = false; break;
             }
 
             LDi_millisleep(1000);
