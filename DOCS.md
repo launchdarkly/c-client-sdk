@@ -530,7 +530,7 @@ Functions to access or copy the flag store.
         void identify(LDUser *user);
 ```
 
-Switch user and generate identify event.
+Switch user and generate identify event, ownership of the `user` object is transferred to the client. This causes a reconnection to the LaunchDarkly servers and refreshes the flag store in the background. This should not be called frequently because of the performance implications. You may want to call `awaitInitialized` to wait until the updated flag store is ready.
 
 ```C++
         void setOffline();
