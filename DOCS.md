@@ -163,13 +163,13 @@ may be built programmatically using the LDNode functions (see below), or
 may be set all at once with a json string.
 
 ```C
-void LDUserAddPrivateAttribute(LDUser *, const char *name);
+void LDUserAddPrivateAttribute(LDUser *user, const char *name);
 ```
 
 Add an attribute name to the private list which will not be recorded.
 
 ```C
-void LDClientIdentify(LDClient *, LDUser *);
+void LDClientIdentify(LDClient *client, LDUser *user);
 ```
 
 Update the client with a new user. The old user is freed. This will re-fetch feature flag settings from LaunchDarkly-- for performance reasons, user contexts should not be changed frequently.
@@ -183,19 +183,19 @@ LDClient *LDClientInit(LDConfig *config, LDUser *user, unsigned int maxwaitmilli
 Initialize the client with the config and user. After this call, the `config` and `user` must not be modified. There is only ever one `LDClient`. The parameter `maxwaitmilli` indicates the maximumum amount of time the client will wait to be fully initialized. If the timeout is hit the client will be available for feature flag evaluation but the results will be fallbacks. The client will continue attempting to connect to LaunchDarkly in the background. If `maxwaitmilli` is set to `0` then `LDClientInit` will wait indefinitely.
 
 ```C
-LDClient *LDClientGet(void);
+LDClient *LDClientGet();
 ```
 
 Get a reference to the (single, global) client.
 
 ```C
-void LDClientClose(LDClient *);
+void LDClientClose(LDClient *client);
 ```
 
 Close the client, free resources, and generally shut down.
 
 ```C
-bool LDClientIsInitialized(LDClient *);
+bool LDClientIsInitialized(LDClient *client);
 ```
 
 Returns true if the client has been initialized.
@@ -213,19 +213,19 @@ void LDClientFlush(LDClient *client);
 Send any pending events to the server. They will normally be flushed after a timeout, but may also be flushed manually. This operation does not block.
 
 ```C
-void LDClientSetOffline(LDClient *);
+void LDClientSetOffline(LDClient *client);
 ```
 
 Make the client operate in offline mode. No network traffic.
 
 ```C
-void LDClientSetOnline(LDClient *);
+void LDClientSetOnline(LDClient *client);
 ```
 
 Return the client to online mode.
 
 ```C
-bool LDClientIsOffline(void);
+bool LDClientIsOffline();
 ```
 
 Returns the offline status of the client.
@@ -249,17 +249,17 @@ typedef enum {
 ## Feature flags
 
 ```C
-bool LDBoolVariation(LDClient *, const char *name , bool default);
-int LDIntVariation(LDClient *, const char *name, int default);
-double LDDoubleVariation(LDClient *, const char *name, double default);
+bool LDBoolVariation(LDClient *client, const char *featurekey , bool defaultvalue);
+int LDIntVariation(LDClient *client, const char *featurekey, int defaultvalue);
+double LDDoubleVariation(LDClient *client, const char *featurekey, double defaultvalue);
 ```
 
 Ask for a bool, int, or double flag, respectively. Return the default if not
 found.
 
 ```C
-char *LDStringVariationAlloc(LDClient *, const char *name, const char *def);
-char *LDStringVariation(LDClient *, const char *name, const char *default,
+char *LDStringVariationAlloc(LDClient *client, const char *featurekey, const char *defaultvalue);
+char *LDStringVariation(LDClient *client, const char *featurekey, const char *defaultvalue,
     char *buffer, size_t size);
 ```
 
@@ -270,15 +270,15 @@ size bytes will be copied into buffer, truncating if necessary.
 Both functions return a pointer.
 
 ```C
-LDNode *LDJSONVariation(LDClient *client, const char *name, const LDNode *default);
+LDNode *LDJSONVariation(LDClient *client, const char *featurekey, const LDNode *defaultvalue);
 ```
 
 Ask for a JSON variation, returned as a parsed tree of LDNodes. You must free the result with `LDNodeFree`. See also `LDNodeLookup`.
 
 ```C
-typedef void (*LDlistenerfn)(const char *name, int update);
-bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn);
-bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn);
+typedef void (*LDlistenerfn)(const char *featurekey, int update);
+bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *featurekey, LDlistenerfn);
+bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *featurekey, LDlistenerfn);
 ```
 
 Register and unregister callbacks when features change. The name argument indicates the changed value. The update argument is 0 for new or updated and 1 for deleted.
@@ -309,7 +309,7 @@ The LD client uses JSON to communicate, which is represented as LDNode
 structures. Both arrays and hashes (objects) are supported.
 
 ```C
-LDNode *LDNodeCreateHash(void);
+LDNode *LDNodeCreateHash();
 ```
 
 Create a new empty hash.
@@ -478,7 +478,7 @@ enum ld_log_level {
 void LDFree(void *)
 ```
 
-Frees a string.
+Frees memory allocated by the SDK.
 
 ## C++ interface
 
@@ -489,30 +489,31 @@ class LDClient {
 ```
 
 ```C++
-        static LDClient *Get(void);
+        static LDClient *Get();
 ```
 
 Return the LDClient singleton.
 
 ```C++
-        static LDClient *Init(LDConfig *, LDUser *);
-        bool isInitialized(void);
+        static LDClient *Init(LDConfig *config, LDUser *user);
+        bool isInitialized();
         bool awaitInitialized(unsigned int timeoutmilli);
 ```
 
 Initialize the client and functions to check the initialization status.
 
 ```C++
-        bool boolVariation(const std::string &, bool);
-        int intVariation(const std::string &, int);
-        std::string stringVariation(const std::string &, const std::string &);
-        char *stringVariation(const std::string &, const std::string &, char *, size_t);
+        bool boolVariation(const std::string &featurekey, bool defaultvalue);
+        int intVariation(const std::string &featurekey, int defaultvalue);
+        std::string stringVariation(const std::string &featurekey, const std::string &defaultvalue);
+        char *stringVariation(const std::string &featurekey, const std::string &defaultvalue,
+            char *buffer, size_t size);
 ```
 
 Functions to ask for variations.
 
 ```C++
-        LDNode *JSONVariation(const std::string &, const LDNode *);
+        LDNode *JSONVariation(const std::string &featurekey, const LDNode *defaultvalue);
 ```
 
 Request a JSON variation. It must be freed.
@@ -526,7 +527,7 @@ Request a JSON variation. It must be freed.
 Functions to access or copy the flag store.
 
 ```C++
-        void identify(LDUser *);
+        void identify(LDUser *user);
 ```
 
 Switch user and generate identify event.
@@ -539,12 +540,12 @@ Switch user and generate identify event.
 
 ```C++
         std::string saveFlags();
-        void restoreFlags(const std::string &);
+        void restoreFlags(const std::string &flagsjson);
 ```
 
 ```C++
-        void flush(void);
-        void close(void);
+        void flush();
+        void close();
 ```
 
 ```C++
