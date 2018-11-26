@@ -17,7 +17,7 @@ endif
 all: libldapi.so libldapiplus.so libldapi.a  test
 
 clean:
-	rm -f *.o libldapi.so libldapi.a test
+	rm -f *.o *.so *.a test
 
 libldapi.a: ldapi.h ldinternal.h $(COBJS)
 	$(AR) libldapi.a $(COBJS)

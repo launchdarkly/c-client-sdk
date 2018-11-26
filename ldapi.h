@@ -57,7 +57,6 @@ typedef struct LDNode_i {
 #ifdef __cplusplus
     struct LDNode_i *lookup(const std::string &key);
     struct LDNode_i *index(unsigned int idx);
-    void release(void);
 #endif
 } LDNode;
 
@@ -125,8 +124,9 @@ void LDClientClose(struct LDClient_i *);
 
 void LDSetClientStatusCallback(void (callback)(int));
 
-/* must be released via LDJSONRelease */
+/* Access the flag store must unlock with LDClientUnlockFlags */
 LDNode *LDClientGetLockedFlags(struct LDClient_i *client);
+void LDClientUnlockFlags(struct LDClient_i *client);
 
 void LDClientTrack(struct LDClient_i *client, const char *name);
 void LDClientTrackData(struct LDClient_i *client, const char *name, LDNode *data);
@@ -204,13 +204,13 @@ typedef struct LDClient_i LDClient;
 #ifdef __cplusplus
 }
 
-
 class LDClient {
     public:
         static LDClient *Get(void);
         static LDClient *Init(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
         bool isInitialized(void);
+        bool awaitInitialized(unsigned int timeoutmilli);
 
         bool boolVariation(const std::string &, bool);
         int intVariation(const std::string &, int);
@@ -218,9 +218,12 @@ class LDClient {
         std::string stringVariation(const std::string &, const std::string &);
         char *stringVariation(const std::string &, const std::string &, char *, size_t);
 
-        LDNode *JSONVariation(const std::string &, LDNode *);
+        LDNode *JSONVariation(const std::string &, const LDNode *);
 
         LDNode *getLockedFlags();
+        void unlockFlags();
+
+        LDNode *getAllFlags();
 
         void setOffline();
         void setOnline();
@@ -229,6 +232,8 @@ class LDClient {
 
         std::string saveFlags();
         void restoreFlags(const std::string &);
+
+        void identify(LDUser *);
 
         void track(const std::string &name);
         void track(const std::string &name, LDNode *data);
@@ -242,6 +247,5 @@ class LDClient {
     private:
         struct LDClient_i *client;
 };
-
 
 #endif
