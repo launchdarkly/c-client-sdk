@@ -28,6 +28,7 @@ EXPORTS
    LDUserSetEmail
    LDUserSetName
    LDUserSetAvatar
+   LDUserSetSecondary
 
    LDUserSetCustomAttributesJSON
    LDUserSetCustomAttributes
@@ -39,6 +40,7 @@ EXPORTS
    LDClientIdentify
    LDClientFlush
    LDClientIsInitialized
+   LDClientAwaitInitialized
    LDClientIsOffline
    LDClientSetOffline
    LDClientSetOnline
@@ -52,6 +54,8 @@ EXPORTS
 
    LDClientTrack
    LDClientTrackData
+
+   LDAllFlags
 
    LDClientRegisterFeatureFlagListener
    LDClientUnregisterFeatureFlagListener
@@ -67,6 +71,7 @@ EXPORTS
    LDAlloc
    LD_allocations
    LD_frees
+   LDSetString
    LDNodeCreateHash
    LDNodeAddBool
    LDNodeAddNumber
@@ -76,5 +81,21 @@ EXPORTS
    LDNodeLookup
    LDNodeFree
    LDNodeCount
+   LDCloneHash
+   LDNodeCreateArray
+   LDNodeAppendBool
+   LDNodeAppendNumber
+   LDNodeAppendString
+   LDNodeIndex
+   LDCloneArray
+
+   LDNodeToJSON
+   LDNodeFromJSON
 
    LDSetLogFunction
+
+   LD_store_setfns
+   LD_store_fileopen
+   LD_store_filewrite
+   LD_store_fileread
+   LD_store_fileclose
