@@ -141,6 +141,11 @@ LDi_strdup(const char *src)
     return cp;
 }
 
+void *
+LDi_realloc(void *const buffer, const size_t futuresize)
+{
+    return realloc(buffer, futuresize);
+}
 
 /*
  * some functions to help with threads.

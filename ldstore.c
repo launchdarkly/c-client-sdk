@@ -101,7 +101,7 @@ LD_store_fileread(void *const context, const char *const name)
 
     size_t bufsize = 4096, bufspace = 4095, buflen = 0;
 
-    char *buf = malloc(bufsize);
+    char *buf = LDAlloc(bufsize);
 
     if (!buf) { return NULL; }
 
@@ -118,9 +118,9 @@ LD_store_fileread(void *const context, const char *const name)
             bufsize += bufspace;
             bufspace--;
 
-            void *const p = realloc(buf, bufsize);
+            void *const p = LDi_realloc(buf, bufsize);
 
-            if (!p) { free(buf); return NULL; }
+            if (!p) { LDFree(buf); return NULL; }
 
             buf = p;
         }
