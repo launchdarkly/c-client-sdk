@@ -14,24 +14,10 @@ logger(const char *const s)
     printf("LD: %s\n", s);
 }
 
-void *
-fake_opener(void *const ctx, const char *const name, const char *const mode, const size_t len)
-{
-    return "the handle";
-}
-
-void
-fake_closer(void *const handle)
-{
-    if (strcmp(handle, "the handle") != 0) {
-        printf("ERROR: something bad happened to the handle\n");
-    }
-}
-
 bool gotcallback = false;
 
 bool
-fake_stringwriter(void *const handle, const char *const data)
+fake_stringwriter(void *context, const char *name, const char *data)
 {
     gotcallback = true;
     return true;
@@ -43,7 +29,7 @@ fake_stringwriter(void *const handle, const char *const data)
 void
 test1(void)
 {
-    LD_store_setfns(NULL, LD_store_fileopen, NULL /* no writer */, LD_store_fileread, LD_store_fileclose);
+    LD_store_setfns(NULL, NULL /* no writer */, LD_store_fileread);
 
     LDConfig *const config = LDConfigNew("authkey");
     LDConfigSetOffline(config, true);
@@ -81,7 +67,7 @@ test1(void)
 void
 test2(void)
 {
-    LD_store_setfns(NULL, fake_opener, fake_stringwriter, NULL, fake_closer);
+    LD_store_setfns(NULL, fake_stringwriter, NULL);
 
     LDConfig *const config = LDConfigNew("authkey");
     LDConfigSetOffline(config, true);

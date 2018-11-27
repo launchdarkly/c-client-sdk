@@ -171,18 +171,13 @@ void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 /*
  * store interface. open files, read/write strings, ...
  */
-typedef void *(*LD_store_opener)(void *, const char *, const char *, size_t);
-typedef bool (*LD_store_stringwriter)(void *, const char *data);
-typedef const char *(*LD_store_stringreader)(void *);
-typedef void (*LD_store_closer)(void *);
+typedef bool (*LD_store_stringwriter)(void *context, const char *name, const char *data);
+typedef char *(*LD_store_stringreader)(void *context, const char *name);
 
-void
-LD_store_setfns(void *context, LD_store_opener, LD_store_stringwriter, LD_store_stringreader, LD_store_closer);
+void LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader);
 
-void *LD_store_fileopen(void *, const char *name, const char *mode, size_t len);
-bool LD_store_filewrite(void *h, const char *data);
-const char *LD_store_fileread(void *h);
-void LD_store_fileclose(void *h);
+bool LD_store_filewrite(void *context, const char *name, const char *data);
+char *LD_store_fileread(void *context, const char *name);
 
 /*
  * listener function for flag changes.
