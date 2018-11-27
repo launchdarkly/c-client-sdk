@@ -414,7 +414,7 @@ void LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader
 typedef bool (*LD_store_stringwriter)(void *context, const char *name, const char *data);
 ```
 
-Should write the `data` using the associated `context` to `name`. Returns true for success.
+Should write the `data` using the associated `context` to `name`. Returns `true` for success.
 
 ```C
 typedef char *(*LD_store_stringreader)(void *context, const char *name);
