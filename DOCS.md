@@ -402,7 +402,7 @@ typedef struct {
 
 The client library supports persisting data between sessions or when internet
 connectivity is intermittent. This is exposed to the application via the
-LD_store interface which consists of four functions.
+LD_store interface which consists of two main functions.
 
 ```C
 void LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader);
