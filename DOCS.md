@@ -405,51 +405,28 @@ connectivity is intermittent. This is exposed to the application via the
 LD_store interface which consists of four functions.
 
 ```C
-void
-LD_store_setfns(void *context, LD_store_opener, LD_store_stringwriter,
-    LD_store_stringreader, LD_store_closer)
+void LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader);
 ```
 
-`LD_store_setfns` sets the functions to be used. The opener and closer
-are required, but reader and writer may optionally be `NULL`. The
-provided opaque context is passed to each open call.
+`LD_store_setfns` sets the functions to be used. Reader and writer may optionally be `NULL`. The provided opaque context is passed to each open call.
 
 ```C
-typedef void *(*LD_store_opener)(void *context, const char *name,
-    const char *mode, size_t predictedlen);
+typedef bool (*LD_store_stringwriter)(void *context, const char *name, const char *data);
 ```
 
-The opener function should return a handle to an open file.
-context is as set above. name identifies the data requested. mode
-is an fopen style string, "r" for reading and "w" for writing.
-predictedlen is the expected length of data to be read or written.
-It returns a handle for further operations, or NULL for failure.
+Should write the `data` using the associated `context` to `name`. Returns true for success.
 
 ```C
-typedef bool (*LD_store_stringwriter)(void *handle, const char *data);
+typedef char *(*LD_store_stringreader)(void *context, const char *name);
 ```
 
-Should write the data to the handle. Returns true for success.
-
-```C
-typedef const char *(*LD_store_stringreader)(void *handle);
-```
-
-Read a string from the handle. Returns `NULL` on failure. Memory is to be managed by the handle.
-
-```C
-typedef void (*LD_store_closer)(void *handle);
-```
-
-Close a handle and free resources (e.g. the string returned by stringreader).
+Read a string from the `name` associated with the `context`. Returns `NULL` on failure. Memory returned from the reader must come from `LDAlloc`.
 
 A simple set of functions that operate on POSIX files is provided:
 
 ```C
-void *LD_store_fileopen(void *, const char *name, const char *mode, size_t len);
-bool LD_store_filewrite(void *h, const char *data);
-const char *LD_store_fileread(void *h);
-void LD_store_fileclose(void *h);
+bool LD_store_filewrite(void *context, const char *name, const char *data);
+char *LD_store_fileread(void *context, const char *name);
 ```
 
 ## Logging
