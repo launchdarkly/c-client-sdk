@@ -8,107 +8,106 @@
  #include "ldapi.h"
  #include "ldinternal.h"
 
-void *store_ctx;
-LD_store_opener store_open;
-LD_store_stringwriter store_writestring;
-LD_store_stringreader store_readstring;
-LD_store_closer store_close;
+void *store_ctx = NULL;
+LD_store_stringwriter store_writestring = NULL;
+LD_store_stringreader store_readstring = NULL;
 
 void
-LD_store_setfns(void *context, LD_store_opener openfn, LD_store_stringwriter writefn,
-    LD_store_stringreader readfn, LD_store_closer closefn)
+LD_store_setfns(void *const context, LD_store_stringwriter writefn,
+    LD_store_stringreader readfn)
 {
     store_ctx = context;
-    store_open = openfn;
     store_writestring = writefn;
     store_readstring = readfn;
-    store_close = closefn;
 }
 
 void
-LDi_savedata(const char *dataname, const char *username, const char *data)
+LDi_savedata(const char *const dataname, const char *const username, const char *const data)
 {
-    if (!store_writestring)
-        return;
+    if (!store_writestring) { return; }
+
     char fullname[1024];
-    snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username);
-    void *handle = store_open(store_ctx, fullname, "w", strlen(data));
-    if (!handle)
-        return;
-    store_writestring(handle, data);
-    store_close(handle);
+
+    if (snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username) < 0) {
+        LDi_log(LD_LOG_ERROR, "LDi_savedata snprintf failed"); return;
+    }
+
+    LDi_log(LD_LOG_INFO, "About to open abstract file %s", fullname);
+
+    store_writestring(store_ctx, fullname, data);
 }
 
 char *
 LDi_loaddata(const char *dataname, const char *username)
 {
-    char *data = NULL;
+    if (!store_readstring) { return NULL; }
 
-    if (!store_readstring)
-        return NULL;
     char fullname[1024];
-    snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username);
+
+    if (snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username) < 0) {
+        LDi_log(LD_LOG_ERROR, "LDi_loaddata snprintf failed"); return NULL;
+    }
+
     LDi_log(LD_LOG_INFO, "About to open abstract file %s", fullname);
-    void *handle = store_open(store_ctx, fullname, "r", 0);
-    if (!handle)
-        return NULL;
-    const char *s = store_readstring(handle);
-    if (s)
-        data = LDi_strdup(s);
-    store_close(handle);
-    return data;
+
+    return store_readstring(store_ctx, fullname);
 }
 
 /*
  * concrete implementation using standard C stdio
  */
 
-struct stdio_store {
-    FILE *fp;
-    char *s;
-};
-
-void *
-LD_store_fileopen(void *context, const char *name, const char *mode, size_t len)
+static FILE *
+fileopen(const char *const name, const char *const mode)
 {
-    struct stdio_store *handle = LDAlloc(sizeof(*handle));
-    if (!handle)
-        return NULL;
     char filename[1024];
-    snprintf(filename, sizeof(filename), "LD-%s.txt", name);
-    handle->fp = fopen(filename, mode);
-    if (!handle->fp) {
+
+    if (snprintf(filename, sizeof(filename), "LD-%s.txt", name) < 0) {
+        LDi_log(LD_LOG_ERROR, "fileopen snprintf failed"); return NULL;
+    }
+
+    FILE *const handle = fopen(filename, mode);
+
+    if (!handle) {
         LDi_log(LD_LOG_ERROR, "Failed to open %s", filename);
-        LDFree(handle);
         return NULL;
     }
-    handle->s = NULL;
+
     return handle;
 }
 
 bool
-LD_store_filewrite(void *h, const char *data)
+LD_store_filewrite(void *const context, const char *const name, const char *const data)
 {
-    struct stdio_store *handle = h;
-    return fwrite(data, 1, strlen(data), handle->fp) == strlen(data);
+    FILE *const handle = fileopen(name, "w");
+
+    if (!handle) { return false; }
+
+    const size_t len = strlen(data);
+
+    const bool success = fwrite(data, 1, len, handle) == len;
+
+    fclose(handle);
+
+    return success;
 }
 
-const char *
-LD_store_fileread(void *h)
+char *
+LD_store_fileread(void *const context, const char *const name)
 {
-    struct stdio_store *handle = h;
-    char *buf;
-    size_t bufsize, bufspace, buflen;
+    FILE *const handle = fileopen(name, "r");
 
-    buflen = 0;
-    bufspace = bufsize = 4096;
-    bufspace--; /* save a byte for nul */
-    buf = malloc(bufsize);
-    if (!buf)
-        return NULL;
+    if (!handle) { return NULL; }
+
+    size_t bufsize = 4096, bufspace = 4095, buflen = 0;
+
+    char *buf = LDAlloc(bufsize);
+
+    if (!buf) { return NULL; }
 
     while (true) {
-        size_t amt = fread(buf + buflen, 1, bufspace, handle->fp);
+        const size_t amt = fread(buf + buflen, 1, bufspace, handle);
+
         buflen += amt;
         if (amt < bufspace) {
             /* done */
@@ -118,24 +117,18 @@ LD_store_fileread(void *h)
             bufspace = bufsize;
             bufsize += bufspace;
             bufspace--;
-            void *p = realloc(buf, bufsize);
-            if (!p) {
-                free(buf);
-                return NULL;
-            }
+
+            void *const p = LDi_realloc(buf, bufsize);
+
+            if (!p) { LDFree(buf); return NULL; }
+
             buf = p;
         }
     }
-    buf[buflen] = 0;
-    handle->s = buf;
-    return buf;
-}
 
-void
-LD_store_fileclose(void *h)
-{
-    struct stdio_store *handle = h;
-    fclose(handle->fp);
-    free(handle->s);
-    LDFree(handle);
+    buf[buflen] = 0;
+
+    fclose(handle);
+
+    return buf;
 }

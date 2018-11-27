@@ -95,7 +95,5 @@ EXPORTS
    LDSetLogFunction
 
    LD_store_setfns
-   LD_store_fileopen
    LD_store_filewrite
    LD_store_fileread
-   LD_store_fileclose
