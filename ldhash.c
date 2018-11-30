@@ -169,8 +169,6 @@ LDi_hashtoversionedjson(const LDNode *const hash)
         case LDNodeArray:
             cJSON_AddItemToObject(val, "value", LDi_arraytojson(node->a));
             break;
-        case LDNodeNone:
-            break;
         }
 
         if (node->version) {
@@ -216,8 +214,6 @@ LDi_hashtojson(const LDNode *const hash)
         case LDNodeArray:
             cJSON_AddItemToObject(json, node->key, LDi_arraytojson(node->a));
             break;
-        case LDNodeNone:
-            break;
         }
     }
 
@@ -248,8 +244,6 @@ LDi_arraytojson(const LDNode *const hash)
             break;
         case LDNodeArray:
             cJSON_AddItemToArray(json, LDi_arraytojson(node->a));
-            break;
-        case LDNodeNone:
             break;
         }
     }
