@@ -43,9 +43,10 @@ Once integrated, you can follow these steps to initialize a client instance:
 2. Create a new LDClient instance and user with your SDK key:
 
 ```C
+    unsigned int maxwaitmilliseconds = 10 * 1000;
     LDConfig *config = LDConfigNew("YOUR_CLIENT_SIDE_KEY");
     LDUser *user = LDUserNew("YOUR_USER_KEY");
-    LDClient *client = LDClientInit(config, user);
+    LDClient *client = LDClientInit(config, user, maxwaitmilliseconds);
 ```
 
 In most cases, you should create a single `LDClient` instance for the lifecycle of your program (a singleton pattern can be helpful here). When finished with the client (or prior to program exit), you should close the client:
@@ -81,10 +82,6 @@ There are several unimplemented features and known bugs. We intend to address al
 
 * Multiple clients: It is currently not safe to create more than one LDClient instance per application.
 * Cross-platform continuous integration: We have not yet set up a full cross-platform CI suite. You may encounter problems building the SDK on particular platforms. If you run into any issues building the SDK, please reach out, and we'll prioritize addressing your issues.
-* All Flags: This function for getting all flag values at once has not been implemented.
-* Anonymous user keys: In the other mobile SDKs, if you do not specify any user key, the SDK generates one based on unique properties of the device and also sets the anonymous attribute. The equivalent in the C SDK will probably be based on the MAC, but this is not implemented yet, so currently you will get a randomized key instead.
-* Flag listeners: In the current implementation of LDClientRegisterFeatureFlagListener, it is not safe for the listener function to perform any operations on the LDClient, including checking flag values. Doing so could cause a deadlock.
-* Client shutdown: LDClientClose does not currently stop the client's background threads and does not ensure the delivery of any pending events.
 
 Learn more
 -----------

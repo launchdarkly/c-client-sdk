@@ -9,31 +9,18 @@
 #include "ldinternal.h"
 
 void
-logger(const char *s)
+logger(const char *const s)
 {
-    printf("LD: %s", s);
-}
-
-void *
-fake_opener(void *ctx, const char *name, const char *mode, size_t len)
-{
-    return "the handle";
-}
-
-void
-fake_closer(void *handle)
-{
-    if (strcmp(handle, "the handle") != 0) {
-        printf("ERROR: something bad happened to the handle\n");
-    }
+    printf("LD: %s\n", s);
 }
 
 bool gotcallback = false;
 
 bool
-fake_stringwriter(void *handle, const char *data)
+fake_stringwriter(void *context, const char *name, const char *data)
 {
     gotcallback = true;
+    return true;
 }
 
 /*
@@ -42,13 +29,15 @@ fake_stringwriter(void *handle, const char *data)
 void
 test1(void)
 {
-    LD_store_setfns(NULL, LD_store_fileopen, NULL /* no writer */, LD_store_fileread, LD_store_fileclose);
+    LD_store_setfns(NULL, NULL /* no writer */, LD_store_fileread);
 
-    LDConfig *config = LDConfigNew("authkey");
-    config->offline = true;
-    LDUser *user = LDUserNew("fileuser");
-    LDClient *client = LDClientInit(config, user);
-    
+    LDConfig *const config = LDConfigNew("authkey");
+    LDConfigSetOffline(config, true);
+
+    LDUser *const user = LDUserNew("fileuser");
+
+    LDClient *const client = LDi_clientinitisolated(config, user, 0);
+
     char buffer[256];
     LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
     if (strcmp(buffer, "as expected") != 0) {
@@ -56,21 +45,20 @@ test1(void)
     }
 
     char *patch = "{ \"key\": \"filedata\", \"value\": \"updated\", \"version\": 2 } }";
-    LDi_onstreameventpatch(patch);
+    LDi_onstreameventpatch(client, patch);
     LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
     if (strcmp(buffer, "as expected") != 0) {
         printf("ERROR: applied stale patch\n");
     }
 
     patch = "{ \"key\": \"filedata\", \"value\": \"updated\", \"version\": 4 } }";
-    LDi_onstreameventpatch(patch);
+    LDi_onstreameventpatch(client, patch);
     LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
     if (strcmp(buffer, "updated") != 0) {
         printf("ERROR: didn't apply good patch\n");
     }
 
     LDClientClose(client);
-
 }
 
 /*
@@ -79,35 +67,34 @@ test1(void)
 void
 test2(void)
 {
-    LD_store_setfns(NULL, fake_opener, fake_stringwriter, NULL, fake_closer);
+    LD_store_setfns(NULL, fake_stringwriter, NULL);
 
-    LDConfig *config = LDConfigNew("authkey");
-    config->offline = true;
-    LDUser *user = LDUserNew("fakeuser");
-    LDClient *client = LDClientInit(config, user);
-    char *putflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 1 } }";
-    LDi_onstreameventput(putflags);
+    LDConfig *const config = LDConfigNew("authkey");
+    LDConfigSetOffline(config, true);
+
+    LDUser *const user = LDUserNew("fakeuser");
+
+    LDClient *const client = LDi_clientinitisolated(config, user, 0);
+
+    const char *const putflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 1 } }";
+
+    LDi_onstreameventput(client, putflags);
 
     if (!gotcallback) {
         printf("ERROR: flag update didn't call writer\n");
     }
 
     LDClientClose(client);
-
 }
 
 int
 main(int argc, char **argv)
 {
-    printf("Beginning tests\n");
-
     LDSetLogFunction(1, logger);
 
     test1();
 
     test2();
 
-    printf("Completed all tests\n");
     return 0;
 }
-

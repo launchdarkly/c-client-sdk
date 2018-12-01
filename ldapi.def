@@ -16,9 +16,10 @@ EXPORTS
    LDConfigSetStreamURI
    LDConfigSetUseReport
    LDConfigAddPrivateAttribute
+   LDConfigSetProxyURI
 
-   LDClientInit
    LDClientGet
+   LDClientInit
    LDUserNew
    LDUserSetAnonymous
    LDUserSetIP
@@ -27,6 +28,7 @@ EXPORTS
    LDUserSetEmail
    LDUserSetName
    LDUserSetAvatar
+   LDUserSetSecondary
 
    LDUserSetCustomAttributesJSON
    LDUserSetCustomAttributes
@@ -38,6 +40,7 @@ EXPORTS
    LDClientIdentify
    LDClientFlush
    LDClientIsInitialized
+   LDClientAwaitInitialized
    LDClientIsOffline
    LDClientSetOffline
    LDClientSetOnline
@@ -47,9 +50,12 @@ EXPORTS
    LDSetClientStatusCallback
 
    LDClientGetLockedFlags
+   LDClientUnlockFlags
 
    LDClientTrack
    LDClientTrackData
+
+   LDAllFlags
 
    LDClientRegisterFeatureFlagListener
    LDClientUnregisterFeatureFlagListener
@@ -60,12 +66,12 @@ EXPORTS
    LDStringVariationAlloc
    LDStringVariation
    LDJSONVariation
-   LDJSONRelease
 
    LDFree
    LDAlloc
    LD_allocations
    LD_frees
+   LDSetString
    LDNodeCreateHash
    LDNodeAddBool
    LDNodeAddNumber
@@ -75,5 +81,19 @@ EXPORTS
    LDNodeLookup
    LDNodeFree
    LDNodeCount
+   LDCloneHash
+   LDNodeCreateArray
+   LDNodeAppendBool
+   LDNodeAppendNumber
+   LDNodeAppendString
+   LDNodeIndex
+   LDCloneArray
+
+   LDNodeToJSON
+   LDNodeFromJSON
 
    LDSetLogFunction
+
+   LD_store_setfns
+   LD_store_filewrite
+   LD_store_fileread

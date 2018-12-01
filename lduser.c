@@ -10,9 +10,17 @@ LDUserNew(const char *const key)
     memset(user, 0, sizeof(*user));
 
     if (!key || key[0] == '\0') {
-        char randomkey[32 + 1] = { 0 };
-        LDi_randomhex(randomkey, sizeof(randomkey) - 1);
-        LDSetString(&user->key, randomkey);
+        char *const deviceid = LDi_deviceid();
+        if (deviceid) {
+            LDSetString(&user->key, deviceid);
+            LDFree(deviceid);
+        } else {
+            LDi_log(LD_LOG_WARNING, "Failed to get device ID falling back to random ID");
+            char randomkey[32 + 1] = { 0 };
+            LDi_randomhex(randomkey, sizeof(randomkey) - 1);
+            LDSetString(&user->key, randomkey);
+        }
+        LDi_log(LD_LOG_INFO, "Setting user key to: %s", user->key);
         user->anonymous = true;
     }
     else {

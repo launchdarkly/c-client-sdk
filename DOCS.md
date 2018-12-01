@@ -97,13 +97,19 @@ void LDConfigSetUseReport(LDConfig *config, bool report);
 
 Determines whether the `REPORT` or `GET` verb is used for calls to LaunchDarkly. Do not use unless advised by LaunchDarkly.
 
+```C
+void LDConfigSetProxyURI(LDConfig *config, const char *uri);
+```
+
+Set the proxy server used for connecting to LaunchDarkly. By default no proxy is used. The URI string should be of the form `socks5://127.0.0.1:9050`. You may read more about how this SDK handles proxy servers by reading the [libcurl](https://curl.haxx.se) documentation on the subject [here](https://ec.haxx.se/libcurl-proxies.html).
+
 ## Users
 
 ```C
 LDUser *LDUserNew(const char *key);
 ```
 
-Allocate a new user. The user may be modified *until* it is passed to the `LdClientIdentify` or `LDClientInit`. The `key` argument is required.
+Allocate a new user. The user may be modified *until* it is passed to the `LDClientIdentify` or `LDClientInit`. The `key` argument is not required. When `key` is `NULL` then a device specific ID is used. If a device specific ID cannot be obtained then a random fallback is generated.
 
 ```C
 void LDUserSetAnonymous(LDUser *user, bool anon);
@@ -157,13 +163,13 @@ may be built programmatically using the LDNode functions (see below), or
 may be set all at once with a json string.
 
 ```C
-void LDUserAddPrivateAttribute(LDUser *, const char *name);
+void LDUserAddPrivateAttribute(LDUser *user, const char *name);
 ```
 
 Add an attribute name to the private list which will not be recorded.
 
 ```C
-void LDClientIdentify(LDClient *, LDUser *);
+void LDClientIdentify(LDClient *client, LDUser *user);
 ```
 
 Update the client with a new user. The old user is freed. This will re-fetch feature flag settings from LaunchDarkly-- for performance reasons, user contexts should not be changed frequently.
@@ -171,79 +177,89 @@ Update the client with a new user. The old user is freed. This will re-fetch fea
 ## Client lifecycle management
 
 ```C
-LDClient *LDClientInit(LDConfig *config, LDUser *user);
+LDClient *LDClientInit(LDConfig *config, LDUser *user, unsigned int maxwaitmilli);
 ```
 
-Initialize the client with the config and user. After this call, the `config` and `user` must not be modified. May be called more than once to change `config`, in which case the previous `config` is freed. There is only ever one `LDClient`.
+Initialize the client with the config and user. After this call, the `config` and `user` must not be modified. There is only ever one `LDClient`. The parameter `maxwaitmilli` indicates the maximumum amount of time the client will wait to be fully initialized. If the timeout is hit the client will be available for feature flag evaluation but the results will be fallbacks. The client will continue attempting to connect to LaunchDarkly in the background. If `maxwaitmilli` is set to `0` then `LDClientInit` will wait indefinitely.
 
 ```C
-LDClient *LDClientGet(void);
+LDClient *LDClientGet();
 ```
 
 Get a reference to the (single, global) client.
 
 ```C
-void LDClientClose(LDClient *);
+void LDClientClose(LDClient *client);
 ```
 
 Close the client, free resources, and generally shut down.
 
 ```C
-bool LDClientIsInitialized(LDClient *);
+bool LDClientIsInitialized(LDClient *client);
 ```
 
 Returns true if the client has been initialized.
 
 ```C
+bool LDClientAwaitInitialized(LDClient *client, unsigned int timeoutmilli);
+```
+
+Block until initialized up to timeout, returns true if initialized.
+
+```C
 void LDClientFlush(LDClient *client);
 ```
 
-Send any pending events to the server. They will normally be flushed after a
-timeout, but may also be flushed manually.
+Send any pending events to the server. They will normally be flushed after a timeout, but may also be flushed manually. This operation does not block.
 
 ```C
-void LDClientSetOffline(LDClient *);
+void LDClientSetOffline(LDClient *client);
 ```
 
 Make the client operate in offline mode. No network traffic.
 
 ```C
-void LDClientSetOnline(LDClient *);
+void LDClientSetOnline(LDClient *client);
 ```
 
 Return the client to online mode.
 
 ```C
-bool LDClientIsOffline(void);
+bool LDClientIsOffline();
 ```
 
 Returns the offline status of the client.
 
 ```C
-void LDSetClientStatusCallback(void (callback)(int status));
+void LDSetClientStatusCallback(void (callback)(LDStatus status));
 ```
 
-Set a callback function for client status changes. These are major
-status changes only, not updates to the feature Node.
-Current status code:
-0 - Offline. The client has been shut down, likely due to a permission failure.
-1 - Ready. The client has received an initial feature Node from the server
-    and is ready to proceed.
+Set a callback function for client status changes. These are major status changes only, not updates to the feature Node. Current status codes:
+
+```c
+typedef enum {
+    LDStatusInitializing, //Initializing. Flags may be evaluated at this time
+    LDStatusInitialized, //Ready. The client has received an initial feature Node from the server and is ready to proceed
+    LDStatusFailed, //Offline. The client has been shut down, likely due to a permission failure
+    LDStatusShuttingdown, //In the process of shutting down. Flags should not be evaluated at this time
+    LDStatusShutdown //The client has fully shutdown. Interacting with the client object is not safe
+} LDStatus;
+```
 
 ## Feature flags
 
 ```C
-bool LDBoolVariation(LDClient *, const char *name , bool default);
-int LDIntVariation(LDClient *, const char *name, int default);
-double LDDoubleVariation(LDClient *, const char *name, double default);
+bool LDBoolVariation(LDClient *client, const char *featurekey , bool defaultvalue);
+int LDIntVariation(LDClient *client, const char *featurekey, int defaultvalue);
+double LDDoubleVariation(LDClient *client, const char *featurekey, double defaultvalue);
 ```
 
 Ask for a bool, int, or double flag, respectively. Return the default if not
 found.
 
 ```C
-char *LDStringVariationAlloc(LDClient *, const char *name, const char *def);
-char *LDStringVariation(LDClient *, const char *name, const char *default,
+char *LDStringVariationAlloc(LDClient *client, const char *featurekey, const char *defaultvalue);
+char *LDStringVariation(LDClient *client, const char *featurekey, const char *defaultvalue,
     char *buffer, size_t size);
 ```
 
@@ -254,28 +270,31 @@ size bytes will be copied into buffer, truncating if necessary.
 Both functions return a pointer.
 
 ```C
-LDNode *LDJSONVariation(LDClient *client, const char *name, LDNode *default);
+LDNode *LDJSONVariation(LDClient *client, const char *featurekey, const LDNode *defaultvalue);
 ```
 
-Ask for a JSON variation, returned as a parsed tree of LDNodes.
-The node returned is an internal data structure of the client. After examination,
-it must be released by calling `LDJSONRelease()` which will unlock the client.
-See also `LDNodeLookup`.
+Ask for a JSON variation, returned as a parsed tree of LDNodes. You must free the result with `LDNodeFree`. See also `LDNodeLookup`.
 
 ```C
-typedef void (*LDlistenerfn)(const char *name, int update);
-bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn);
-bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *name, LDlistenerfn);
+typedef void (*LDlistenerfn)(const char *featurekey, int update);
+bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *featurekey, LDlistenerfn);
+bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *featurekey, LDlistenerfn);
 ```
 
 Register and unregister callbacks when features change. The name argument indicates the changed value. The update argument is 0 for new or updated and 1 for deleted.
 
 ```C
 LDNode *LDClientGetLockedFlags(LDClient *client);
-void LDClientPutLockedFlags(LDClient *client, LDNode *flags);
+void LDClientUnlockFlags(LDClient *client);
 ```
 
-Directly access all flags. This locks the client until the flags are put back.
+Directly access all flags. This locks the client until the flags are unlocked.
+
+```C
+LDNode *LDAllFlags(LDClient *client);
+```
+
+Returns a hash table of all flags. This must be freed with `LDNodeFree`.
 
 ```C
 void LDClientTrack(LDClient *client, const char *name);
@@ -290,7 +309,7 @@ The LD client uses JSON to communicate, which is represented as LDNode
 structures. Both arrays and hashes (objects) are supported.
 
 ```C
-LDNode *LDNodeCreateHash(void);
+LDNode *LDNodeCreateHash();
 ```
 
 Create a new empty hash.
@@ -308,7 +327,7 @@ Memory ownership: The string `s` will be duplicated internally. The Node m
 is _not_ duplicated. It will be owned by the containing hash.
 
 ```C
-LDNode *LDNodeLookup(LDNode *hash, const char *key);
+LDNode *LDNodeLookup(const LDNode *hash, const char *key);
 ```
 
 Find a node in a hash. See below for structure.
@@ -336,13 +355,19 @@ void LDNodeAppendString(LDNode **array, const char *s);
 Add a bool, number, or string to an array.
 
 ```C
-LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
+LDNode *LDCloneHash(const LDNode *hash);
+LDNode *LDCloneArray(const LDNode *array);
+```
+Return a deep copy of the originals.
+
+```C
+LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
 ```
 
 Retrieve the element at index idx.
 
 ```C
-unsigned int LDNodeCount(LDNode *hash);
+unsigned int LDNodeCount(const LDNode *hash);
 ```
 
 Return the number of elements in a hash or array.
@@ -377,54 +402,31 @@ typedef struct {
 
 The client library supports persisting data between sessions or when internet
 connectivity is intermittent. This is exposed to the application via the
-LD_store interface which consists of four functions.
+LD_store interface which consists of two main functions.
 
 ```C
-void
-LD_store_setfns(void *context, LD_store_opener, LD_store_stringwriter,
-    LD_store_stringreader, LD_store_closer)
+void LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader);
 ```
 
-`LD_store_setfns` sets the functions to be used. The opener and closer
-are required, but reader and writer may optionally be `NULL`. The
-provided opaque context is passed to each open call.
+`LD_store_setfns` sets the functions to be used. Reader and writer may optionally be `NULL`. The provided opaque context is passed to each open call.
 
 ```C
-typedef void *(*LD_store_opener)(void *context, const char *name,
-    const char *mode, size_t predictedlen);
+typedef bool (*LD_store_stringwriter)(void *context, const char *name, const char *data);
 ```
 
-The opener function should return a handle to an open file.
-context is as set above. name identifies the data requested. mode
-is an fopen style string, "r" for reading and "w" for writing.
-predictedlen is the expected length of data to be read or written.
-It returns a handle for further operations, or NULL for failure.
+Should write the `data` using the associated `context` to `name`. Returns `true` for success.
 
 ```C
-typedef bool (*LD_store_stringwriter)(void *handle, const char *data);
+typedef char *(*LD_store_stringreader)(void *context, const char *name);
 ```
 
-Should write the data to the handle. Returns true for success.
-
-```C
-typedef const char *(*LD_store_stringreader)(void *handle);
-```
-
-Read a string from the handle. Returns `NULL` on failure. Memory is to be managed by the handle.
-
-```C
-typedef void (*LD_store_closer)(void *handle);
-```
-
-Close a handle and free resources (e.g. the string returned by stringreader).
+Read a string from the `name` associated with the `context`. Returns `NULL` on failure. Memory returned from the reader must come from `LDAlloc`.
 
 A simple set of functions that operate on POSIX files is provided:
 
 ```C
-void *LD_store_fileopen(void *, const char *name, const char *mode, size_t len);
-bool LD_store_filewrite(void *h, const char *data);
-const char *LD_store_fileread(void *h);
-void LD_store_fileclose(void *h);
+bool LD_store_filewrite(void *context, const char *name, const char *data);
+char *LD_store_fileread(void *context, const char *name);
 ```
 
 ## Logging
@@ -433,7 +435,19 @@ void LD_store_fileclose(void *h);
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *))
 ```
 
-Set the log function and log level. Increasing log levels result in increasing output.
+Set the log function and log level. Increasing log levels result in increasing output. The current log levels are:
+
+```C
+enum ld_log_level {
+    LD_LOG_FATAL = 0,
+    LD_LOG_CRITICAL,
+    LD_LOG_ERROR,
+    LD_LOG_WARNING,
+    LD_LOG_INFO,
+    LD_LOG_DEBUG,
+    LD_LOG_TRACE
+};
+```
 
 ## Other utilities
 
@@ -441,7 +455,7 @@ Set the log function and log level. Increasing log levels result in increasing o
 void LDFree(void *)
 ```
 
-Frees a string.
+Frees memory allocated by the SDK.
 
 ## C++ interface
 
@@ -452,31 +466,48 @@ class LDClient {
 ```
 
 ```C++
-        static LDClient *Get(void);
+        static LDClient *Get();
 ```
 
 Return the LDClient singleton.
 
 ```C++
-        static LDClient *Init(LDConfig *, LDUser *);
+        static LDClient *Init(LDConfig *config, LDUser *user);
+        bool isInitialized();
+        bool awaitInitialized(unsigned int timeoutmilli);
 ```
 
-Initialize the client.
+Initialize the client and functions to check the initialization status.
 
 ```C++
-        bool boolVariation(const std::string &, bool);
-        int intVariation(const std::string &, int);
-        std::string stringVariation(const std::string &, const std::string &);
-        char *stringVariation(const std::string &, const std::string &, char *, size_t);
+        bool boolVariation(const std::string &featurekey, bool defaultvalue);
+        int intVariation(const std::string &featurekey, int defaultvalue);
+        std::string stringVariation(const std::string &featurekey, const std::string &defaultvalue);
+        char *stringVariation(const std::string &featurekey, const std::string &defaultvalue,
+            char *buffer, size_t size);
 ```
 
 Functions to ask for variations.
 
 ```C++
-        LDNode *JSONVariation(const std::string &, LDNode *);
+        LDNode *JSONVariation(const std::string &featurekey, const LDNode *defaultvalue);
 ```
 
-Request a JSON variation. It must be released.
+Request a JSON variation. It must be freed.
+
+```C++
+        LDNode *getLockedFlags();
+        void unlockFlags();
+        LDNode *getAllFlags();
+```
+
+Functions to access or copy the flag store.
+
+```C++
+        void identify(LDUser *user);
+```
+
+Switch user and generate identify event, ownership of the `user` object is transferred to the client. This causes a reconnection to the LaunchDarkly servers and refreshes the flag store in the background. This should not be called frequently because of the performance implications. You may want to call `awaitInitialized` to wait until the updated flag store is ready.
 
 ```C++
         void setOffline();
@@ -486,12 +517,12 @@ Request a JSON variation. It must be released.
 
 ```C++
         std::string saveFlags();
-        void restoreFlags(const std::string &);
+        void restoreFlags(const std::string &flagsjson);
 ```
 
 ```C++
-        void flush(void);
-        void close(void);
+        void flush();
+        void close();
 ```
 
 ```C++
@@ -511,10 +542,10 @@ class LDNode {
 Find a subnode.
 
 ```C++
-    void release(void);
+    LDNode *index(unsigned int idx);
 ```
 
-Release a node, as returned from LDClient::JSONVariation.
+Retrieve the element at index idx.
 
 ```C++
 }

@@ -22,6 +22,14 @@ enum ld_log_level {
 };
 
 typedef enum {
+    LDStatusInitializing = 0,
+    LDStatusInitialized,
+    LDStatusFailed,
+    LDStatusShuttingdown,
+    LDStatusShutdown
+} LDStatus;
+
+typedef enum {
     LDNodeNone = 0,
     LDNodeString,
     LDNodeNumber,
@@ -51,7 +59,6 @@ typedef struct LDNode_i {
 #ifdef __cplusplus
     struct LDNode_i *lookup(const std::string &key);
     struct LDNode_i *index(unsigned int idx);
-    void release(void);
 #endif
 } LDNode;
 
@@ -78,13 +85,14 @@ void LDConfigSetOffline(LDConfig *config, bool offline);
 void LDConfigSetStreaming(LDConfig *config, bool streaming);
 void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 void LDConfigSetStreamURI(LDConfig *config, const char *uri);
+void LDConfigSetProxyURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
-
-struct LDClient_i *LDClientInit(LDConfig *, LDUser *);
-struct LDClient_i *LDClientGet(void);
-
+/* must have already called LDClientInit to receive valid client */
+struct LDClient_i *LDClientGet();
+/* create the global client singleton */
+struct LDClient_i *LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
 LDUser *LDUserNew(const char *);
 
@@ -118,19 +126,22 @@ void LDClientClose(struct LDClient_i *);
 
 void LDSetClientStatusCallback(void (callback)(int));
 
-/* must be released via LDJSONRelease */
+/* Access the flag store must unlock with LDClientUnlockFlags */
 LDNode *LDClientGetLockedFlags(struct LDClient_i *client);
+void LDClientUnlockFlags(struct LDClient_i *client);
 
 void LDClientTrack(struct LDClient_i *client, const char *name);
 void LDClientTrackData(struct LDClient_i *client, const char *name, LDNode *data);
+
+/* returns a hash table of existing flags, must be freed with LDNodeFree */
+LDNode *LDAllFlags(struct LDClient_i *const client);
 
 bool LDBoolVariation(struct LDClient_i *, const char *, bool);
 int LDIntVariation(struct LDClient_i *, const char *, int);
 double LDDoubleVariation(struct LDClient_i *, const char *, double);
 char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
 char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
-LDNode *LDJSONVariation(struct LDClient_i *client, const char *key, LDNode *);
-void LDJSONRelease(LDNode *m);
+LDNode *LDJSONVariation(struct LDClient_i *client, const char *key, const LDNode *);
 
 void LDFree(void *);
 void *LDAlloc(size_t amt);
@@ -142,17 +153,19 @@ LDNode * LDNodeAddNumber(LDNode **hash, const char *key, double n);
 LDNode * LDNodeAddString(LDNode **hash, const char *key, const char *s);
 LDNode * LDNodeAddHash(LDNode **hash, const char *key, LDNode *h);
 LDNode * LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
-LDNode *LDNodeLookup(LDNode *hash, const char *key);
+LDNode *LDNodeLookup(const LDNode *hash, const char *key);
 void LDNodeFree(LDNode **hash);
-unsigned int LDNodeCount(LDNode *hash);
+unsigned int LDNodeCount(const LDNode *hash);
+LDNode *LDCloneHash(const LDNode *original);
 /* functions for treating nodes as arrays */
 LDNode *LDNodeCreateArray(void);
 LDNode * LDNodeAppendBool(LDNode **array, bool b);
 LDNode * LDNodeAppendNumber(LDNode **array, double n);
 LDNode * LDNodeAppendString(LDNode **array, const char *s);
-LDNode *LDNodeIndex(LDNode *array, unsigned int idx);
+LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
+LDNode *LDCloneArray(const LDNode *original);
 /* functions for converting nodes to / from JSON */
-char *LDNodeToJSON(LDNode* node);
+char *LDNodeToJSON(const LDNode* node);
 LDNode *LDNodeFromJSON(const char *json);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
@@ -160,18 +173,13 @@ void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 /*
  * store interface. open files, read/write strings, ...
  */
-typedef void *(*LD_store_opener)(void *, const char *, const char *, size_t);
-typedef bool (*LD_store_stringwriter)(void *, const char *data);
-typedef const char *(*LD_store_stringreader)(void *);
-typedef void (*LD_store_closer)(void *);
+typedef bool (*LD_store_stringwriter)(void *context, const char *name, const char *data);
+typedef char *(*LD_store_stringreader)(void *context, const char *name);
 
-void
-LD_store_setfns(void *context, LD_store_opener, LD_store_stringwriter, LD_store_stringreader, LD_store_closer);
+void LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader);
 
-void *LD_store_fileopen(void *, const char *name, const char *mode, size_t len);
-bool LD_store_filewrite(void *h, const char *data);
-const char *LD_store_fileread(void *h);
-void LD_store_fileclose(void *h);
+bool LD_store_filewrite(void *context, const char *name, const char *data);
+char *LD_store_fileread(void *context, const char *name);
 
 /*
  * listener function for flag changes.
@@ -193,13 +201,13 @@ typedef struct LDClient_i LDClient;
 #ifdef __cplusplus
 }
 
-
 class LDClient {
     public:
         static LDClient *Get(void);
-        static LDClient *Init(LDConfig *, LDUser *);
+        static LDClient *Init(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
         bool isInitialized(void);
+        bool awaitInitialized(unsigned int timeoutmilli);
 
         bool boolVariation(const std::string &, bool);
         int intVariation(const std::string &, int);
@@ -207,9 +215,12 @@ class LDClient {
         std::string stringVariation(const std::string &, const std::string &);
         char *stringVariation(const std::string &, const std::string &, char *, size_t);
 
-        LDNode *JSONVariation(const std::string &, LDNode *);
+        LDNode *JSONVariation(const std::string &, const LDNode *);
 
         LDNode *getLockedFlags();
+        void unlockFlags();
+
+        LDNode *getAllFlags();
 
         void setOffline();
         void setOnline();
@@ -218,6 +229,8 @@ class LDClient {
 
         std::string saveFlags();
         void restoreFlags(const std::string &);
+
+        void identify(LDUser *);
 
         void track(const std::string &name);
         void track(const std::string &name, LDNode *data);
@@ -231,7 +244,6 @@ class LDClient {
     private:
         struct LDClient_i *client;
 };
-
 
 #endif
 

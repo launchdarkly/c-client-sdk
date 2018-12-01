@@ -10,16 +10,16 @@
 #include "ldinternal.h"
 
 void
-logger(const char *s)
+logger(const char *const s)
 {
-    printf("LD: %s", s);
+    printf("LD: %s\n", s);
 }
 
 /*
  * Test that turning a user into json looks like we expect.
  */
 void
-test1(LDClient *const client)
+test1()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -30,8 +30,8 @@ test1(LDClient *const client)
     LDNodeAddBool(&user->custom, "bossmode", true);
     LDNodeAddString(&user->custom, "species", "krell");
 
-    cJSON *const json = LDi_usertojson(client, user, true);
-    const char *const str = cJSON_PrintUnformatted(json);
+    cJSON *const json = LDi_usertojson(NULL, user, true);
+    char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
         "\"avatar\":\"pirate\",\"custom\":{\"excellence\":10,\"bossmode\":true,\"species\":\"krell\"}}";
@@ -40,6 +40,9 @@ test1(LDClient *const client)
         printf("ERROR: User json %s was not expected\n", str);
     }
 
+    cJSON_Delete(json);
+    free(str);
+
     LDi_freeuser(user);
 }
 
@@ -47,7 +50,7 @@ test1(LDClient *const client)
  * test setting json directly. also has a list of custom attributes.
  */
 void
-test2(LDClient *const client)
+test2()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -55,8 +58,8 @@ test2(LDClient *const client)
     LDUserSetAvatar(user, "pirate");
     LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
 
-    cJSON *const json = LDi_usertojson(client, user, true);
-    const char *const str = cJSON_PrintUnformatted(json);
+    cJSON *const json = LDi_usertojson(NULL, user, true);
+    char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
         "\"avatar\":\"pirate\",\"custom\":{\"toppings\":[\"pineapple\",\"ham\"]}}";
@@ -65,6 +68,9 @@ test2(LDClient *const client)
         printf("ERROR: User json %s was not expected\n", str);
     }
 
+    cJSON_Delete(json);
+    free(str);
+
     LDi_freeuser(user);
 }
 
@@ -72,7 +78,7 @@ test2(LDClient *const client)
  * Test private attributes
  */
 void
-test3(LDClient *const client)
+test3()
 {
     LDUser *const user = LDUserNew("username");
     LDUserSetFirstName(user, "Tsrif");
@@ -81,8 +87,8 @@ test3(LDClient *const client)
     LDUserAddPrivateAttribute(user, "count");
     LDUserAddPrivateAttribute(user, "avatar");
 
-    cJSON *const json = LDi_usertojson(client, user, true);
-    const char *const str = cJSON_PrintUnformatted(json);
+    cJSON *const json = LDi_usertojson(NULL, user, true);
+    char *const str = cJSON_PrintUnformatted(json);
 
     const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"custom\":{\"food\":[\"apple\"]},\"privateAttrs\":[\"avatar\",\"count\"]}";
 
@@ -90,33 +96,25 @@ test3(LDClient *const client)
         printf("ERROR: User json %s was not expected\n", str);
     }
 
+    cJSON_Delete(json);
+    free(str);
+
     LDi_freeuser(user);
 }
 
 int
 main(int argc, char **argv)
 {
-    printf("Beginning tests\n");
-
     LDSetLogFunction(1, logger);
 
-    LDUser *const user = LDUserNew("");
+    test1();
 
-    LDConfig *const config = LDConfigNew("authkey");
-    config->offline = true;
+    test2();
 
-    LDClient *const client = LDClientInit(config, user);
-
-    test1(client);
-
-    test2(client);
-
-    test3(client);
+    test3();
 
     extern unsigned long long LD_allocations, LD_frees;
 
     // printf("Memory consumed: %lld allocs %lld frees\n", LD_allocations, LD_frees);
-
-    printf("Completed all tests\n");
     return 0;
 }

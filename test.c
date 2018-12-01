@@ -10,9 +10,9 @@
 #include "ldapi.h"
 
 void
-logger(const char *s)
+logger(const char *const s)
 {
-    printf("LD: %s", s);
+    printf("LD: %s\n", s);
 }
 
 void
@@ -30,61 +30,90 @@ main(int argc, char **argv)
 
     LDSetClientStatusCallback(statusupdate);
 
-    LDConfig *config = LDConfigNew("authkey");
+    LDConfig *const config = LDConfigNew("authkey");
     LDConfigSetOffline(config, true);
 
-    LDUser *user = LDUserNew("user200");
+    LDUser *const user = LDUserNew("user200");
 
-    LDClient *client = LDClientInit(config, user);
+    LDClient *const client = LDClientInit(config, user, 0);
 
-    char *testflags = "{ \"sort.order\": { \"value\": false}, \"bugcount\": { \"value\": 0} , \"jj\": { \"value\": { \"ii\": 7 }} }";
+    {
+        const char *const testflags = "{ \"sort.order\": { \"value\": false}, \"bugcount\": { \"value\": 0} , \"jj\": { \"value\": { \"ii\": 7 }} }";
 
-    printf("Restoring flags\n");
-    LDClientRestoreFlags(client, testflags);
-    printf("Done restoring. Did the status change?\n");
+        printf("Restoring flags\n");
+        LDClientRestoreFlags(client, testflags);
+        printf("Done restoring. Did the status change?\n");
 
-    char *ss = LDClientSaveFlags(client);
-    printf("INFO: the output json is %s\n", ss);
-    LDFree(ss);
+        char *const ss = LDClientSaveFlags(client);
+        printf("INFO: the output json is %s\n", ss);
 
-    int high, low;
-
-    low = LDIntVariation(client, "bugcount", 1);
-    high = LDIntVariation(client, "bugcount", 10);
-    if (high != low) {
-        printf("ERROR: bugcount inconsistent\n");
-    }
-    low = LDIntVariation(client, "missing", 1);
-    high = LDIntVariation(client, "missing", 10);
-    if (high == low) {
-        printf("ERROR: default malfunction\n");
+        LDFree(ss);
     }
 
-    char buffer[10];
-    /* deliberately check for truncation (no overflow) */
-    LDStringVariation(client, "missing", "more than ten letters", buffer, sizeof(buffer));
-    if (strcmp(buffer, "more than") != 0) {
-        printf("ERROR: the string variation failed\n");
-    }
-    char *letters = LDStringVariationAlloc(client, "missing", "more than ten letters");
-    if (strcmp(letters, "more than ten letters") != 0) {
-        printf("ERROR: the string variation failed\n");
-    }
-    LDFree(letters);
 
-    LDNode *jnode = LDJSONVariation(client, "jj", NULL);
-    LDNode *ii = LDNodeLookup(jnode, "ii");
-    if (ii->type != LDNodeNumber || ii->n != 7) {
-        printf("ERROR: the json was not as expected\n");
+    {
+        const int low = LDIntVariation(client, "bugcount", 1);
+        const int high = LDIntVariation(client, "bugcount", 10);
+
+        if (high != low) {
+            printf("ERROR: bugcount inconsistent\n");
+        }
     }
-    LDJSONRelease(jnode);
-    jnode = LDJSONVariation(client, "missing", NULL);
-    ii = LDNodeLookup(jnode, "ii");
-    if (ii != NULL) {
-        printf("ERROR: found some unexpected json\n");
+
+    {
+        const int low = LDIntVariation(client, "missing", 1);
+        const int high = LDIntVariation(client, "missing", 10);
+
+        if (high == low) {
+            printf("ERROR: default malfunction\n");
+        }
     }
-    LDJSONRelease(jnode);
-    
+
+    {
+        char buffer[10];
+        // deliberately check for truncation (no overflow)
+        LDStringVariation(client, "missing", "more than ten letters", buffer, sizeof(buffer));
+        if (strcmp(buffer, "more than") != 0) {
+            printf("ERROR: the string variation failed\n");
+        }
+
+        char *const letters = LDStringVariationAlloc(client, "missing", "more than ten letters");
+        if (strcmp(letters, "more than ten letters") != 0) {
+            printf("ERROR: the string variation failed\n");
+        }
+
+        LDFree(letters);
+    }
+
+    {
+        LDNode *jnode = LDJSONVariation(client, "jj", NULL);
+
+        if (!jnode) {
+            printf("ERROR: node empty 1\n"); abort();
+        }
+
+        LDNode *const ii = LDNodeLookup(jnode, "ii");
+
+        if (!ii || ii->type != LDNodeNumber || ii->n != 7) {
+            printf("ERROR: the json was not as expected: %p\n", ii); abort();
+        }
+
+        LDNodeFree(&jnode);
+    }
+
+    {
+        LDNode *jnode = LDJSONVariation(client, "missing", NULL);
+
+        LDNode *const ii = LDNodeLookup(jnode, "ii");
+
+        if (ii != NULL) {
+            printf("ERROR: found some unexpected json\n"); abort();
+        }
+
+        LDNodeFree(&jnode);
+    }
+
+
     LDClientClose(client);
 
     printf("Completed all tests\n");
@@ -95,4 +124,3 @@ main(int argc, char **argv)
 
     return 0;
 }
-

@@ -1,5 +1,5 @@
 AR=ar rcs
-CC=gcc -fPIC -std=c99 -D_XOPEN_SOURCE=600
+CC=gcc -fPIC -std=c99 -D_XOPEN_SOURCE=600 -Wall -Wextra -Wno-unused-parameter
 CXX=g++ -fPIC -D_XOPEN_SOURCE=600
 CSRCS=ldclient.c ldutil.c lduser.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c ldstore.c base64.c cJSON.c
 COBJS=$(CSRCS:.c=.o)
@@ -8,10 +8,16 @@ CXXOBJS=$(CXXSRCS:.cpp=.o)
 
 LIBS=-lcurl -lpthread -lm
 
+UNAME := $(shell uname)
+
+ifeq ($(UNAME),Darwin)
+	LIBS+= -framework CoreFoundation -framework IOKit
+endif
+
 all: libldapi.so libldapiplus.so libldapi.a  test
 
 clean:
-	rm -f *.o libldapi.so libldapi.a test
+	rm -f *.o *.so *.a test
 
 libldapi.a: ldapi.h ldinternal.h $(COBJS)
 	$(AR) libldapi.a $(COBJS)
