@@ -278,7 +278,7 @@ LDi_deviceid()
         return NULL;
     }
 
-    const LSTATUS querystatus = RegQueryValueExA(hkey, "MachineGuid", NULL, &regtype, buffer, &buffersize);
+    const LSTATUS querystatus = RegQueryValueExA(hkey, "MachineGuid", NULL, &regtype, (unsigned char*)buffer, &buffersize);
 
     if (querystatus != ERROR_SUCCESS) {
         RegCloseKey(hkey);
