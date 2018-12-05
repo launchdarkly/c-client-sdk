@@ -180,7 +180,7 @@ Update the client with a new user. The old user is freed. This will re-fetch fea
 LDClient *LDClientInit(LDConfig *config, LDUser *user, unsigned int maxwaitmilli);
 ```
 
-Initialize the client with the 'config and user. After this call, the `config` and `user` must not be modified. There is only ever one `LDClient`. The parameter `maxwaitmilli` indicates the maximum amount of time the client will wait to be fully initialized. If the timeout is hit the client will be available for feature flag evaluation but the results will be fallbacks. The client will continue attempting to connect to LaunchDarkly in the background. If `maxwaitmilli` is set to `0` then `LDClientInit` will wait indefinitely.
+Initialize the client with the config and user. After this call, the `config` and `user` must not be modified. There is only ever one `LDClient`. The parameter `maxwaitmilli` indicates the maximum amount of time the client will wait to be fully initialized. If the timeout is hit the client will be available for feature flag evaluation but the results will be fallbacks. The client will continue attempting to connect to LaunchDarkly in the background. If `maxwaitmilli` is set to `0` then `LDClientInit` will wait indefinitely.
 
 Only a single initialized client from `LDClientInit` may exist at one time. To initialize another instance you must first cleanup the previous client with `LDClientClose`. Should you initialize with `LDClientInit` while another client exists `abort` will be called.
 
