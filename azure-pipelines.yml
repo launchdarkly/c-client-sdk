@@ -15,7 +15,7 @@ jobs:
           cleanDestinationFolder: false
         displayName: 'Extract Curl'
       - script: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\VsDevCmd.bat"
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\VsDevCmd.bat" -host_arch=amd64 -arch=amd64
           nmake /f Makefile.win
         displayName: 'Build'
       - script: test
