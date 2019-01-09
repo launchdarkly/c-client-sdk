@@ -10,6 +10,15 @@ jobs:
           command: sudo apt-get update -y && sudo apt-get install -y libcurl4-openssl-dev
       - run: make
       - run: make -C ./unit-tests all
+      - run:
+          name: Copy Artifacts
+          command: |
+              mkdir -p /tmp/artifacts
+              cp libldapi.a /tmp/artifacts/
+              cp libldapi.so /tmp/artifacts/
+              cp libldapiplus.so /tmp/artifacts/
+      - store_artifacts:
+          path: /tmp/artifacts
 
   build-test-osx:
     macos:
@@ -18,6 +27,15 @@ jobs:
       - checkout
       - run: make
       - run: make -C ./unit-tests all
+      - run:
+          name: Copy Artifacts
+          command: |
+              mkdir -p /tmp/artifacts
+              cp libldapi.a /tmp/artifacts/
+              cp libldapi.so /tmp/artifacts/
+              cp libldapiplus.so /tmp/artifacts/
+      - store_artifacts:
+          path: /tmp/artifacts
 
   build-test-windows:
     docker:
@@ -45,6 +63,13 @@ jobs:
       - run:
           name: Test Emulated
           command: wine ./test
+      - run:
+          name: Copy Artifacts
+          command: |
+              mkdir -p /tmp/artifacts
+              cp ldapi.dll /tmp/artifacts/
+      - store_artifacts:
+          path: /tmp/artifacts
 
 workflows:
   version: 2
