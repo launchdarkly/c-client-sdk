@@ -63,13 +63,6 @@ jobs:
       - run:
           name: Test Emulated
           command: wine ./test
-      - run:
-          name: Copy Artifacts
-          command: |
-              mkdir -p /tmp/artifacts
-              cp ldapi.dll /tmp/artifacts/
-      - store_artifacts:
-          path: /tmp/artifacts
 
 workflows:
   version: 2
