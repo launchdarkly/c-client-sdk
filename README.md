@@ -1,7 +1,5 @@
-LaunchDarkly SDK [BETA] for C / C++
+LaunchDarkly SDK for C / C++
 ===================================
-
-*Warning:* This software is *beta* software and should not be used in a production environment until version 1.0.
 
 The LaunchDarkly C / C++ SDK is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
 
@@ -10,7 +8,7 @@ Quick setup (POSIX)
 
 The C / C++ SDK requires a POSIX environment, and assumes that both `libcurl` and `libpthread` are installed.
 
-Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
 
 You can get the required dependencies on Ubuntu Linux with:
 
@@ -23,7 +21,7 @@ Quick setup (Windows)
 
 Building the SDK requires that the Visual Studio C compiler be installed. The SDK also requires libcurl.
 
-Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page.
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client/releases) page.
 
 You can obtain the libcurl dependency at [curl.haxx.se](https://curl.haxx.se/download/curl-7.59.0.zip). You will need to extract curl and then update `Makefile.win` with the path you saved it to. The Makefile will automatically build curl for you.
 
@@ -75,13 +73,6 @@ You'll also want to ensure that the client is initialized before checking the fl
 ```C
 initialized = LDClientIsInitialized(client);
 ```
-
-Unimplemented features and known bugs
--------------------------------------
-There are several unimplemented features and known bugs. We intend to address all of these before our first non-beta release.
-
-* Multiple clients: It is currently not safe to create more than one LDClient instance per application.
-* Cross-platform continuous integration: We have not yet set up a full cross-platform CI suite. You may encounter problems building the SDK on particular platforms. If you run into any issues building the SDK, please reach out, and we'll prioritize addressing your issues.
 
 Learn more
 -----------

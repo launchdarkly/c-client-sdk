@@ -90,6 +90,7 @@ addNodeToJSONObject(cJSON *const obj, const char *const key, LDNode *const node)
         break;
     case LDNodeArray:
         cJSON_AddItemToObject(obj, key, LDi_arraytojson(node->a));
+        break;
     default:
         LDi_log(LD_LOG_FATAL, "addNodeToJSONObject unhandled case");
         abort();

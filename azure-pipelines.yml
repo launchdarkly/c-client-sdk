@@ -1,0 +1,31 @@
+jobs:
+  - job: build
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+      - task: PowerShell@2
+        inputs:
+          targetType: inline
+          script: iwr -outf curl.zip https://curl.haxx.se/download/curl-7.59.0.zip
+          workingDirectory: $(System.DefaultWorkingDirectory)
+        displayName: 'Fetch Curl'
+      - task: ExtractFiles@1
+        inputs:
+          archiveFilePatterns: curl.zip
+          cleanDestinationFolder: false
+        displayName: 'Extract Curl'
+      - script: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\VsDevCmd.bat" -host_arch=amd64 -arch=amd64
+          nmake /f Makefile.win
+        displayName: 'Build'
+      - script: test
+        displayName: 'Test'
+      - task: CopyFiles@2
+        inputs:
+          targetFolder: $(Build.ArtifactStagingDirectory)
+          sourceFolder: $(System.DefaultWorkingDirectory)
+          contents: 'ldapi.dll'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          artifactName: library

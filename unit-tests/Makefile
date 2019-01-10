@@ -6,6 +6,12 @@ COBJS=$(CSRCS:.c=.o)
 
 LIBS=-lcurl -lpthread -lm
 
+UNAME := $(shell uname)
+
+ifeq ($(UNAME),Darwin)
+	LIBS+= -framework CoreFoundation -framework IOKit
+endif
+
 TESTS=test-store.test test-hooks.test test-userencoding.test test-deviceid.test
 
 all: run-tests
