@@ -20,3 +20,12 @@ jobs:
         displayName: 'Build'
       - script: test
         displayName: 'Test'
+      - task: CopyFiles@2
+        inputs:
+          targetFolder: $(Build.ArtifactStagingDirectory)
+          sourceFolder: $(System.DefaultWorkingDirectory)
+          contents: 'ldapi.dll'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          artifactName: library
