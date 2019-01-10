@@ -8,7 +8,7 @@ Quick setup (POSIX)
 
 The C / C++ SDK requires a POSIX environment, and assumes that both `libcurl` and `libpthread` are installed.
 
-Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
 
 You can get the required dependencies on Ubuntu Linux with:
 
@@ -21,7 +21,7 @@ Quick setup (Windows)
 
 Building the SDK requires that the Visual Studio C compiler be installed. The SDK also requires libcurl.
 
-Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-sdk/releases) page.
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client/releases) page.
 
 You can obtain the libcurl dependency at [curl.haxx.se](https://curl.haxx.se/download/curl-7.59.0.zip). You will need to extract curl and then update `Makefile.win` with the path you saved it to. The Makefile will automatically build curl for you.
 
