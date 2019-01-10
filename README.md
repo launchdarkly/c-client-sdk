@@ -1,7 +1,5 @@
-LaunchDarkly SDK [BETA] for C / C++
+LaunchDarkly SDK for C / C++
 ===================================
-
-*Warning:* This software is *beta* software and should not be used in a production environment until version 1.0.
 
 The LaunchDarkly C / C++ SDK is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
 
@@ -75,13 +73,6 @@ You'll also want to ensure that the client is initialized before checking the fl
 ```C
 initialized = LDClientIsInitialized(client);
 ```
-
-Unimplemented features and known bugs
--------------------------------------
-There are several unimplemented features and known bugs. We intend to address all of these before our first non-beta release.
-
-* Multiple clients: It is currently not safe to create more than one LDClient instance per application.
-* Cross-platform continuous integration: We have not yet set up a full cross-platform CI suite. You may encounter problems building the SDK on particular platforms. If you run into any issues building the SDK, please reach out, and we'll prioritize addressing your issues.
 
 Learn more
 -----------
