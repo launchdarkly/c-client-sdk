@@ -25,6 +25,11 @@ jobs:
           targetFolder: $(Build.ArtifactStagingDirectory)
           sourceFolder: $(System.DefaultWorkingDirectory)
           contents: 'ldapi.dll'
+      - task: CopyFiles@2
+        inputs:
+          targetFolder: $(Build.ArtifactStagingDirectory)
+          sourceFolder: $(System.DefaultWorkingDirectory)
+          contents: 'ldapi.lib'
       - task: PublishBuildArtifacts@1
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)'
