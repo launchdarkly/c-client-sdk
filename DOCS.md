@@ -103,6 +103,12 @@ void LDConfigSetProxyURI(LDConfig *config, const char *uri);
 
 Set the proxy server used for connecting to LaunchDarkly. By default no proxy is used. The URI string should be of the form `socks5://127.0.0.1:9050`. You may read more about how this SDK handles proxy servers by reading the [libcurl](https://curl.haxx.se) documentation on the subject [here](https://ec.haxx.se/libcurl-proxies.html).
 
+```C
+LDConfigSetUseEvaluationReasons(LDConfig *config, bool usereasons);
+```
+
+Decide whether the client should fetch feature flag evaluation explanations from LaunchDarkly.
+
 ## Users
 
 ```C
@@ -278,6 +284,34 @@ LDNode *LDJSONVariation(LDClient *client, const char *featurekey, const LDNode *
 Ask for a JSON variation, returned as a parsed tree of LDNodes. You must free the result with `LDNodeFree`. See also `LDNodeLookup`.
 
 ```C
+bool LDBoolVariationDetail(LDClient *client, const char *featurekey, bool defaultvalue, LDVariationDetails *details);
+int LDIntVariationDetail(LDClient *client, const char *featurekey, int defaultvalue, LDVariationDetails *details);
+double LDDoubleVariationDetail(LDClient *client, const char *featurekey, double defaultvalue, LDVariationDetails *details);
+char *LDStringVariationAllocDetail(LDClient *client, const char *featurekey, const char *defaultvalue, LDVariationDetails *details);
+char *LDStringVariationDetail(LDClient *client, const char *featurekey, const char *, char *defaultvalue, size_t, LDVariationDetails *details);
+LDNode *LDJSONVariationDetail(LDClient *client, const char *featurekey, const LDNode *defaultvalue, LDVariationDetails *details);
+```
+
+To receive evaluation explanations you must use the detail version of flag variations.
+
+```C
+LDVariationDetails details;
+bool value = LDBoolVariationDetail(client, "my-key", false, &details);
+LDFreeDetailContents(details);
+```
+
+To use detail variations you must provide a pointer to an `LDVariationDetails` struct that will be filled by the evaluation routine. The contents of `LDVariationDetails` must be freed with `LDFreeDetailContents` when they are no longer needed.
+
+```C
+typedef struct {
+    int variationIndex;
+    LDNode* reason;
+} LDVariationDetails;
+```
+
+The `LDVariationDetails` struct provides the flag index and evaluation reason. For more about the content of the "reason" object, see: https://docs.launchdarkly.com/v2.0/docs/evaluation-reasons.
+
+```C
 typedef void (*LDlistenerfn)(const char *featurekey, int update);
 bool LDClientRegisterFeatureFlagListener(LDClient *client, const char *featurekey, LDlistenerfn);
 bool LDClientUnregisterFeatureFlagListener(LDClient *client, const char *featurekey, LDlistenerfn);
@@ -367,6 +401,12 @@ LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
 ```
 
 Retrieve the element at index idx.
+
+```C
+char *LDHashToJSON(const LDNode *node)
+```
+
+Utility to convert a hash to a JSON object.
 
 ```C
 unsigned int LDNodeCount(const LDNode *hash);
@@ -496,6 +536,17 @@ Functions to ask for variations.
 ```
 
 Request a JSON variation. It must be freed.
+
+```C++
+        bool boolVariationDetail(const std::string &featurekey, bool defaultvalue, LDVariationDetails *details);
+        int intVariationDetail(const std::string &featurekey, int defaultvalue, LDVariationDetails *details);
+        double doubleVariationDetail(const std::string &featurekey, double defaultvalue, LDVariationDetails *details);
+        std::string stringVariationDetail(const std::string &featurekey, const std::string &defaultvalue, LDVariationDetails *details);
+        char *stringVariationDetail(const std::string &featurekey, const std::string &, char *defaultvalue, size_t, LDVariationDetails *details);
+        LDNode *JSONVariationDetail(const std::string &featurekey, const LDNode *defaultvalue, LDVariationDetails *details);
+```
+
+Detail version of each evaluation variation.
 
 ```C++
         LDNode *getLockedFlags();

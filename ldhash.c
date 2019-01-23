@@ -19,6 +19,7 @@ newnode(LDNode **const hash, const char *const key, const LDNodeType type)
     memset(node, 0, sizeof(*node));
     node->key = LDi_strdup(key);
     node->type = type;
+    node->variation = -1;
     HASH_ADD_KEYPTR(hh, *hash, node->key, strlen(node->key), node);
     return node;
 }
@@ -83,6 +84,7 @@ appendnode(LDNode **const array, const LDNodeType type)
     memset(node, 0, sizeof(*node));
     node->idx = HASH_COUNT(*array);
     node->type = type;
+    node->variation = -1;
     HASH_ADD_INT(*array, idx, node);
     return node;
 }
@@ -183,6 +185,10 @@ LDi_hashtoversionedjson(const LDNode *const hash)
             cJSON_AddNumberToObject(val, "flagVersion", node->flagversion);
         }
 
+        if (node->reason) {
+            cJSON_AddItemToObject(val, "reason", LDi_hashtojson(node->reason));
+        }
+
         cJSON_AddItemToObject(json, node->key, val);
     }
 
@@ -279,7 +285,7 @@ jsontoarray(const cJSON *const json)
 {
     LDNode *array = NULL;
 
-    for (cJSON *item = json->child; item; item = item->next) {
+    for (const cJSON *item = json->child; item; item = item->next) {
         switch (item->type) {
         case cJSON_False:
             LDNodeAppendBool(&array, false);
@@ -317,44 +323,15 @@ LDi_jsontohash(const cJSON *const json, const int flavor)
         }
         const char *key = item->string;
         int version = 0;
-        int variation = 0;
+        int variation = -1;
         double track = 0;
         int flagversion = 0;
+        LDNode* reason = NULL;
 
         const cJSON *valueitem = item;
-        switch (flavor) {
-        case 0:
-            /* plain json, no special handling */
-            break;
-        case 1:
-            /* versioned, value is hiding one level down */
-            /* grab the version first */
-            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
-                if (strcmp(valueitem->string, "version") == 0) {
-                    version = (int)valueitem->valuedouble;
-                }
-                if (strcmp(valueitem->string, "flagVersion") == 0) {
-                    flagversion = (int)valueitem->valuedouble;
-                }
-                if (strcmp(valueitem->string, "variation") == 0) {
-                    variation = (int)valueitem->valuedouble;
-                }
-                if (strcmp(valueitem->string, "debugEventsUntilDate") == 0) {
-                    track = valueitem->valuedouble;
-                }
-                if (strcmp(valueitem->string, "trackEvents") == 0) {
-                    if (valueitem->type == cJSON_True)
-                        track = 1;
-                }
-            }
-            for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
-                if (strcmp(valueitem->string, "value") == 0) {
-                    break;
-                }
-            }
-            break;
-        case 2:
-            /* patch, the key is also hiding one level down */
+
+        // versioned, patch
+        if (flavor == 1 || flavor == 2) {
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
                 if (strcmp(valueitem->string, "key") == 0) {
                     key = valueitem->valuestring;
@@ -366,14 +343,26 @@ LDi_jsontohash(const cJSON *const json, const int flavor)
                     flagversion = (int)valueitem->valuedouble;
                 }
                 if (strcmp(valueitem->string, "variation") == 0) {
-                    variation = (int)valueitem->valuedouble;
+                    if (cJSON_IsNumber(valueitem)) {
+                        variation = (int)valueitem->valuedouble;
+                    } else if (cJSON_IsNull(valueitem)) {
+                        variation = -1;
+                    } else {
+                        LDi_log(LD_LOG_ERROR, "variation not number or null");
+                        variation = -1;
+                    }
                 }
                 if (strcmp(valueitem->string, "debugEventsUntilDate") == 0) {
                     track = valueitem->valuedouble;
                 }
                 if (strcmp(valueitem->string, "trackEvents") == 0) {
-                    if (valueitem->type == cJSON_True)
+                    if (valueitem->type == cJSON_True) {
                         track = 1;
+                    }
+                }
+                if (strcmp(valueitem->string, "reason") == 0) {
+                    LD_ASSERT(cJSON_IsObject(valueitem));
+                    reason = LDi_jsontohash(valueitem, 0);
                 }
             }
             for (valueitem = item->child; valueitem; valueitem = valueitem->next) {
@@ -381,7 +370,6 @@ LDi_jsontohash(const cJSON *const json, const int flavor)
                     break;
                 }
             }
-            break;
         }
 
         LDNode *node = NULL;
@@ -401,7 +389,7 @@ LDi_jsontohash(const cJSON *const json, const int flavor)
                 node = LDNodeAddString(&hash, key, valueitem->valuestring);
                 break;
             case cJSON_Array: {
-                LDNode *array = jsontoarray(valueitem);
+                LDNode *const array = jsontoarray(valueitem);
                 node = LDNodeAddArray(&hash, key, array);
                 break;
             }
@@ -421,6 +409,7 @@ LDi_jsontohash(const cJSON *const json, const int flavor)
         node->variation = variation;
         node->track = track;
         node->flagversion = flagversion;
+        node->reason = reason;
 
         if (flavor == 2) {
             /* stop */
@@ -478,6 +467,11 @@ LDNodeFromJSON(const char *const text)
 
     cJSON_Delete(json);
     return output;
+}
+
+char *LDHashToJSON(const LDNode *const node)
+{
+    return LDi_hashtostring(node, false);
 }
 
 LDNode*
@@ -558,6 +552,8 @@ freenode(LDNode *const node, const bool freekey)
         /* other cases have no dynamic memory */
         break;
     }
+
+    LDi_freehash(node->reason);
 
     LDFree(node);
 }
