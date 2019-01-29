@@ -36,6 +36,8 @@ Once integrated, you can follow these steps to initialize a client instance:
 
 ```C
 #include "ldapi.h"
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Flaunchdarkly%2Fc-client.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Flaunchdarkly%2Fc-client?ref=badge_shield)
+
 ```
 
 2. Create a new LDClient instance and user with your SDK key:
@@ -112,3 +114,7 @@ About LaunchDarkly
     * [docs.launchdarkly.com](http://docs.launchdarkly.com/  "LaunchDarkly Documentation") for our documentation and SDKs
     * [apidocs.launchdarkly.com](http://apidocs.launchdarkly.com/  "LaunchDarkly API Documentation") for our API documentation
     * [blog.launchdarkly.com](http://blog.launchdarkly.com/  "LaunchDarkly Blog Documentation") for the latest product updates
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Flaunchdarkly%2Fc-client.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Flaunchdarkly%2Fc-client?ref=badge_large)
