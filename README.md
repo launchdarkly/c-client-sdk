@@ -77,6 +77,8 @@ initialized = LDClientIsInitialized(client);
 Learn more
 -----------
 
+The full API reference to the types and functions in the SDK is in [DOCS.md](https://docs.launchdarkly.com/v2.0/docs/evaluation-reasons).
+
 Check out our [documentation](http://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](http://docs.launchdarkly.com/v2.0/docs/c-sdk-reference).
 
 Testing
