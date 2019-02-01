@@ -89,13 +89,13 @@ LDi_usertojson(LDClient *const client, LDUser *const lduser, const bool redact)
 
     cJSON *hidden = NULL;
 
-    #define addstring(field)                                                     \
-        if (lduser->field) {                                                    \
-            if (redact && isPrivateAttr(client, lduser, #field)) {              \
-                addHidden(&hidden, #field);                                     \
+    #define addstring(field)                                                   \
+        if (lduser->field) {                                                   \
+            if (redact && isPrivateAttr(client, lduser, #field)) {             \
+                addHidden(&hidden, #field);                                    \
             }                                                                  \
             else {                                                             \
-                cJSON_AddStringToObject(json, #field, lduser->field);            \
+                cJSON_AddStringToObject(json, #field, lduser->field);          \
             }                                                                  \
         }                                                                      \
 

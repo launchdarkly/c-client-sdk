@@ -251,6 +251,14 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         }
     }
 
+    if (client->config->useReasons) {
+        const size_t len = strlen(url);
+        if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
+            free(jsonuser);
+            LDi_log(LD_LOG_ERROR, "snprintf useReason failed"); return;
+        }
+    }
+
     if (!prepareShared(url, client->config, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
         free(jsonuser);
         return;
@@ -365,6 +373,14 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         if (status < 0) {
             free(jsonuser);
             LDi_log(LD_LOG_ERROR, "snprintf !usereport failed"); return NULL;
+        }
+    }
+
+    if (client->config->useReasons) {
+        const size_t len = strlen(url);
+        if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
+            free(jsonuser);
+            LDi_log(LD_LOG_ERROR, "snprintf useReason failed"); return NULL;
         }
     }
 

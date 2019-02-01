@@ -17,6 +17,7 @@ EXPORTS
    LDConfigSetUseReport
    LDConfigAddPrivateAttribute
    LDConfigSetProxyURI
+   LDConfigSetUseEvaluationReasons
 
    LDClientGet
    LDClientInit
@@ -67,6 +68,15 @@ EXPORTS
    LDStringVariation
    LDJSONVariation
 
+   LDBoolVariationDetail
+   LDIntVariationDetail
+   LDDoubleVariationDetail
+   LDStringVariationAllocDetail
+   LDStringVariationDetail
+   LDJSONVariationDetail
+
+   LDFreeDetailContents
+
    LDFree
    LDAlloc
    LD_allocations
@@ -88,6 +98,7 @@ EXPORTS
    LDNodeAppendString
    LDNodeIndex
    LDCloneArray
+   LDHashToJSON
 
    LDNodeToJSON
    LDNodeFromJSON

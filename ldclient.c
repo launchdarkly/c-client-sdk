@@ -56,6 +56,7 @@ LDConfigNew(const char *const mobileKey)
     config->privateAttributeNames = NULL;
     config->streaming = true;
     config->useReport = false;
+    config->useReasons = false;
     config->proxyURI = NULL;
 
     return config;
@@ -129,6 +130,11 @@ void LDConfigSetStreamURI(LDConfig *const config, const char *const uri)
 void LDConfigSetUseReport(LDConfig *const config, const bool report)
 {
     LD_ASSERT(config); config->useReport = report;
+}
+
+void LDConfigSetUseEvaluationReasons(LDConfig *const config, const bool reasons)
+{
+    LD_ASSERT(config); config->useReasons = reasons;
 }
 
 void LDConfigSetProxyURI(LDConfig *const config, const char *const uri)
@@ -524,13 +530,31 @@ LDAllFlags(LDClient *const client)
  * a block of functions to look up feature flags
  */
 
-bool
-LDBoolVariation(LDClient *const client, const char *const key, const bool fallback)
+static void
+fillDetails(const LDNode *const node, LDVariationDetails *const details, const LDNodeType type)
 {
-    LD_ASSERT(client); LD_ASSERT(key);
+    if (node) {
+        if (node->type == type || node->type == LDNodeNone) {
+            details->reason = LDCloneHash(node->reason);
+            details->variationIndex = node->variation;
+        } else {
+            details->reason = LDNodeCreateHash();
+            details->variationIndex = -1;
+            LDNodeAddString(&details->reason, "kind", "ERROR");
+            LDNodeAddString(&details->reason, "errorKind", "WRONG_TYPE");
+        }
+    } else {
+        details->reason = LDNodeCreateHash();
+        details->variationIndex = -1;
+        LDNodeAddString(&details->reason, "kind", "ERROR");
+        LDNodeAddString(&details->reason, "errorKind", "FLAG_NOT_FOUND");
+    }
+}
 
+static bool
+LDi_BoolNode(LDClient *const client, const char *const key, const bool fallback, LDNode **const selected)
+{
     bool result;
-    LDi_rdlock(&client->clientLock);
 
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
@@ -541,19 +565,45 @@ LDBoolVariation(LDClient *const client, const char *const key, const bool fallba
     }
 
     LDi_recordfeature(client, client->user, node, key, LDNodeBool,
-        (double)result, NULL, NULL, (double)fallback, NULL, NULL);
+        (double)result, NULL, NULL, (double)fallback, NULL, NULL, (bool)selected);
 
-    LDi_rdunlock(&client->clientLock);
+    if (selected) { *selected = node; }
+
     return result;
 }
 
-int
-LDIntVariation(LDClient *const client, const char *const key, const int fallback)
+bool
+LDBoolVariationDetail(LDClient *const client, const char *const key,
+    const bool fallback, LDVariationDetails *const details)
+{
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+
+    LDi_rdlock(&client->clientLock);
+    LDNode *selected = NULL;
+    const bool value = LDi_BoolNode(client, key, fallback, &selected);
+    fillDetails(selected, details, LDNodeBool);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+bool
+LDBoolVariation(LDClient *const client, const char *const key, const bool fallback)
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    int result;
     LDi_rdlock(&client->clientLock);
+    const bool value = LDi_BoolNode(client, key, fallback, NULL);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+static int
+LDi_IntNode(LDClient *const client, const char *const key,
+    const int fallback, LDNode **const selected)
+{
+    int result;
 
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
@@ -564,20 +614,45 @@ LDIntVariation(LDClient *const client, const char *const key, const int fallback
     }
 
     LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
-        (double)result, NULL, NULL, (double)fallback, NULL, NULL);
+        (double)result, NULL, NULL, (double)fallback, NULL, NULL, (bool)selected);
 
-    LDi_rdunlock(&client->clientLock);
+    if (selected) { *selected = node; }
 
     return result;
 }
 
-double
-LDDoubleVariation(LDClient *const client, const char *const key, const double fallback)
+int
+LDIntVariationDetail(LDClient *const client, const char *const key,
+    const int fallback, LDVariationDetails *const details)
+{
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+
+    LDi_rdlock(&client->clientLock);
+    LDNode *selected = NULL;
+    const int value = LDi_IntNode(client, key, fallback, &selected);
+    fillDetails(selected, details, LDNodeNumber);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+int
+LDIntVariation(LDClient *const client, const char *const key, const int fallback)
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    double result;
     LDi_rdlock(&client->clientLock);
+    const int value = LDi_IntNode(client, key, fallback, NULL);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+double
+LDi_DoubleNode(LDClient *const client, const char *const key,
+    const double fallback, LDNode **const selected)
+{
+    double result;
 
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
@@ -588,21 +663,45 @@ LDDoubleVariation(LDClient *const client, const char *const key, const double fa
     }
 
     LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
-        result, NULL, NULL, fallback, NULL, NULL);
+        result, NULL, NULL, fallback, NULL, NULL, (bool)selected);
 
-    LDi_rdunlock(&client->clientLock);
+    if (selected) { *selected = node; }
 
     return result;
 }
 
-char *
-LDStringVariation(LDClient *const client, const char *const key,
-    const char *const fallback, char *const buffer, const size_t space)
+double
+LDDoubleVariationDetail(LDClient *const client, const char *const key,
+    const double fallback, LDVariationDetails *const details)
 {
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
 
-    const char *result;
     LDi_rdlock(&client->clientLock);
+    LDNode *selected = NULL;
+    const double value = LDi_DoubleNode(client, key, fallback, &selected);
+    fillDetails(selected, details, LDNodeNumber);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+double
+LDDoubleVariation(LDClient *const client, const char *const key, const double fallback)
+{
+    LD_ASSERT(client); LD_ASSERT(key);
+
+    LDi_rdlock(&client->clientLock);
+    const double value = LDi_DoubleNode(client, key, fallback, NULL);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+static char *
+LDi_StringNode(LDClient *const client, const char *const key,
+    const char *const fallback, char *const buffer, const size_t space, LDNode **const selected)
+{
+    const char *result;
 
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
@@ -620,20 +719,46 @@ LDStringVariation(LDClient *const client, const char *const key,
     buffer[len] = 0;
 
     LDi_recordfeature(client, client->user, node, key, LDNodeString,
-        0.0, result, NULL, 0.0, fallback, NULL);
+        0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
 
-    LDi_rdunlock(&client->clientLock);
+    if (selected) { *selected = node; }
 
     return buffer;
 }
 
 char *
-LDStringVariationAlloc(LDClient *const client, const char *const key, const char *const fallback)
+LDStringVariationDetail(LDClient *const client, const char *const key,
+    const char *const fallback, char *const buffer, const size_t space, LDVariationDetails *const details)
 {
-    LD_ASSERT(client); LD_ASSERT(key);
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));  LD_ASSERT(details);
 
-    const char *value;
     LDi_rdlock(&client->clientLock);
+    LDNode *selected = NULL;
+    char* const value = LDi_StringNode(client, key, fallback, buffer, space, &selected);
+    fillDetails(selected, details, LDNodeString);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+char *
+LDStringVariation(LDClient *const client, const char *const key,
+    const char *const fallback, char *const buffer, const size_t space)
+{
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));
+
+    LDi_rdlock(&client->clientLock);
+    char* const value = LDi_StringNode(client, key, fallback, buffer, space, NULL);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+static char *
+LDi_StringAllocNode(LDClient *const client, const char *const key,
+    const char *const fallback, LDNode **const selected)
+{
+    const char *value;
 
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
@@ -646,20 +771,45 @@ LDStringVariationAlloc(LDClient *const client, const char *const key, const char
     char *const result = LDi_strdup(value);
 
     LDi_recordfeature(client, client->user, node, key, LDNodeString,
-        0.0, result, NULL, 0.0, fallback, NULL);
+        0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
 
-    LDi_rdunlock(&client->clientLock);
+    if (selected) { *selected = node; }
 
     return result;
 }
 
-LDNode *
-LDJSONVariation(LDClient *const client, const char *const key, const LDNode *const fallback)
+char *
+LDStringVariationAllocDetail(LDClient *const client, const char *const key,
+    const char* fallback, LDVariationDetails *const details)
+{
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+
+    LDi_rdlock(&client->clientLock);
+    LDNode *selected = NULL;
+    char *const value = LDi_StringAllocNode(client, key, fallback, &selected);
+    fillDetails(selected, details, LDNodeString);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+char *
+LDStringVariationAlloc(LDClient *const client, const char *const key, const char* fallback)
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    LDNode *result;
     LDi_rdlock(&client->clientLock);
+    char *const value = LDi_StringAllocNode(client, key, fallback, NULL);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+static LDNode *
+LDi_JSONNode(LDClient *const client, const char *const key,
+    const LDNode *const fallback, LDNode **const selected)
+{
+    LDNode *result;
 
     LDNode *const node = LDNodeLookup(client->allFlags, key);
 
@@ -670,11 +820,38 @@ LDJSONVariation(LDClient *const client, const char *const key, const LDNode *con
     }
 
     LDi_recordfeature(client, client->user, node, key, LDNodeHash,
-        0.0, NULL, result, 0.0, NULL, fallback);
+        0.0, NULL, result, 0.0, NULL, fallback, (bool)selected);
 
-    LDi_rdunlock(&client->clientLock);
+    if (selected) { *selected = node; }
 
     return result;
+}
+
+LDNode *
+LDJSONVariationDetail(LDClient *const client, const char *const key,
+    const LDNode* const fallback, LDVariationDetails *const details)
+{
+    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+
+    LDi_rdlock(&client->clientLock);
+    LDNode *selected = NULL;
+    LDNode *const value = LDi_JSONNode(client, key, fallback, &selected);
+    fillDetails(selected, details, LDNodeHash);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
+}
+
+LDNode *
+LDJSONVariation(LDClient *const client, const char *const key, const LDNode *const fallback)
+{
+    LD_ASSERT(client); LD_ASSERT(key);
+
+    LDi_rdlock(&client->clientLock);
+    LDNode *const value = LDi_JSONNode(client, key, fallback, NULL);
+    LDi_rdunlock(&client->clientLock);
+
+    return value;
 }
 
 void
@@ -773,3 +950,8 @@ LDi_updatestatus(struct LDClient_i *const client, const LDStatus status)
    }
    LDi_condsignal(&client->initCond);
 };
+
+void LDFreeDetailContents(LDVariationDetails details)
+{
+    LDi_freehash(details.reason);
+}

@@ -221,7 +221,7 @@ collectSummary(LDClient *const client)
 void
 LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const res,
     const char *const feature, const LDNodeType type, const double n, const char *const s, LDNode *const m,
-    const double defaultn, const char *const defaults, const LDNode *const defaultm)
+    const double defaultn, const char *const defaults, const LDNode *const defaultm, const bool detail)
 {
     summarizeEvent(client, lduser, res, feature, type, n, s, m, defaultn, defaults, defaultm);
 
@@ -238,6 +238,10 @@ LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const re
 
     if (type == res->type) {
         cJSON_AddNumberToObject(json, "variation", res->variation);
+    }
+
+    if (detail && res->reason) {
+        cJSON_AddItemToObject(json, "reason", LDi_hashtojson(res->reason));
     }
 
     if (type == LDNodeNumber) {

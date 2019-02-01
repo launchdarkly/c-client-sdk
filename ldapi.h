@@ -56,11 +56,17 @@ typedef struct LDNode_i {
     int variation;
     int flagversion;
     double track;
+    struct LDNode_i* reason;
 #ifdef __cplusplus
     struct LDNode_i *lookup(const std::string &key);
     struct LDNode_i *index(unsigned int idx);
 #endif
 } LDNode;
+
+typedef struct {
+    int variationIndex;
+    struct LDNode_i* reason;
+} LDVariationDetails;
 
 typedef struct LDConfig_i LDConfig;
 
@@ -87,6 +93,7 @@ void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
 void LDConfigSetStreamURI(LDConfig *config, const char *uri);
 void LDConfigSetProxyURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
+void LDConfigSetUseEvaluationReasons(LDConfig *config, bool reasons);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
 
 /* must have already called LDClientInit to receive valid client */
@@ -143,8 +150,16 @@ char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
 char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
 LDNode *LDJSONVariation(struct LDClient_i *client, const char *key, const LDNode *);
 
+bool LDBoolVariationDetail(struct LDClient_i *, const char *, bool, LDVariationDetails *);
+int LDIntVariationDetail(struct LDClient_i *, const char *, int, LDVariationDetails *);
+double LDDoubleVariationDetail(struct LDClient_i *, const char *, double, LDVariationDetails *);
+char *LDStringVariationAllocDetail(struct LDClient_i *, const char *, const char *, LDVariationDetails *);
+char *LDStringVariationDetail(struct LDClient_i *, const char *, const char *, char *, size_t, LDVariationDetails *);
+LDNode *LDJSONVariationDetail(struct LDClient_i *client, const char *key, const LDNode *, LDVariationDetails *);
+
 void LDFree(void *);
 void *LDAlloc(size_t amt);
+void LDFreeDetailContents(LDVariationDetails details);
 
 /* functions for working with (JSON) nodes (aka hash tables) */
 LDNode *LDNodeCreateHash(void);
@@ -165,8 +180,9 @@ LDNode * LDNodeAppendString(LDNode **array, const char *s);
 LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
 LDNode *LDCloneArray(const LDNode *original);
 /* functions for converting nodes to / from JSON */
-char *LDNodeToJSON(const LDNode* node);
+char *LDNodeToJSON(const LDNode *node);
 LDNode *LDNodeFromJSON(const char *json);
+char *LDHashToJSON(const LDNode *node);
 
 void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 
@@ -214,8 +230,14 @@ class LDClient {
         double doubleVariation(const std::string &, double);
         std::string stringVariation(const std::string &, const std::string &);
         char *stringVariation(const std::string &, const std::string &, char *, size_t);
-
         LDNode *JSONVariation(const std::string &, const LDNode *);
+
+        bool boolVariationDetail(const std::string &, bool, LDVariationDetails *);
+        int intVariationDetail(const std::string &, int, LDVariationDetails *);
+        double doubleVariationDetail(const std::string &, double, LDVariationDetails *);
+        std::string stringVariationDetail(const std::string &, const std::string &, LDVariationDetails *);
+        char *stringVariationDetail(const std::string &, const std::string &, char *, size_t, LDVariationDetails *);
+        LDNode *JSONVariationDetail(const std::string &, const LDNode *, LDVariationDetails *);
 
         LDNode *getLockedFlags();
         void unlockFlags();
