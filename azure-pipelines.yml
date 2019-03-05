@@ -30,6 +30,14 @@ jobs:
           targetFolder: $(Build.ArtifactStagingDirectory)
           sourceFolder: $(System.DefaultWorkingDirectory)
           contents: 'ldapi.lib'
+      - task: PowerShell@2
+        inputs:
+          targetType: inline
+          script: |
+            Rename-Item -Path "ldapi.dll" -NewName "windows-vs-64bit-ldapi.dll"
+            Rename-Item -Path "ldapi.lib" -NewName "windows-vs-64bit-ldapi.lib"
+          workingDirectory: '$(Build.ArtifactStagingDirectory)'
+        displayName: 'Rename Artifacts'
       - task: PublishBuildArtifacts@1
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)'

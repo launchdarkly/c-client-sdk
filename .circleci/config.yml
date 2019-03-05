@@ -14,9 +14,9 @@ jobs:
           name: Copy Artifacts
           command: |
               mkdir -p /tmp/artifacts
-              cp libldapi.a /tmp/artifacts/
-              cp libldapi.so /tmp/artifacts/
-              cp libldapiplus.so /tmp/artifacts/
+              cp libldapi.a /tmp/artifacts/linux-gcc-64bit-libldapi.a
+              cp libldapi.so /tmp/artifacts/linux-gcc-64bit-libldapi.so
+              cp libldapiplus.so /tmp/artifacts/linux-gcc-64bit-libldapiplus.so
       - store_artifacts:
           path: /tmp/artifacts
 
@@ -31,9 +31,9 @@ jobs:
           name: Copy Artifacts
           command: |
               mkdir -p /tmp/artifacts
-              cp libldapi.a /tmp/artifacts/
-              cp libldapi.so /tmp/artifacts/
-              cp libldapiplus.so /tmp/artifacts/
+              cp libldapi.a /tmp/artifacts/osx-clang-64bit-libldapi.a
+              cp libldapi.so /tmp/artifacts/osx-clang-64bit-libldapi.so
+              cp libldapiplus.so /tmp/artifacts/osx-clang-64bit-libldapiplus.so
       - store_artifacts:
           path: /tmp/artifacts
 
