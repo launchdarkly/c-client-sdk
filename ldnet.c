@@ -121,7 +121,7 @@ prepareShared(const char *const url, LDConfig *const config, CURL **r_curl, stru
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headerauth"); goto error;
     }
 
-    const char *const headeragent = "User-Agent: CClient/0.1";
+    const char *const headeragent = "User-Agent: CClient/1.1.1";
     if (!(headers = curl_slist_append(headers, headeragent))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headeragent"); goto error;
     }
