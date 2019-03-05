@@ -70,6 +70,9 @@ LDi_bgeventsender(void *const v)
                 LDi_wrlock(&client->clientLock);
                 LDi_updatestatus(client, LDStatusFailed);
                 LDi_wrunlock(&client->clientLock);
+
+                LDi_log(LD_LOG_ERROR, "mobile key not authorized, event sending failed");
+
                 sendfailed = true; break;
             } else if (response == -1) {
                 if (sendfailed) {
@@ -153,6 +156,8 @@ LDi_bgfeaturepoller(void *const v)
             LDi_wrlock(&client->clientLock);
             LDi_updatestatus(client, LDStatusFailed);
             LDi_wrunlock(&client->clientLock);
+
+            LDi_log(LD_LOG_ERROR, "mobile key not authorized, polling failed");
         }
         if (!data) { continue; }
         if (LDi_clientsetflags(client, true, data, 1)) {
@@ -401,7 +406,7 @@ LDi_bgfeaturestreamer(void *const v)
             continue;
         }
 
-        LDi_rdunlock(&client->clientLock);
+        LDi_wrunlock(&client->clientLock);
 
         int response;
         /* this won't return until it disconnects */
@@ -411,6 +416,8 @@ LDi_bgfeaturestreamer(void *const v)
             LDi_wrlock(&client->clientLock);
             LDi_updatestatus(client, LDStatusFailed);
             LDi_wrunlock(&client->clientLock);
+
+            LDi_log(LD_LOG_ERROR, "mobile key not authorized, streaming failed");
             continue;
         } else if (response == -1) {
             retries++;
