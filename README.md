@@ -23,9 +23,9 @@ Building the SDK requires that the Visual Studio C compiler be installed. The SD
 
 Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client/releases) page.
 
-You can obtain the libcurl dependency at [curl.haxx.se](https://curl.haxx.se/download/curl-7.59.0.zip). You will need to extract curl and then update `Makefile.win` with the path you saved it to. The Makefile will automatically build curl for you.
+You can obtain the libcurl dependency at [curl.haxx.se](https://curl.haxx.se/download/curl-7.59.0.zip). You will need to extract curl and then update `Makefile.win` with the path you saved it to. The Makefile will automatically build curl for you. Ensure you edit `Makefile.win` to indicate if you want an `x64`, or `x86` build.
 
-Open a Visual Studio command prompt, navigate to the c-sdk directory, and run `nmake /f Makefile.win` to build the SDK libraries.
+Open a Visual Studio command prompt, navigate to the c-sdk directory, and run `nmake /f Makefile.win` to build the SDK libraries. Visual Studio command prompt can be configured for multiple environments. To ensure that you are using your intended tool chain you can launch an environment with: `call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\Tools\VsDevCmd.bat" -host_arch=amd64 -arch=amd64`, where `arch` is your target, `host_arch` is the platform you are building on, and the path is your path to `VsDevCmd.bat`. You will need to modify the above command for your specific setup.
 
 Getting started
 ---------------
