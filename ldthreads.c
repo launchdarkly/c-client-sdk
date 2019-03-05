@@ -401,7 +401,7 @@ LDi_bgfeaturestreamer(void *const v)
             continue;
         }
 
-        LDi_rdunlock(&client->clientLock);
+        LDi_wrunlock(&client->clientLock);
 
         int response;
         /* this won't return until it disconnects */
