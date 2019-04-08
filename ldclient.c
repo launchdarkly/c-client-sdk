@@ -369,6 +369,10 @@ LDClientClose(LDClient *const client)
         item = next;
     }
 
+    LDi_jointhread(client->eventThread);
+    LDi_jointhread(client->pollingThread);
+    LDi_jointhread(client->streamingThread);
+
     LDFree(client);
 
     globalClient = NULL;

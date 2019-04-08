@@ -11,6 +11,7 @@
 #ifndef _WINDOWS
 #define ld_thread_t pthread_t
 #define LDi_createthread(thread, fn, arg) pthread_create(thread, NULL, fn, arg)
+#define LDi_jointhread(thread) pthread_join(thread, NULL)
 
 #define ld_rwlock_t pthread_rwlock_t
 #define LD_RWLOCK_INIT PTHREAD_RWLOCK_INITIALIZER
@@ -39,6 +40,8 @@
 #else
 #define ld_thread_t HANDLE
 void LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg);
+#define LDi_jointhread(thread) WaitForSingleObject(thread, INFINITE)
+
 #define ld_rwlock_t SRWLOCK
 #define LD_RWLOCK_INIT SRWLOCK_INIT
 #define LDi_rwlockinit(lk) InitializeSRWLock(lk)
