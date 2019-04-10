@@ -16,11 +16,15 @@ EXPORTS
    LDConfigSetStreamURI
    LDConfigSetUseReport
    LDConfigAddPrivateAttribute
+   LDConfigAddSecondaryMobileKey
    LDConfigSetProxyURI
    LDConfigSetUseEvaluationReasons
+   LDConfigFree
 
    LDClientGet
    LDClientInit
+   LDClientGetForMobileKey
+
    LDUserNew
    LDUserSetAnonymous
    LDUserSetIP

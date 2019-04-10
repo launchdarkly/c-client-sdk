@@ -98,8 +98,10 @@ SocketCallback(void *const c, curlsocktype type, struct curl_sockaddr *const add
 
 /* returns false on failure, results left in clean state */
 static bool
-prepareShared(const char *const url, LDConfig *const config, CURL **r_curl, struct curl_slist **r_headers,
-    WriteCB headercb, void *const headerdata, WriteCB datacb, void *const data)
+prepareShared(const char *const url, const LDConfig *const config,
+    CURL **r_curl, struct curl_slist **r_headers, WriteCB headercb,
+    void *const headerdata, WriteCB datacb, void *const data,
+    const LDClient *const client)
 {
     CURL *const curl = curl_easy_init();
 
@@ -112,7 +114,7 @@ prepareShared(const char *const url, LDConfig *const config, CURL **r_curl, stru
     }
 
     char headerauth[256];
-    if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s", config->mobileKey) < 0) {
+    if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s", client->mobileKey) < 0) {
         LDi_log(LD_LOG_CRITICAL, "snprintf during Authorization header creation failed"); goto error;
     }
 
@@ -218,17 +220,19 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     streamdata.callback = cbdata; streamdata.lastdatatime = time(NULL); streamdata.client = client;
 
     LDi_rdlock(&client->clientLock);
-    char *const jsonuser = LDi_usertojsontext(client, client->user, false);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    char *const jsonuser = LDi_usertojsontext(client, client->shared->sharedUser, false);
+    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rdunlock(&client->clientLock);
+
     if (!jsonuser) {
-        LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed");
         return;
     }
-    LDi_rdunlock(&client->clientLock);
 
     char url[4096];
-    if (client->config->useReport) {
-        if (snprintf(url, sizeof(url), "%s/meval", client->config->streamURI) < 0) {
+    if (client->shared->sharedConfig->useReport) {
+        if (snprintf(url, sizeof(url), "%s/meval", client->shared->sharedConfig->streamURI) < 0) {
             free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed"); return;
         }
@@ -242,7 +246,8 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
             LDi_log(LD_LOG_ERROR, "LDi_base64_encode == NULL in LDi_readstream"); return;
         }
 
-        const int status = snprintf(url, sizeof(url), "%s/meval/%s", client->config->streamURI, b64text);
+        const int status = snprintf(url, sizeof(url), "%s/meval/%s",
+            client->shared->sharedConfig->streamURI, b64text);
         free(b64text);
 
         if (status < 0) {
@@ -251,7 +256,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         }
     }
 
-    if (client->config->useReasons) {
+    if (client->shared->sharedConfig->useReasons) {
         const size_t len = strlen(url);
         if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
             free(jsonuser);
@@ -259,14 +264,17 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         }
     }
 
-    if (!prepareShared(url, client->config, &curl, &headerlist, &WriteMemoryCallback, &headers, &StreamWriteCallback, &streamdata)) {
+    if (!prepareShared(url, client->shared->sharedConfig, &curl, &headerlist,
+        &WriteMemoryCallback, &headers, &StreamWriteCallback,
+        &streamdata, client))
+    {
         free(jsonuser);
         return;
     }
 
     free(jsonuser);
 
-    if (client->config->useReport) {
+    if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed");
             curl_easy_cleanup(curl); return;
@@ -343,17 +351,19 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
     LDi_rdlock(&client->clientLock);
-    char *const jsonuser = LDi_usertojsontext(client, client->user, false);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    char *const jsonuser = LDi_usertojsontext(client, client->shared->sharedUser, false);
+    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rdunlock(&client->clientLock);
+
     if (!jsonuser) {
-        LDi_rdunlock(&client->clientLock);
         LDi_log(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed");
         return NULL;
     }
-    LDi_rdunlock(&client->clientLock);
 
     char url[4096];
-    if (client->config->useReport) {
-        if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", client->config->appURI) < 0) {
+    if (client->shared->sharedConfig->useReport) {
+        if (snprintf(url, sizeof(url), "%s/msdk/evalx/user", client->shared->sharedConfig->appURI) < 0) {
             free(jsonuser);
             LDi_log(LD_LOG_CRITICAL, "snprintf usereport failed"); return NULL;
         }
@@ -367,7 +377,8 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
             LDi_log(LD_LOG_CRITICAL, "LDi_base64_encode == NULL in LDi_fetchfeaturemap"); return NULL;
         }
 
-        const int status = snprintf(url, sizeof(url), "%s/msdk/evalx/users/%s", client->config->appURI, b64text);
+        const int status = snprintf(url, sizeof(url), "%s/msdk/evalx/users/%s",
+            client->shared->sharedConfig->appURI, b64text);
         free(b64text);
 
         if (status < 0) {
@@ -376,7 +387,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         }
     }
 
-    if (client->config->useReasons) {
+    if (client->shared->sharedConfig->useReasons) {
         const size_t len = strlen(url);
         if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
             free(jsonuser);
@@ -384,14 +395,16 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
         }
     }
 
-    if (!prepareShared(url, client->config, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    if (!prepareShared(url, client->shared->sharedConfig, &curl, &headerlist,
+        &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data, client))
+    {
         free(jsonuser);
         return NULL;
     }
 
     free(jsonuser);
 
-    if (client->config->useReport) {
+    if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed");
             curl_easy_cleanup(curl); return NULL;
@@ -438,12 +451,14 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
     char url[4096];
-    if (snprintf(url, sizeof(url), "%s/mobile", client->config->eventsURI) < 0) {
+    if (snprintf(url, sizeof(url), "%s/mobile", client->shared->sharedConfig->eventsURI) < 0) {
         LDi_log(LD_LOG_CRITICAL, "snprintf config->eventsURI failed");
         return;
     }
 
-    if (!prepareShared(url, client->config, &curl, &headerlist, &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data)) {
+    if (!prepareShared(url, client->shared->sharedConfig, &curl, &headerlist,
+        &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data, client))
+    {
         return;
     }
 

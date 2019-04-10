@@ -82,8 +82,8 @@ struct listener {
 };
 
 struct LDClient_i {
-    LDConfig *config;
-    LDUser *user;
+    struct LDGlobal_i *shared;
+    char *mobileKey;
     LDNode *allFlags;
     ld_rwlock_t clientLock;
     bool offline;
@@ -113,6 +113,7 @@ struct LDClient_i {
     /* init cond */
     ld_cond_t initCond;
     ld_mutex_t initCondMtx;
+    UT_hash_handle hh;
 };
 
 struct LDConfig_i {
@@ -128,6 +129,7 @@ struct LDConfig_i {
     bool offline;
     int pollingIntervalMillis;
     LDNode *privateAttributeNames;
+    LDNode *secondaryMobileKeys;
     bool streaming;
     char *streamURI;
     bool useReport;
@@ -149,6 +151,14 @@ struct LDUser_i {
     LDNode *privateAttributeNames;
 };
 
+struct LDGlobal_i {
+    LDClient *clientTable;
+    LDClient *primaryClient;
+    LDConfig *sharedConfig;
+    LDUser *sharedUser;
+    ld_rwlock_t sharedUserLock;
+};
+
 struct IdentifyEvent {
     char *kind;
     char *key;
@@ -162,7 +172,8 @@ struct FeatureRequestEvent {
     LDNode Default;
 };
 
-LDClient *LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli);
+LDClient *LDi_clientinitisolated(struct LDGlobal_i *shared,
+    const char *mobileKey);
 
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);

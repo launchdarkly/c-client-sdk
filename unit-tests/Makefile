@@ -1,4 +1,4 @@
-CC=gcc -fPIC -std=c99 -D_XOPEN_SOURCE=600 -I.. -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
+CC=gcc -g3 -fPIC -std=c99 -D_XOPEN_SOURCE=600 -I.. -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
 CXX=g++ -fPIC -D_XOPEN_SOURCE=600
 UPCSRCS=ldclient.c ldutil.c lduser.c ldthreads.c ldlog.c ldnet.c ldevents.c ldhash.c ldstore.c base64.c cJSON.c
 CSRCS=$(addprefix ../,$(UPCSRCS))
@@ -12,7 +12,7 @@ ifeq ($(UNAME),Darwin)
 	LIBS+= -framework CoreFoundation -framework IOKit
 endif
 
-TESTS=test-store.test test-hooks.test test-userencoding.test test-deviceid.test
+TESTS=test-store.test test-hooks.test test-userencoding.test test-deviceid.test test-multienv.test
 
 all: run-tests
 

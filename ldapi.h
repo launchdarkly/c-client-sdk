@@ -11,6 +11,8 @@
 extern "C" {
 #endif
 
+#define LDPrimaryEnvironmentName "default"
+
 enum ld_log_level {
     LD_LOG_FATAL = 0,
     LD_LOG_CRITICAL,
@@ -77,7 +79,7 @@ struct LDClient_i;
 /* returns true on success */
 bool LDSetString(char **target, const char *value);
 
-LDConfig *LDConfigNew(const char *);
+LDConfig *LDConfigNew(const char *mobileKey);
 void LDConfigSetAllAttributesPrivate(LDConfig *config, bool allprivate);
 void LDConfigSetBackgroundPollingIntervalMillis(LDConfig *config, int millis);
 void LDConfigSetAppURI(LDConfig *config, const char *uri);
@@ -95,9 +97,12 @@ void LDConfigSetProxyURI(LDConfig *config, const char *uri);
 void LDConfigSetUseReport(LDConfig *config, bool report);
 void LDConfigSetUseEvaluationReasons(LDConfig *config, bool reasons);
 void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
+bool LDConfigAddSecondaryMobileKey(LDConfig *config, const char *name, const char *key);
+void LDConfigFree(LDConfig *config);
 
 /* must have already called LDClientInit to receive valid client */
 struct LDClient_i *LDClientGet();
+struct LDClient_i *LDClientGetForMobileKey(const char *keyName);
 /* create the global client singleton */
 struct LDClient_i *LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 

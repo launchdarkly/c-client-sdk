@@ -32,10 +32,7 @@ LDi_bgeventsender(void *const v)
             return THREAD_RETURN_DEFAULT;
         }
 
-        int ms = 30000;
-        if (client->config) {
-            ms = client->config->eventsFlushIntervalMillis;
-        }
+        int ms = client->shared->sharedConfig->eventsFlushIntervalMillis;
         LDi_wrunlock(&client->clientLock);
 
         if (status != LDStatusShuttingdown) {
@@ -114,21 +111,13 @@ LDi_bgfeaturepoller(void *const v)
             return THREAD_RETURN_DEFAULT;
         }
 
-        /*
-         * the logic here is a bit tangled. we start with a default ms poll interval.
-         * we skip polling if the client is dead or offline.
-         * if we have a config, we revise those values.
-         */
-        int ms = 3000000;
         bool skippolling = client->offline;
-        if (client->config) {
-            ms = client->config->pollingIntervalMillis;
-            if (client->background) {
-                ms = client->config->backgroundPollingIntervalMillis;
-                skippolling = skippolling || client->config->disableBackgroundUpdating;
-            } else {
-                skippolling = skippolling || client->config->streaming;
-            }
+        int ms = client->shared->sharedConfig->pollingIntervalMillis;
+        if (client->background) {
+            ms = client->shared->sharedConfig->backgroundPollingIntervalMillis;
+            skippolling = skippolling || client->shared->sharedConfig->disableBackgroundUpdating;
+        } else {
+            skippolling = skippolling || client->shared->sharedConfig->streaming;
         }
 
         /* this triggers the first time the thread runs, so we don't have to wait */
@@ -172,7 +161,9 @@ void
 LDi_onstreameventput(LDClient *const client, const char *const data)
 {
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_savedata("features", client->user->key, data);
+        LDi_rdlock(&client->shared->sharedUserLock);
+        LDi_savedata("features", client->shared->sharedUser->key, data);
+        LDi_rdunlock(&client->shared->sharedUserLock);
     }
 }
 
@@ -268,7 +259,9 @@ onstreameventping(LDClient *const client)
     }
     if (!data) { return; }
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_savedata("features", client->user->key, data);
+        LDi_rdlock(&client->shared->sharedUserLock);
+        LDi_savedata("features", client->shared->sharedUser->key, data);
+        LDi_rdunlock(&client->shared->sharedUserLock);
     }
     free(data);
 }
@@ -397,7 +390,7 @@ LDi_bgfeaturestreamer(void *const v)
             return THREAD_RETURN_DEFAULT;
         }
 
-        if (!client->config->streaming || client->offline || client->background) {
+        if (!client->shared->sharedConfig->streaming || client->offline || client->background) {
             LDi_wrunlock(&client->clientLock);
             int ms = 30000;
             LDi_mtxenter(&client->condMtx);
