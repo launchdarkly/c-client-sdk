@@ -577,7 +577,7 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
         return false;
     }
 
-    if (payload->type != cJSON_Object) {
+    if (!cJSON_IsObject(payload)) {
         LDi_log(LD_LOG_ERROR, "LDi_clientsetflags did not get object");
         cJSON_Delete(payload);
         return false;

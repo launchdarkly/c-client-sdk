@@ -171,7 +171,7 @@ static void
 applypatch(LDClient *const client, cJSON *const payload, const bool isdelete)
 {
     LDNode *patch = NULL;
-    if (payload->type == cJSON_Object) {
+    if (cJSON_IsObject(payload)) {
         patch = LDi_jsontohash(payload, 2);
     }
     cJSON_Delete(payload);
