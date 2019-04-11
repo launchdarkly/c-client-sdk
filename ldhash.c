@@ -114,6 +114,22 @@ LDNodeAppendString(LDNode **const array, const char *const s)
 }
 
 LDNode *
+LDNodeAppendArray(LDNode **const array, LDNode *const a)
+{
+    LDNode *const node = appendnode(array, LDNodeArray);
+    node->a = a;
+    return node;
+}
+
+LDNode *
+LDNodeAppendHash(LDNode **const array, LDNode *const h)
+{
+    LDNode *const node = appendnode(array, LDNodeHash);
+    node->h = h;
+    return node;
+}
+
+LDNode *
 LDNodeLookup(const LDNode *const hash, const char *const key)
 {
     LDNode *res = NULL;
@@ -296,6 +312,14 @@ jsontoarray(const cJSON *const json)
             LDNodeAppendNumber(&array, item->valuedouble);
         } else if (cJSON_IsString(item)) {
             LDNodeAppendString(&array, item->valuestring);
+        } else if (cJSON_IsArray(item)) {
+            LDNode *const child = jsontoarray(item);
+            LD_ASSERT(child);
+            LDNodeAppendArray(&array, child);
+        } else if (cJSON_IsObject(item)) {
+            LDNode *const child = LDi_jsontohash(item, 0);
+            LD_ASSERT(child);
+            LDNodeAppendHash(&array, child);
         } else {
             LDi_log(LD_LOG_FATAL, "jsontoarray unhandled case");
             abort();

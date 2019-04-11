@@ -182,6 +182,8 @@ LDNode *LDNodeCreateArray(void);
 LDNode * LDNodeAppendBool(LDNode **array, bool b);
 LDNode * LDNodeAppendNumber(LDNode **array, double n);
 LDNode * LDNodeAppendString(LDNode **array, const char *s);
+LDNode * LDNodeAppendArray(LDNode **array, LDNode *a);
+LDNode * LDNodeAppendHash(LDNode **array, LDNode *h);
 LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
 LDNode *LDCloneArray(const LDNode *original);
 /* functions for converting nodes to / from JSON */
