@@ -1,5 +1,5 @@
 AR=ar rcs
-SHAREDFLAGS=-fPIC -D_XOPEN_SOURCE=600 -Wall -Wextra -Wno-unused-parameter
+SHAREDFLAGS=-fPIC -D_XOPEN_SOURCE=600 -Wall -Wextra -Wno-unused-parameter -fvisibility=hidden
 CFLAGS=$(SHAREDFLAGS) -std=c99
 CXXFLAGS=$(SHAREDFLAGS)
 CC=gcc
@@ -35,7 +35,7 @@ libldapi.a: ldapi.h ldinternal.h $(COBJS)
 	$(AR) libldapi.a $(COBJS)
 
 libldapi.so: ldapi.h ldinternal.h $(COBJS)
-	$(CC) -o libldapi.so -fPIC -shared $(SRCS) $(LIBS)
+	$(CC) -o libldapi.so -fPIC -shared $(COBJS) $(LIBS)
 
 libldapiplus.so: ldapi.h ldinternal.h $(COBJS) $(CXXOBJS)
 	$(CXX) -o libldapiplus.so -fPIC -shared $(COBJS) $(CXXOBJS) $(LIBS)
