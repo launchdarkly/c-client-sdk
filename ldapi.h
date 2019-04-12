@@ -1,15 +1,21 @@
 #ifndef C_CLIENT_LDIAPI_H
 #define C_CLIENT_LDIAPI_H
 
-#include <stdbool.h>
-
-#include "uthash.h"
+#ifdef _WIN32
+    #define LD_EXPORT(x) __declspec(dllexport) x
+#else
+    #define LD_EXPORT(x) __attribute__((visibility("default"))) x
+#endif
 
 #ifdef __cplusplus
 #include <string>
 
 extern "C" {
 #endif
+
+#include <stdbool.h>
+
+#include "uthash.h"
 
 #define LDPrimaryEnvironmentName "default"
 
@@ -77,121 +83,121 @@ typedef struct LDUser_i LDUser;
 struct LDClient_i;
 
 /* returns true on success */
-bool LDSetString(char **target, const char *value);
+LD_EXPORT(bool) LDSetString(char **target, const char *value);
 
-LDConfig *LDConfigNew(const char *mobileKey);
-void LDConfigSetAllAttributesPrivate(LDConfig *config, bool allprivate);
-void LDConfigSetBackgroundPollingIntervalMillis(LDConfig *config, int millis);
-void LDConfigSetAppURI(LDConfig *config, const char *uri);
-void LDConfigSetConnectionTimeoutMillies(LDConfig *config, int millis);
-void LDConfigSetDisableBackgroundUpdating(LDConfig *config, bool disable);
-void LDConfigSetEventsCapacity(LDConfig *config, int capacity);
-void LDConfigSetEventsFlushIntervalMillis(LDConfig *config, int millis);
-void LDConfigSetEventsURI(LDConfig *config, const char *uri);
-void LDConfigSetMobileKey(LDConfig *config, const char *key);
-void LDConfigSetOffline(LDConfig *config, bool offline);
-void LDConfigSetStreaming(LDConfig *config, bool streaming);
-void LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
-void LDConfigSetStreamURI(LDConfig *config, const char *uri);
-void LDConfigSetProxyURI(LDConfig *config, const char *uri);
-void LDConfigSetUseReport(LDConfig *config, bool report);
-void LDConfigSetUseEvaluationReasons(LDConfig *config, bool reasons);
-void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
-bool LDConfigAddSecondaryMobileKey(LDConfig *config, const char *name, const char *key);
-void LDConfigFree(LDConfig *config);
+LD_EXPORT(LDConfig *) LDConfigNew(const char *mobileKey);
+LD_EXPORT(void) LDConfigSetAllAttributesPrivate(LDConfig *config, bool allprivate);
+LD_EXPORT(void) LDConfigSetBackgroundPollingIntervalMillis(LDConfig *config, int millis);
+LD_EXPORT(void) LDConfigSetAppURI(LDConfig *config, const char *uri);
+LD_EXPORT(void) LDConfigSetConnectionTimeoutMillies(LDConfig *config, int millis);
+LD_EXPORT(void) LDConfigSetDisableBackgroundUpdating(LDConfig *config, bool disable);
+LD_EXPORT(void) LDConfigSetEventsCapacity(LDConfig *config, int capacity);
+LD_EXPORT(void) LDConfigSetEventsFlushIntervalMillis(LDConfig *config, int millis);
+LD_EXPORT(void) LDConfigSetEventsURI(LDConfig *config, const char *uri);
+LD_EXPORT(void) LDConfigSetMobileKey(LDConfig *config, const char *key);
+LD_EXPORT(void) LDConfigSetOffline(LDConfig *config, bool offline);
+LD_EXPORT(void) LDConfigSetStreaming(LDConfig *config, bool streaming);
+LD_EXPORT(void) LDConfigSetPollingIntervalMillis(LDConfig *config, int millis);
+LD_EXPORT(void) LDConfigSetStreamURI(LDConfig *config, const char *uri);
+LD_EXPORT(void) LDConfigSetProxyURI(LDConfig *config, const char *uri);
+LD_EXPORT(void) LDConfigSetUseReport(LDConfig *config, bool report);
+LD_EXPORT(void) LDConfigSetUseEvaluationReasons(LDConfig *config, bool reasons);
+LD_EXPORT(void) LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
+LD_EXPORT(bool) LDConfigAddSecondaryMobileKey(LDConfig *config, const char *name, const char *key);
+LD_EXPORT(void) LDConfigFree(LDConfig *config);
 
 /* must have already called LDClientInit to receive valid client */
-struct LDClient_i *LDClientGet();
-struct LDClient_i *LDClientGetForMobileKey(const char *keyName);
+LD_EXPORT(struct LDClient_i *) LDClientGet();
+LD_EXPORT(struct LDClient_i *) LDClientGetForMobileKey(const char *keyName);
 /* create the global client singleton */
-struct LDClient_i *LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
+LD_EXPORT(struct LDClient_i *) LDClientInit(LDConfig *, LDUser *, unsigned int maxwaitmilli);
 
-LDUser *LDUserNew(const char *);
+LD_EXPORT(LDUser *) LDUserNew(const char *);
 
-void LDUserSetAnonymous(LDUser *user, bool anon);
-void LDUserSetIP(LDUser *user, const char *str);
-void LDUserSetFirstName(LDUser *user, const char *str);
-void LDUserSetLastName(LDUser *user, const char *str);
-void LDUserSetEmail(LDUser *user, const char *str);
-void LDUserSetName(LDUser *user, const char *str);
-void LDUserSetAvatar(LDUser *user, const char *str);
-void LDUserSetSecondary(LDUser *user, const char *str);
+LD_EXPORT(void) LDUserSetAnonymous(LDUser *user, bool anon);
+LD_EXPORT(void) LDUserSetIP(LDUser *user, const char *str);
+LD_EXPORT(void) LDUserSetFirstName(LDUser *user, const char *str);
+LD_EXPORT(void) LDUserSetLastName(LDUser *user, const char *str);
+LD_EXPORT(void) LDUserSetEmail(LDUser *user, const char *str);
+LD_EXPORT(void) LDUserSetName(LDUser *user, const char *str);
+LD_EXPORT(void) LDUserSetAvatar(LDUser *user, const char *str);
+LD_EXPORT(void) LDUserSetSecondary(LDUser *user, const char *str);
 
-bool LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
-void LDUserSetCustomAttributes(LDUser *user, LDNode *custom);
-void LDUserAddPrivateAttribute(LDUser *user, const char *attribute);
+LD_EXPORT(bool) LDUserSetCustomAttributesJSON(LDUser *user, const char *jstring);
+LD_EXPORT(void) LDUserSetCustomAttributes(LDUser *user, LDNode *custom);
+LD_EXPORT(void) LDUserAddPrivateAttribute(LDUser *user, const char *attribute);
 
-char *LDClientSaveFlags(struct LDClient_i *client);
-void LDClientRestoreFlags(struct LDClient_i *client, const char *data);
+LD_EXPORT(char *) LDClientSaveFlags(struct LDClient_i *client);
+LD_EXPORT(void) LDClientRestoreFlags(struct LDClient_i *client, const char *data);
 
-void LDClientIdentify(struct LDClient_i *, LDUser *);
+LD_EXPORT(void) LDClientIdentify(struct LDClient_i *, LDUser *);
 
-void LDClientFlush(struct LDClient_i *client);
-bool LDClientIsInitialized(struct LDClient_i *);
+LD_EXPORT(void) LDClientFlush(struct LDClient_i *client);
+LD_EXPORT(bool) LDClientIsInitialized(struct LDClient_i *);
 /* block until initialized up to timeout, returns true if initialized */
-bool LDClientAwaitInitialized(struct LDClient_i *client, unsigned int timeoutmilli);
-bool LDClientIsOffline(struct LDClient_i *);
-void LDClientSetOffline(struct LDClient_i *);
-void LDClientSetOnline(struct LDClient_i *);
-void LDClientSetBackground(struct LDClient_i *client, bool background);
-void LDClientClose(struct LDClient_i *);
+LD_EXPORT(bool) LDClientAwaitInitialized(struct LDClient_i *client, unsigned int timeoutmilli);
+LD_EXPORT(bool) LDClientIsOffline(struct LDClient_i *);
+LD_EXPORT(void) LDClientSetOffline(struct LDClient_i *);
+LD_EXPORT(void) LDClientSetOnline(struct LDClient_i *);
+LD_EXPORT(void) LDClientSetBackground(struct LDClient_i *client, bool background);
+LD_EXPORT(void) LDClientClose(struct LDClient_i *);
 
-void LDSetClientStatusCallback(void (callback)(int));
+LD_EXPORT(void) LDSetClientStatusCallback(void (callback)(int));
 
 /* Access the flag store must unlock with LDClientUnlockFlags */
-LDNode *LDClientGetLockedFlags(struct LDClient_i *client);
-void LDClientUnlockFlags(struct LDClient_i *client);
+LD_EXPORT(LDNode *) LDClientGetLockedFlags(struct LDClient_i *client);
+LD_EXPORT(void) LDClientUnlockFlags(struct LDClient_i *client);
 
-void LDClientTrack(struct LDClient_i *client, const char *name);
-void LDClientTrackData(struct LDClient_i *client, const char *name, LDNode *data);
+LD_EXPORT(void) LDClientTrack(struct LDClient_i *client, const char *name);
+LD_EXPORT(void) LDClientTrackData(struct LDClient_i *client, const char *name, LDNode *data);
 
 /* returns a hash table of existing flags, must be freed with LDNodeFree */
-LDNode *LDAllFlags(struct LDClient_i *const client);
+LD_EXPORT(LDNode *) LDAllFlags(struct LDClient_i *const client);
 
-bool LDBoolVariation(struct LDClient_i *, const char *, bool);
-int LDIntVariation(struct LDClient_i *, const char *, int);
-double LDDoubleVariation(struct LDClient_i *, const char *, double);
-char *LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
-char *LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
-LDNode *LDJSONVariation(struct LDClient_i *client, const char *key, const LDNode *);
+LD_EXPORT(bool) LDBoolVariation(struct LDClient_i *, const char *, bool);
+LD_EXPORT(int) LDIntVariation(struct LDClient_i *, const char *, int);
+LD_EXPORT(double) LDDoubleVariation(struct LDClient_i *, const char *, double);
+LD_EXPORT(char *) LDStringVariationAlloc(struct LDClient_i *, const char *, const char *);
+LD_EXPORT(char *) LDStringVariation(struct LDClient_i *, const char *, const char *, char *, size_t);
+LD_EXPORT(LDNode *) LDJSONVariation(struct LDClient_i *client, const char *key, const LDNode *);
 
-bool LDBoolVariationDetail(struct LDClient_i *, const char *, bool, LDVariationDetails *);
-int LDIntVariationDetail(struct LDClient_i *, const char *, int, LDVariationDetails *);
-double LDDoubleVariationDetail(struct LDClient_i *, const char *, double, LDVariationDetails *);
-char *LDStringVariationAllocDetail(struct LDClient_i *, const char *, const char *, LDVariationDetails *);
-char *LDStringVariationDetail(struct LDClient_i *, const char *, const char *, char *, size_t, LDVariationDetails *);
-LDNode *LDJSONVariationDetail(struct LDClient_i *client, const char *key, const LDNode *, LDVariationDetails *);
+LD_EXPORT(bool) LDBoolVariationDetail(struct LDClient_i *, const char *, bool, LDVariationDetails *);
+LD_EXPORT(int) LDIntVariationDetail(struct LDClient_i *, const char *, int, LDVariationDetails *);
+LD_EXPORT(double) LDDoubleVariationDetail(struct LDClient_i *, const char *, double, LDVariationDetails *);
+LD_EXPORT(char *) LDStringVariationAllocDetail(struct LDClient_i *, const char *, const char *, LDVariationDetails *);
+LD_EXPORT(char *) LDStringVariationDetail(struct LDClient_i *, const char *, const char *, char *, size_t, LDVariationDetails *);
+LD_EXPORT(LDNode *) LDJSONVariationDetail(struct LDClient_i *client, const char *key, const LDNode *, LDVariationDetails *);
 
-void LDFree(void *);
-void *LDAlloc(size_t amt);
-void LDFreeDetailContents(LDVariationDetails details);
+LD_EXPORT(void) LDFree(void *);
+LD_EXPORT(void *) LDAlloc(size_t amt);
+LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);
 
 /* functions for working with (JSON) nodes (aka hash tables) */
-LDNode *LDNodeCreateHash(void);
-LDNode * LDNodeAddBool(LDNode **hash, const char *key, bool b);
-LDNode * LDNodeAddNumber(LDNode **hash, const char *key, double n);
-LDNode * LDNodeAddString(LDNode **hash, const char *key, const char *s);
-LDNode * LDNodeAddHash(LDNode **hash, const char *key, LDNode *h);
-LDNode * LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
-LDNode *LDNodeLookup(const LDNode *hash, const char *key);
-void LDNodeFree(LDNode **hash);
-unsigned int LDNodeCount(const LDNode *hash);
-LDNode *LDCloneHash(const LDNode *original);
+LD_EXPORT(LDNode *) LDNodeCreateHash(void);
+LD_EXPORT(LDNode *) LDNodeAddBool(LDNode **hash, const char *key, bool b);
+LD_EXPORT(LDNode *) LDNodeAddNumber(LDNode **hash, const char *key, double n);
+LD_EXPORT(LDNode *) LDNodeAddString(LDNode **hash, const char *key, const char *s);
+LD_EXPORT(LDNode *) LDNodeAddHash(LDNode **hash, const char *key, LDNode *h);
+LD_EXPORT(LDNode *) LDNodeAddArray(LDNode **hash, const char *key, LDNode *a);
+LD_EXPORT(LDNode *) LDNodeLookup(const LDNode *hash, const char *key);
+LD_EXPORT(void) LDNodeFree(LDNode **hash);
+LD_EXPORT(unsigned int) LDNodeCount(const LDNode *hash);
+LD_EXPORT(LDNode *) LDCloneHash(const LDNode *original);
 /* functions for treating nodes as arrays */
-LDNode *LDNodeCreateArray(void);
-LDNode * LDNodeAppendBool(LDNode **array, bool b);
-LDNode * LDNodeAppendNumber(LDNode **array, double n);
-LDNode * LDNodeAppendString(LDNode **array, const char *s);
-LDNode * LDNodeAppendArray(LDNode **array, LDNode *a);
-LDNode * LDNodeAppendHash(LDNode **array, LDNode *h);
-LDNode *LDNodeIndex(const LDNode *array, unsigned int idx);
-LDNode *LDCloneArray(const LDNode *original);
+LD_EXPORT(LDNode *) LDNodeCreateArray(void);
+LD_EXPORT(LDNode *) LDNodeAppendBool(LDNode **array, bool b);
+LD_EXPORT(LDNode *) LDNodeAppendNumber(LDNode **array, double n);
+LD_EXPORT(LDNode *) LDNodeAppendString(LDNode **array, const char *s);
+LD_EXPORT(LDNode *) LDNodeAppendArray(LDNode **array, LDNode *a);
+LD_EXPORT(LDNode *) LDNodeAppendHash(LDNode **array, LDNode *h);
+LD_EXPORT(LDNode *) LDNodeIndex(const LDNode *array, unsigned int idx);
+LD_EXPORT(LDNode *) LDCloneArray(const LDNode *original);
 /* functions for converting nodes to / from JSON */
-char *LDNodeToJSON(const LDNode *node);
-LDNode *LDNodeFromJSON(const char *json);
-char *LDHashToJSON(const LDNode *node);
+LD_EXPORT(char *) LDNodeToJSON(const LDNode *node);
+LD_EXPORT(LDNode *) LDNodeFromJSON(const char *json);
+LD_EXPORT(char *) LDHashToJSON(const LDNode *node);
 
-void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
+LD_EXPORT(void) LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 
 /*
  * store interface. open files, read/write strings, ...
@@ -199,10 +205,10 @@ void LDSetLogFunction(int userlevel, void (userlogfn)(const char *));
 typedef bool (*LD_store_stringwriter)(void *context, const char *name, const char *data);
 typedef char *(*LD_store_stringreader)(void *context, const char *name);
 
-void LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader);
+LD_EXPORT(void) LD_store_setfns(void *context, LD_store_stringwriter, LD_store_stringreader);
 
-bool LD_store_filewrite(void *context, const char *name, const char *data);
-char *LD_store_fileread(void *context, const char *name);
+LD_EXPORT(bool) LD_store_filewrite(void *context, const char *name, const char *data);
+LD_EXPORT(char *) LD_store_fileread(void *context, const char *name);
 
 /*
  * listener function for flag changes.
@@ -214,8 +220,8 @@ typedef void (*LDlistenerfn)(const char *, int);
 /*
  * register a new listener.
  */
-void LDClientRegisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
-bool LDClientUnregisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
+LD_EXPORT(void) LDClientRegisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
+LD_EXPORT(bool) LDClientUnregisterFeatureFlagListener(struct LDClient_i *, const char *, LDlistenerfn);
 
 #if !defined(__cplusplus) && !defined(LD_C_API)
 typedef struct LDClient_i LDClient;
@@ -224,7 +230,7 @@ typedef struct LDClient_i LDClient;
 #ifdef __cplusplus
 }
 
-class LDClient {
+class LD_EXPORT(LDClient) {
     public:
         static LDClient *Get(void);
         static LDClient *Init(LDConfig *, LDUser *, unsigned int maxwaitmilli);

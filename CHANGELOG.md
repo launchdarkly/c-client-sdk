@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.1] - 2019-04-12
+### Fixed:
+- Cleaned up exported symbols in shared libraries
+
 ## [1.2.0] - 2019-04-11
 ### Added:
 - Added multiple environments support. It is now possible to evaluate flags in additional environments. You can add multiple secondary environments with `LDConfigAddSecondaryMobileKey`, and use an environment with `LDClientGetForMobileKey`.
