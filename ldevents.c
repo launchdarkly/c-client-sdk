@@ -15,7 +15,7 @@ milliTimestamp(void)
 static void
 enqueueEvent(LDClient *const client, cJSON *const event)
 {
-    if (client->numEvents >= client->config->eventsCapacity) {
+    if (client->numEvents >= client->shared->sharedConfig->eventsCapacity) {
         LDi_log(LD_LOG_WARNING, "event capacity exceeded");
         cJSON_Delete(event);
         return;

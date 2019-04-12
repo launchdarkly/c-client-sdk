@@ -63,8 +63,8 @@ isPrivateAttr(LDClient *const client, LDUser *const user, const char *const key)
     bool global = false;
 
     if (client) {
-        global = client->config->allAttributesPrivate  ||
-            (LDNodeLookup(client->config->privateAttributeNames, key) != NULL);
+        global = client->shared->sharedConfig->allAttributesPrivate  ||
+            (LDNodeLookup(client->shared->sharedConfig->privateAttributeNames, key) != NULL);
     }
 
     return global || (LDNodeLookup(user->privateAttributeNames, key) != NULL);

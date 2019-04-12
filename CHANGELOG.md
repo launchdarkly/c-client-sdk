@@ -2,10 +2,21 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.0] - 2019-04-11
+### Added:
+- Added multiple environments support. It is now possible to evaluate flags in additional environments. You can add multiple secondary environments with `LDConfigAddSecondaryMobileKey`, and use an environment with `LDClientGetForMobileKey`.
+- Added `LDNodeAppendHash`, and `LDNodeAppendArray`
+- Exposed `LDConfigFree` (not needed in standard usage)
+### Fixed:
+- Switched to bitflag comparison routines as per cJSON doc
+- Memory leak of background thread stack
+
 ## [1.1.1] - 2019-03-05
+### Added:
 * Improved Windows build documentation
-* Fixed a deadlock manifesting on Windows systems
 * Added logging on authorization failure
+### Fixed:
+* Fixed a deadlock manifesting on Windows systems
 
 ## [1.1.0] - 2019-02-01
 ### Added:

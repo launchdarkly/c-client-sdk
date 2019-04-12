@@ -1,13 +1,13 @@
 version: 2
 jobs:
-  build-test-linux:
+  build-test-linux-recent:
     docker:
-      - image: circleci/golang:1.9.6
+      - image: ubuntu:18.10
     steps:
       - checkout
       - run:
-          name: Install libcurl
-          command: sudo apt-get update -y && sudo apt-get install -y libcurl4-openssl-dev
+          name: Install dependencies
+          command: apt-get update -y && apt-get install -y build-essential libcurl4-openssl-dev
       - run: make
       - run: make -C ./unit-tests all
       - run:
@@ -19,6 +19,17 @@ jobs:
               cp libldapiplus.so /tmp/artifacts/linux-gcc-64bit-libldapiplus.so
       - store_artifacts:
           path: /tmp/artifacts
+
+  build-test-linux-historical:
+    docker:
+      - image: centos:6
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: yum install -y make gcc gcc-c++ libcurl-devel
+      - run: make
+      - run: make -C ./unit-tests all
 
   build-test-osx:
     macos:
@@ -68,6 +79,7 @@ workflows:
   version: 2
   build_and_test_all:
     jobs:
-      - build-test-linux
+      - build-test-linux-recent
+      - build-test-linux-historical
       - build-test-osx
       - build-test-windows

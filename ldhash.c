@@ -114,6 +114,22 @@ LDNodeAppendString(LDNode **const array, const char *const s)
 }
 
 LDNode *
+LDNodeAppendArray(LDNode **const array, LDNode *const a)
+{
+    LDNode *const node = appendnode(array, LDNodeArray);
+    node->a = a;
+    return node;
+}
+
+LDNode *
+LDNodeAppendHash(LDNode **const array, LDNode *const h)
+{
+    LDNode *const node = appendnode(array, LDNodeHash);
+    node->h = h;
+    return node;
+}
+
+LDNode *
 LDNodeLookup(const LDNode *const hash, const char *const key)
 {
     LDNode *res = NULL;
@@ -286,25 +302,27 @@ jsontoarray(const cJSON *const json)
     LDNode *array = NULL;
 
     for (const cJSON *item = json->child; item; item = item->next) {
-        switch (item->type) {
-        case cJSON_False:
+        if (cJSON_IsFalse(item)){
             LDNodeAppendBool(&array, false);
-            break;
-        case cJSON_True:
+        } else if (cJSON_IsTrue(item)) {
             LDNodeAppendBool(&array, true);
-            break;
-        case cJSON_NULL:
-            break;
-        case cJSON_Number:
+        } else if (cJSON_IsNull(item)) {
+            /* ignore */
+        } else if (cJSON_IsNumber(item)) {
             LDNodeAppendNumber(&array, item->valuedouble);
-            break;
-        case cJSON_String:
+        } else if (cJSON_IsString(item)) {
             LDNodeAppendString(&array, item->valuestring);
-            break;
-        default:
+        } else if (cJSON_IsArray(item)) {
+            LDNode *const child = jsontoarray(item);
+            LD_ASSERT(child);
+            LDNodeAppendArray(&array, child);
+        } else if (cJSON_IsObject(item)) {
+            LDNode *const child = LDi_jsontohash(item, 0);
+            LD_ASSERT(child);
+            LDNodeAppendHash(&array, child);
+        } else {
             LDi_log(LD_LOG_FATAL, "jsontoarray unhandled case");
             abort();
-            break;
         }
     }
 
@@ -375,29 +393,19 @@ LDi_jsontohash(const cJSON *const json, const int flavor)
         LDNode *node = NULL;
 
         if (valueitem) {
-            switch (valueitem->type) {
-            case cJSON_False:
+            if (cJSON_IsFalse(valueitem)) {
                 node = LDNodeAddBool(&hash, key, false);
-                break;
-            case cJSON_True:
+            } else if (cJSON_IsTrue(valueitem)) {
                 node = LDNodeAddBool(&hash, key, true);
-                break;
-            case cJSON_Number:
+            } else if (cJSON_IsNumber(valueitem)) {
                 node = LDNodeAddNumber(&hash, key, valueitem->valuedouble);
-                break;
-            case cJSON_String:
+            } else if (cJSON_IsString(valueitem)) {
                 node = LDNodeAddString(&hash, key, valueitem->valuestring);
-                break;
-            case cJSON_Array: {
+            } else if (cJSON_IsArray(valueitem)) {
                 LDNode *const array = jsontoarray(valueitem);
                 node = LDNodeAddArray(&hash, key, array);
-                break;
-            }
-            case cJSON_Object:
+            } else if (cJSON_IsObject(valueitem)) {
                 node = LDNodeAddHash(&hash, key, LDi_jsontohash(valueitem, 0));
-                break;
-            default:
-                break;
             }
         }
 
@@ -452,17 +460,13 @@ LDNodeFromJSON(const char *const text)
 
     LDNode *output = NULL;
 
-    switch (json->type) {
-    case cJSON_Array:
+    if (cJSON_IsArray(json)) {
         output = jsontoarray(json);
-        break;
-    case cJSON_Object:
+    } else if (cJSON_IsObject(json)) {
         output = LDi_jsontohash(json, 0);
-        break;
-    default:
+    } else {
         LDi_log(LD_LOG_FATAL, "LDNodeFromJSON not Array or Object");
         abort();
-        break;
     }
 
     cJSON_Delete(json);

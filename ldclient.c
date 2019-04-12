@@ -7,10 +7,13 @@
 
 #include "curl/curl.h"
 
+#include "uthash.h"
 #include "ldapi.h"
 #include "ldinternal.h"
 
-static LDClient *globalClient = NULL;
+static struct LDGlobal_i globalContext = {
+    NULL, NULL, NULL, NULL, LD_RWLOCK_INIT
+};
 
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 
@@ -20,6 +23,8 @@ void
 LDi_earlyinit(void)
 {
     LDi_mtxinit(&LDi_allocmtx);
+
+    LDi_rwlockinit(&globalContext.sharedUserLock);
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
@@ -38,11 +43,8 @@ LDConfigNew(const char *const mobileKey)
     memset(config, 0, sizeof(*config));
 
     LD_ASSERT(LDSetString(&config->appURI, "https://app.launchdarkly.com"));
-
     LD_ASSERT(LDSetString(&config->eventsURI, "https://mobile.launchdarkly.com"));
-
     LD_ASSERT(LDSetString(&config->mobileKey, mobileKey));
-
     LD_ASSERT(LDSetString(&config->streamURI, "https://clientstream.launchdarkly.com"));
 
     config->allAttributesPrivate = false;
@@ -54,6 +56,7 @@ LDConfigNew(const char *const mobileKey)
     config->offline = false;
     config->pollingIntervalMillis = 300000;
     config->privateAttributeNames = NULL;
+    config->secondaryMobileKeys = NULL;
     config->streaming = true;
     config->useReport = false;
     config->useReasons = false;
@@ -62,88 +65,109 @@ LDConfigNew(const char *const mobileKey)
     return config;
 }
 
-void LDConfigSetAllAttributesPrivate(LDConfig *const config, const bool private)
+void
+LDConfigSetAllAttributesPrivate(LDConfig *const config,
+    const bool private)
 {
     LD_ASSERT(config); config->allAttributesPrivate = private;
 }
 
-void LDConfigSetBackgroundPollingIntervalMillis(LDConfig *const config, const int millis)
+void
+LDConfigSetBackgroundPollingIntervalMillis(LDConfig *const config,
+    const int millis)
 {
     LD_ASSERT(config); config->backgroundPollingIntervalMillis = millis;
 }
 
-void LDConfigSetAppURI(LDConfig *const config, const char *const uri)
+void
+LDConfigSetAppURI(LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->appURI, uri));
 }
 
-void LDConfigSetConnectionTimeoutMillies(LDConfig *const config, const int millis)
+void
+LDConfigSetConnectionTimeoutMillies(LDConfig *const config,
+    const int millis)
 {
     LD_ASSERT(config); config->connectionTimeoutMillis = millis;
 }
 
-void LDConfigSetDisableBackgroundUpdating(LDConfig *const config, const bool disable)
+void
+LDConfigSetDisableBackgroundUpdating(LDConfig *const config,
+    const bool disable)
 {
     LD_ASSERT(config); config->disableBackgroundUpdating = disable;
 }
 
-void LDConfigSetEventsCapacity(LDConfig *const config, const int capacity)
+void
+LDConfigSetEventsCapacity(LDConfig *const config, const int capacity)
 {
     LD_ASSERT(config); config->eventsCapacity = capacity;
 }
 
-void LDConfigSetEventsFlushIntervalMillis(LDConfig *const config, const int millis)
+void
+LDConfigSetEventsFlushIntervalMillis(LDConfig *const config,
+    const int millis)
 {
     LD_ASSERT(config); config->eventsFlushIntervalMillis = millis;
 }
 
-void LDConfigSetEventsURI(LDConfig *const config, const char *const uri)
+void
+LDConfigSetEventsURI(LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->eventsURI, uri));
 }
 
-void LDConfigSetMobileKey(LDConfig *const config, const char *const key)
+void
+LDConfigSetMobileKey(LDConfig *const config, const char *const key)
 {
     LD_ASSERT(config); LD_ASSERT(key); LD_ASSERT(LDSetString(&config->mobileKey, key));
 }
 
-void LDConfigSetOffline(LDConfig *const config, const bool offline)
+void
+LDConfigSetOffline(LDConfig *const config, const bool offline)
 {
     LD_ASSERT(config); config->offline = offline;
 }
 
-void LDConfigSetStreaming(LDConfig *const config, const bool streaming)
+void
+LDConfigSetStreaming(LDConfig *const config, const bool streaming)
 {
     LD_ASSERT(config); config->streaming = streaming;
 }
 
-void LDConfigSetPollingIntervalMillis(LDConfig *const config, const int millis)
+void
+LDConfigSetPollingIntervalMillis(LDConfig *const config, const int millis)
 {
     LD_ASSERT(config); config->pollingIntervalMillis = millis;
 }
 
-void LDConfigSetStreamURI(LDConfig *const config, const char *const uri)
+void
+LDConfigSetStreamURI(LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->streamURI, uri));
 }
 
-void LDConfigSetUseReport(LDConfig *const config, const bool report)
+void
+LDConfigSetUseReport(LDConfig *const config, const bool report)
 {
     LD_ASSERT(config); config->useReport = report;
 }
 
-void LDConfigSetUseEvaluationReasons(LDConfig *const config, const bool reasons)
+void
+LDConfigSetUseEvaluationReasons(LDConfig *const config, const bool reasons)
 {
     LD_ASSERT(config); config->useReasons = reasons;
 }
 
-void LDConfigSetProxyURI(LDConfig *const config, const char *const uri)
+void
+LDConfigSetProxyURI(LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->proxyURI, uri));
 }
 
-static void
-freeconfig(LDConfig *const config)
+void
+LDConfigFree(LDConfig *const config)
 {
     if (!config) { return; }
     LDFree(config->appURI);
@@ -152,31 +176,43 @@ freeconfig(LDConfig *const config)
     LDFree(config->streamURI);
     LDFree(config->proxyURI);
     LDi_freehash(config->privateAttributeNames);
+    LDi_freehash(config->secondaryMobileKeys);
     LDFree(config);
 }
 
 static void
 checkconfig(LDConfig *config)
 {
-    if (config->pollingIntervalMillis < 300000)
+    if (config->pollingIntervalMillis < 300000) {
         config->pollingIntervalMillis = 300000;
-
+    }
 }
 
 LDClient *
 LDClientGet()
 {
-    return globalClient;
+    return globalContext.primaryClient;
 };
 
-LDClient *
-LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
+struct LDClient_i *
+LDClientGetForMobileKey(const char *keyName)
 {
-    LD_ASSERT(config); LD_ASSERT(user);
+    struct LDClient_i *lookup;
+
+    LD_ASSERT(keyName);
+
+    HASH_FIND_STR(globalContext.clientTable, keyName, lookup);
+
+    return lookup;
+}
+
+LDClient *
+LDi_clientinitisolated(struct LDGlobal_i *const shared,
+    const char *const mobileKey)
+{
+    LD_ASSERT(shared); LD_ASSERT(mobileKey);
 
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
-
-    checkconfig(config);
 
     LDClient *const client = LDAlloc(sizeof(*client));
 
@@ -191,9 +227,8 @@ LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigne
 
     LDi_wrlock(&client->clientLock);
 
-    client->config = config;
-    client->user = user;
-    client->offline = config->offline;
+    client->shared = shared;
+    client->offline = shared->sharedConfig->offline;
     client->background = false;
     client->status = LDStatusInitializing;
     client->allFlags = NULL;
@@ -202,6 +237,8 @@ LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigne
     client->shouldstopstreaming = false;
     client->databuffer = NULL;
     client->streamhandle = 0;
+
+    LD_ASSERT(LDSetString(&client->mobileKey, mobileKey));
 
     LDi_rwlockinit(&client->eventLock);
     client->eventArray = cJSON_CreateArray();
@@ -222,47 +259,97 @@ LDi_clientinitisolated(LDConfig *const config, LDUser *const user, const unsigne
     LDi_createthread(&client->pollingThread, LDi_bgfeaturepoller, client);
     LDi_createthread(&client->streamingThread, LDi_bgfeaturestreamer, client);
 
-    char *const flags = LDi_loaddata("features", user->key);
+    LDi_rdlock(&shared->sharedUserLock);
+    char *const flags = LDi_loaddata("features", shared->sharedUser->key);
+    LDi_rdunlock(&shared->sharedUserLock);
+
     if (flags) {
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
 
-    LDi_recordidentify(client, user);
+    LDi_rdlock(&shared->sharedUserLock);
+    LDi_recordidentify(client, shared->sharedUser);
+    LDi_rdunlock(&shared->sharedUserLock);
     LDi_wrunlock(&client->clientLock);
-
-    if (maxwaitmilli) {
-        LDClientAwaitInitialized(client, maxwaitmilli);
-    }
 
     return client;
 }
 
 LDClient *
-LDClientInit(LDConfig *const config, LDUser *const user, const unsigned int maxwaitmilli)
+LDClientInit(LDConfig *const config, LDUser *const user,
+    const unsigned int maxwaitmilli)
 {
-    LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalClient);
-    globalClient = LDi_clientinitisolated(config, user, maxwaitmilli);
-    return globalClient;
+    const LDNode *secondaryKey, *tmp;
+
+    LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalContext.primaryClient);
+
+    checkconfig(config);
+
+    globalContext.sharedUser   = user;
+    globalContext.sharedConfig = config;
+
+    globalContext.primaryClient = LDi_clientinitisolated(&globalContext,
+        config->mobileKey);
+
+    LD_ASSERT(globalContext.primaryClient);
+
+    HASH_ADD_KEYPTR(hh, globalContext.clientTable,
+        LDPrimaryEnvironmentName, strlen(LDPrimaryEnvironmentName),
+        globalContext.primaryClient);
+
+    HASH_ITER(hh, config->secondaryMobileKeys, secondaryKey, tmp) {
+        LDClient *const secondaryClient = LDi_clientinitisolated(&globalContext,
+            secondaryKey->s);
+
+        LD_ASSERT(secondaryClient);
+
+        HASH_ADD_KEYPTR(hh, globalContext.clientTable, secondaryKey->key,
+            strlen(secondaryKey->key), secondaryClient);
+    }
+
+    if (maxwaitmilli) {
+        struct LDClient_i *clientIter, *clientTmp;
+
+        const unsigned long long future = 1000 * (unsigned long long)time(NULL) + maxwaitmilli;
+
+        HASH_ITER(hh, globalContext.clientTable, clientIter, clientTmp) {
+            const unsigned long long now = 1000 * (unsigned long long)time(NULL);
+
+            if (now < future) {
+                LDClientAwaitInitialized(clientIter, future - now);
+            } else {
+                break;
+            }
+        }
+    }
+
+    return globalContext.primaryClient;
 }
 
 void
 LDClientSetOffline(LDClient *const client)
 {
-    LD_ASSERT(client);
-    LDi_wrlock(&client->clientLock);
-    client->offline = true;
-    LDi_wrunlock(&client->clientLock);
+    LDClient *clientIter, *tmp;
+
+    HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
+        LDi_wrlock(&clientIter->clientLock);
+        clientIter->offline = true;
+        LDi_wrunlock(&clientIter->clientLock);
+    }
 }
 
 void
 LDClientSetOnline(LDClient *const client)
 {
-    LD_ASSERT(client);
-    LDi_wrlock(&client->clientLock);
-    client->offline = false;
-    LDi_updatestatus(client, LDStatusInitializing);
-    LDi_wrunlock(&client->clientLock);
+    LDClient *clientIter, *tmp;
+
+    HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
+        LDi_wrlock(&clientIter->clientLock);
+        clientIter->offline = false;
+        LDi_updatestatus(clientIter, LDStatusInitializing);
+        LDi_wrunlock(&clientIter->clientLock);
+    }
 }
 
 bool
@@ -288,34 +375,44 @@ LDClientSetBackground(LDClient *const client, const bool background)
 void
 LDClientIdentify(LDClient *const client, LDUser *const user)
 {
+    LDClient *clientIter, *tmp;
+
     LD_ASSERT(client); LD_ASSERT(user);
 
-    LDi_wrlock(&client->clientLock);
+    LDi_wrlock(&globalContext.sharedUserLock);
 
-    if (user != client->user) {
-        LDi_freeuser(client->user);
+    if (user != globalContext.sharedUser) {
+        LDi_freeuser(globalContext.sharedUser);
     }
 
-    client->user = user;
-    client->allFlags = NULL;
+    globalContext.sharedUser = user;
 
-    if (client->status == LDStatusInitialized) {
-        LDi_updatestatus(client, LDStatusInitializing);
+    HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
+        LDi_wrlock(&clientIter->clientLock);
+
+        clientIter->allFlags = NULL;
+
+        if (clientIter->status == LDStatusInitialized) {
+            LDi_updatestatus(client, LDStatusInitializing);
+        }
+
+        char *const flags = LDi_loaddata("features", user->key);
+        if (flags) {
+            LDi_clientsetflags(clientIter, false, flags, 1);
+            LDFree(flags);
+        }
+
+        LDi_reinitializeconnection(clientIter);
+        LDi_recordidentify(clientIter, user);
+
+        LDi_wrunlock(&clientIter->clientLock);
     }
 
-    char *const flags = LDi_loaddata("features", client->user->key);
-    if (flags) {
-        LDi_clientsetflags(client, false, flags, 1);
-        LDFree(flags);
-    }
-
-    LDi_reinitializeconnection(client);
-    LDi_recordidentify(client, user);
-    LDi_wrunlock(&client->clientLock);
+    LDi_wrunlock(&globalContext.sharedUserLock);
 }
 
 void
-LDClientClose(LDClient *const client)
+clientCloseIsolated(LDClient *const client)
 {
     LD_ASSERT(client);
 
@@ -342,9 +439,6 @@ LDClientClose(LDClient *const client)
     }
     LDi_mtxleave(&client->initCondMtx);
 
-    freeconfig(client->config);
-    LDi_freeuser(client->user);
-
     LDi_freehash(client->allFlags);
 
     cJSON_Delete(client->eventArray);
@@ -360,18 +454,39 @@ LDClientClose(LDClient *const client)
     LDi_conddestroy(&client->initCond);
     LDi_conddestroy(&client->eventCond);
     LDi_conddestroy(&client->pollCond);
-
-    free(client->databuffer);
+    LDFree(client->mobileKey);
+    LDFree(client->databuffer);
 
     for (struct listener *item = client->listeners; item;) {
-        struct listener *const next = item->next; //must record next to make delete safe
+        /* must record next to make delete safe */
+        struct listener *const next = item->next;
         LDFree(item->key); LDFree(item);
         item = next;
     }
 
-    LDFree(client);
+    LDi_jointhread(client->eventThread);
+    LDi_jointhread(client->pollingThread);
+    LDi_jointhread(client->streamingThread);
 
-    globalClient = NULL;
+    LDFree(client);
+}
+
+void
+LDClientClose(LDClient *const client)
+{
+    LDClient *clientIter, *tmp;
+
+    HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
+        HASH_DEL(globalContext.clientTable, clientIter);
+        clientCloseIsolated(clientIter);
+    }
+
+    LDi_freeuser(globalContext.sharedUser);
+    LDConfigFree(globalContext.sharedConfig);
+
+    globalContext.sharedConfig  = NULL;
+    globalContext.primaryClient = NULL;
+    globalContext.clientTable   = NULL;
 }
 
 LDNode *
@@ -444,7 +559,9 @@ LDClientRestoreFlags(LDClient *const client, const char *const data)
 {
     LD_ASSERT(client); LD_ASSERT(data);
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_savedata("features", client->user->key, data);
+        LDi_rdlock(&client->shared->sharedUserLock);
+        LDi_savedata("features", client->shared->sharedUser->key, data);
+        LDi_rdunlock(&client->shared->sharedUserLock);
     }
 }
 
@@ -460,7 +577,7 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
         return false;
     }
 
-    if (payload->type != cJSON_Object) {
+    if (!cJSON_IsObject(payload)) {
         LDi_log(LD_LOG_ERROR, "LDi_clientsetflags did not get object");
         cJSON_Delete(payload);
         return false;
@@ -510,8 +627,10 @@ LDi_savehash(LDClient *const client)
 {
     LD_ASSERT(client);
     LDi_rdlock(&client->clientLock);
+    LDi_rdlock(&client->shared->sharedUserLock);
     char *const serialized = LDi_hashtostring(client->allFlags, true);
-    LDi_savedata("features", client->user->key, serialized);
+    LDi_savedata("features", client->shared->sharedUser->key, serialized);
+    LDi_rdunlock(&client->shared->sharedUserLock);
     LDi_rdunlock(&client->clientLock);
     LDFree(serialized);
 }
@@ -564,8 +683,10 @@ LDi_BoolNode(LDClient *const client, const char *const key, const bool fallback,
         result = fallback;
     }
 
-    LDi_recordfeature(client, client->user, node, key, LDNodeBool,
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordfeature(client, client->shared->sharedUser, node, key, LDNodeBool,
         (double)result, NULL, NULL, (double)fallback, NULL, NULL, (bool)selected);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -613,8 +734,11 @@ LDi_IntNode(LDClient *const client, const char *const key,
         result = fallback;
     }
 
-    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
-        (double)result, NULL, NULL, (double)fallback, NULL, NULL, (bool)selected);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordfeature(client, client->shared->sharedUser, node, key,
+        LDNodeNumber, (double)result, NULL, NULL, (double)fallback, NULL, NULL,
+        (bool)selected);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -662,8 +786,10 @@ LDi_DoubleNode(LDClient *const client, const char *const key,
         result = fallback;
     }
 
-    LDi_recordfeature(client, client->user, node, key, LDNodeNumber,
-        result, NULL, NULL, fallback, NULL, NULL, (bool)selected);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordfeature(client, client->shared->sharedUser, node, key,
+        LDNodeNumber, result, NULL, NULL, fallback, NULL, NULL, (bool)selected);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -718,8 +844,10 @@ LDi_StringNode(LDClient *const client, const char *const key,
     memcpy(buffer, result, len);
     buffer[len] = 0;
 
-    LDi_recordfeature(client, client->user, node, key, LDNodeString,
-        0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordfeature(client, client->shared->sharedUser, node, key,
+        LDNodeString, 0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -770,8 +898,10 @@ LDi_StringAllocNode(LDClient *const client, const char *const key,
 
     char *const result = LDi_strdup(value);
 
-    LDi_recordfeature(client, client->user, node, key, LDNodeString,
-        0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordfeature(client, client->shared->sharedUser, node, key,
+        LDNodeString, 0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -819,8 +949,10 @@ LDi_JSONNode(LDClient *const client, const char *const key,
         result = LDCloneHash(fallback);
     }
 
-    LDi_recordfeature(client, client->user, node, key, LDNodeHash,
-        0.0, NULL, result, 0.0, NULL, fallback, (bool)selected);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordfeature(client, client->shared->sharedUser, node, key,
+        LDNodeHash, 0.0, NULL, result, 0.0, NULL, fallback, (bool)selected);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -858,24 +990,28 @@ void
 LDClientTrack(LDClient *const client, const char *const name)
 {
     LD_ASSERT(client); LD_ASSERT(name);
-    LDi_rdlock(&client->clientLock);
-    LDi_recordtrack(client, client->user, name, NULL);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordtrack(client, client->shared->sharedUser, name, NULL);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 }
 
 void
 LDClientTrackData(LDClient *const client, const char *const name, LDNode *const data)
 {
     LD_ASSERT(client); LD_ASSERT(name); LD_ASSERT(data);
-    LDi_rdlock(&client->clientLock);
-    LDi_recordtrack(client, client->user, name, data);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordtrack(client, client->shared->sharedUser, name, data);
+    LDi_rdunlock(&client->shared->sharedUserLock);
 }
 
 void
 LDClientFlush(LDClient *const client)
 {
-    LD_ASSERT(client); LDi_condsignal(&client->eventCond);
+    LDClient *clientIter, *tmp;
+
+    HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
+        LDi_condsignal(&clientIter->eventCond);
+    }
 }
 
 void
@@ -923,7 +1059,17 @@ LDClientUnregisterFeatureFlagListener(LDClient *const client, const char *const 
 void
 LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
 {
+    const LDNode *lookup;
+
     LD_ASSERT(config); LD_ASSERT(key);
+
+    HASH_FIND_STR(config->privateAttributeNames, key, lookup);
+
+    if (lookup) {
+        LDi_log(LD_LOG_WARNING, "Attempted to add duplicate private Attribute");
+
+        return;
+    }
 
     LDNode *const node = LDAlloc(sizeof(*node)); LD_ASSERT(node);
     memset(node, 0, sizeof(*node));
@@ -931,10 +1077,42 @@ LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
     node->key = LDi_strdup(key);
     LD_ASSERT(node->key);
 
-    node->type = LDNodeBool;
-    node->b = true;
+    node->type = LDNodeNone;
 
     HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
+}
+
+bool
+LDConfigAddSecondaryMobileKey(LDConfig *const config, const char *const name,
+    const char *const key)
+{
+    const LDNode *iter, *tmp;
+
+    LD_ASSERT(config); LD_ASSERT(name); LD_ASSERT(key);
+
+    if (strcmp(name, LDPrimaryEnvironmentName) == 0) {
+        LDi_log(LD_LOG_ERROR, "Attempted use the primary environment name as secondary");
+
+        return false;
+    }
+
+    if (strcmp(key, config->mobileKey) == 0) {
+        LDi_log(LD_LOG_ERROR, "Attempted to add primary key as secondary key");
+
+        return false;
+    }
+
+    HASH_ITER(hh, config->secondaryMobileKeys, iter, tmp) {
+        if (strcmp(iter->key, name) == 0 || strcmp(iter->s, key) == 0) {
+            LDi_log(LD_LOG_ERROR, "Attempted to add secondary key twice");
+
+            return false;
+        }
+    }
+
+    LDNodeAddString(&config->secondaryMobileKeys, name, key);
+
+    return true;
 }
 
 void

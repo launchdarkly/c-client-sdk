@@ -31,12 +31,12 @@ test1(void)
 {
     LDSetLogFunction(1, logger);
 
-    LDConfig *const config = LDConfigNew("authkey");
+    LDConfig *const config = LDConfigNew("abc");
     LDConfigSetOffline(config, true);
 
     LDUser *const user = LDUserNew("userX");
 
-    LDClient *const client = LDi_clientinitisolated(config, user, 0);
+    LDClient *const client = LDClientInit(config, user, 0);
     LDClientRegisterFeatureFlagListener(client, "bugcount", hook);
 
     const char *const testflags = "{ \"bugcount\": 1 }";

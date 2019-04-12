@@ -104,10 +104,28 @@ void LDConfigSetProxyURI(LDConfig *config, const char *uri);
 Set the proxy server used for connecting to LaunchDarkly. By default no proxy is used. The URI string should be of the form `socks5://127.0.0.1:9050`. You may read more about how this SDK handles proxy servers by reading the [libcurl](https://curl.haxx.se) documentation on the subject [here](https://ec.haxx.se/libcurl-proxies.html).
 
 ```C
-LDConfigSetUseEvaluationReasons(LDConfig *config, bool usereasons);
+void LDConfigSetUseEvaluationReasons(LDConfig *config, bool usereasons);
 ```
 
 Decide whether the client should fetch feature flag evaluation explanations from LaunchDarkly.
+
+```C
+void LDConfigAddPrivateAttribute(LDConfig *config, const char *name);
+```
+
+Add a user attribute name to the private list which will not be recorded for all users.
+
+```C
+bool LDConfigAddSecondaryMobileKey(LDConfig *config, const char *name, const char *key);
+```
+
+Add another mobile key to the list of secondary environments. Both `name`, and `key` must be unique. You may not add the existing primary environment (the one you used to initialize `LDConfig`). The `name` of the key can later be used in conjunction with `LDClientGetForMobileKey`. This function returns false on failure.
+
+```C
+void LDConfigFree(LDConfig *config);
+```
+
+Free an existing `LDConfig` instance. You will likely never use this routine as ownership is transferred to `LDClient` on initialization.
 
 ## Users
 
@@ -188,7 +206,7 @@ LDClient *LDClientInit(LDConfig *config, LDUser *user, unsigned int maxwaitmilli
 
 Initialize the client with the config and user. After this call, the `config` and `user` must not be modified. The parameter `maxwaitmilli` indicates the maximum amount of time the client will wait to be fully initialized. If the timeout is hit the client will be available for feature flag evaluation but the results will be fallbacks. The client will continue attempting to connect to LaunchDarkly in the background. If `maxwaitmilli` is set to `0` then `LDClientInit` will wait indefinitely.
 
-Only a single initialized client from `LDClientInit` may exist at one time. To initialize another instance you must first cleanup the previous client with `LDClientClose`. Should you initialize with `LDClientInit` while another client exists `abort` will be called.
+Only a single initialized client from `LDClientInit` may exist at one time. To initialize another instance you must first cleanup the previous client with `LDClientClose`. Should you initialize with `LDClientInit` while another client exists `abort` will be called. Both `LDClientInit`, and `LDClientClose` are not thread safe.
 
 ```C
 LDClient *LDClientGet();
@@ -197,10 +215,16 @@ LDClient *LDClientGet();
 Get a reference to the (single, global) client.
 
 ```C
+LDClient *LDClientGetForMobileKey(const char *keyName);
+```
+
+Get a reference to a secondary environment established in the configuration. If the environment name does not exist this function returns `NULL`.
+
+```C
 void LDClientClose(LDClient *client);
 ```
 
-Close the client, free resources, and generally shut down.
+Close the client, free resources, and generally shut down. This will additionally close all secondary environments. Do not attempt to manage secondary environments directly.
 
 ```C
 bool LDClientIsInitialized(LDClient *client);
