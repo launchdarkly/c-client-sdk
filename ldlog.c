@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "ldapi.h"
+
 static void (*logfn)(const char *);
 static int loglevel;
 
