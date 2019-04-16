@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.2] - 2019-04-16
+### Fixed:
+- Ensure `LDSetLogFunction` is properly exported in shared libraries
+
 ## [1.2.1] - 2019-04-12
 ### Fixed:
 - Cleaned up exported symbols in shared libraries
@@ -17,10 +21,10 @@ All notable changes to the LaunchDarkly C SDK will be documented in this file. T
 
 ## [1.1.1] - 2019-03-05
 ### Added:
-* Improved Windows build documentation
-* Added logging on authorization failure
+- Improved Windows build documentation
+- Added logging on authorization failure
 ### Fixed:
-* Fixed a deadlock manifesting on Windows systems
+- Fixed a deadlock manifesting on Windows systems
 
 ## [1.1.0] - 2019-02-01
 ### Added:
