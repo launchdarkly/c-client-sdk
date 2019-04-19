@@ -8,6 +8,7 @@
 #include "ldinternal.h"
 
 #define LD_STREAMTIMEOUT 300
+#define LD_USER_AGENT_HEADER "User-Agent: CClient/" LD_SDK_VERSION
 
 struct MemoryStruct {
     char *memory;
@@ -123,8 +124,7 @@ prepareShared(const char *const url, const LDConfig *const config,
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headerauth"); goto error;
     }
 
-    const char *const headeragent = "User-Agent: CClient/1.2.2";
-    if (!(headers = curl_slist_append(headers, headeragent))) {
+    if (!(headers = curl_slist_append(headers, LD_USER_AGENT_HEADER))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headeragent"); goto error;
     }
 
