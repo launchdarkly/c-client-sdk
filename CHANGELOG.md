@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.3.0] - 2019-04-18
+### Added:
+- Version string macro `LD_SDK_VERSION` in `ldapi.h`
+
 ## [1.2.2] - 2019-04-16
 ### Fixed:
 - Ensure `LDSetLogFunction` is properly exported in shared libraries
