@@ -3,14 +3,14 @@ LaunchDarkly SDK for C / C++ (client-side)
 
 The LaunchDarkly C / C++ (client-side) SDK is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
 
-For using LaunchDarkly in C / C++ server-side applications, refer to our [C / C++ server-side SDK](https://github.com/launchdarkly/c-client-server-side).
+For using LaunchDarkly in C / C++ server-side applications, refer to our [C / C++ server-side SDK](https://github.com/launchdarkly/c-server-sdk).
 
 Quick setup (POSIX)
 -------------------
 
-The C / C++ SDK requires a POSIX environment, and assumes that both `libcurl` and `libpthread` are installed.
+The C / C++ SDK assumes that both `libcurl` and `libpthread` are installed.
 
-Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client-sdk/releases) page. You can use the `Makefile` in this repository as a starting point for integrating this SDK into your application.
 
 You can get the required dependencies on Ubuntu Linux with:
 
@@ -23,7 +23,7 @@ Quick setup (Windows)
 
 Building the SDK requires that the Visual Studio C compiler be installed. The SDK also requires libcurl.
 
-Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client/releases) page.
+Unlike other LaunchDarkly SDKs, the C SDK has no installation steps. To get started, clone [this repository](https://github.com/launchdarkly/c-client-sdk) or download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client-sdk/releases) page.
 
 You can obtain the libcurl dependency at [curl.haxx.se](https://curl.haxx.se/download/curl-7.59.0.zip). You will need to extract curl and then update `Makefile.win` with the path you saved it to. The Makefile will automatically build curl for you. Ensure you edit `Makefile.win` to indicate if you want an `x64`, or `x86` build.
 
@@ -45,10 +45,10 @@ Once integrated, you can follow these steps to initialize a client instance:
 2. Create a new LDClient instance and user with your SDK key:
 
 ```C
-    unsigned int maxwaitmilliseconds = 10 * 1000;
-    LDConfig *config = LDConfigNew("YOUR_CLIENT_SIDE_KEY");
-    LDUser *user = LDUserNew("YOUR_USER_KEY");
-    LDClient *client = LDClientInit(config, user, maxwaitmilliseconds);
+unsigned int maxwaitmilliseconds = 10 * 1000;
+LDConfig *config = LDConfigNew("YOUR_CLIENT_SIDE_KEY");
+LDUser *user = LDUserNew("YOUR_USER_KEY");
+LDClient *client = LDClientInit(config, user, maxwaitmilliseconds);
 ```
 
 In most cases, you should create a single `LDClient` instance for the lifecycle of your program (a singleton pattern can be helpful here). When finished with the client (or prior to program exit), you should close the client:
@@ -81,7 +81,7 @@ initialized = LDClientIsInitialized(client);
 Learn more
 -----------
 
-The full API reference to the types and functions in the SDK is in [DOCS.md](https://github.com/launchdarkly/c-client/blob/master/DOCS.md).
+The full API reference to the types and functions in the SDK is in [DOCS.md](https://github.com/launchdarkly/c-client-sdk/blob/master/DOCS.md).
 
 Check out our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/v2.0/docs/c-sdk-reference).
 
