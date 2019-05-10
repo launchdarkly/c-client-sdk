@@ -253,4 +253,7 @@ THREAD_RETURN LDi_bgeventsender(void *const v);
 THREAD_RETURN LDi_bgfeaturepoller(void *const v);
 THREAD_RETURN LDi_bgfeaturestreamer(void *const v);
 
+/* returns true on success */
+bool LDSetString(char **const target, const char *const value);
+
 #endif /* C_CLIENT_LDINTERNAL_H */

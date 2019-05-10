@@ -1,4 +1,4 @@
-LaunchDarkly Client-side SDK for C/C++ 
+LaunchDarkly Client-side SDK for C/C++
 ===================================
 
 The LaunchDarkly Client-side SDK for C/C++ is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
@@ -26,21 +26,19 @@ Learn more
 
 Check out our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/docs/c-sdk-reference).
 
-The full API reference to the types and functions in the SDK is in [DOCS.md](DOCS.md).
-
 Testing
 -------
- 
+
 We run integration tests for all our SDKs using a centralized test harness. This approach gives us the ability to test for consistency across SDKs, as well as test networking behavior in a long-running application. These tests cover each method in the SDK, and verify that event sending, flag evaluation, stream reconnection, and other aspects of the SDK all behave correctly.
- 
+
 Contributing
 ------------
 
 We encourage pull requests and other contributions from the community. Check out our [contributing guidelines](CONTRIBUTING.md) for instructions on how to contribute to this SDK.
- 
+
 About LaunchDarkly
 -----------
- 
+
 * LaunchDarkly is a continuous delivery platform that provides feature flags as a service and allows developers to iterate quickly and safely. We allow you to easily flag your features and manage them from the LaunchDarkly dashboard.  With LaunchDarkly, you can:
     * Roll out a new feature to a subset of your users (like a group of users who opt-in to a beta tester group), gathering feedback and bug reports from real-world use cases.
     * Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).

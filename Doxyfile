@@ -1,0 +1,16 @@
+PROJECT_NAME           = "C Client-Side SDK"
+PROJECT_BRIEF          = "LaunchDarkly SDK"
+OUTPUT_DIRECTORY       = docs
+ENUM_VALUES_PER_LINE   = 10
+OPTIMIZE_OUTPUT_FOR_C  = YES
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+PREDEFINED             = DOXYGEN_SHOULD_SKIP_THIS
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = docs/mainpage.md
+INPUT                  = ldapi.h docs/mainpage.md
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+OUTPUT_DIRECTORY       = docs/build
+DISABLE_INDEX          = YES
