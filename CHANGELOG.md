@@ -2,8 +2,14 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-# Note on future releases
+## [1.3.1] - 2019-05-10
+### Changed:
+- Renamed the build artifacts. They are now prefixed with `ldclientapi`.
+- Changed repository references to use the new URL.
 
+There are no other changes in this release. Substituting the build artifacts from version 1.3.0 with the build artifacts from version 1.3.1 will not affect functionality.
+
+## Note on future releases
 The LaunchDarkly SDK repositories are being renamed for consistency. This repository is now `c-client-sdk` rather than `c-client`. (Note that `c-server-sdk` also exists, which is the _server-side_ C/C++ SDK.)
 
 The library name will also change. In the 1.3.0 release, it is still `ldapi`; in all future releases, it will be `ldclientapi`.

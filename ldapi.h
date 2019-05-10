@@ -1,7 +1,7 @@
 #ifndef C_CLIENT_LDIAPI_H
 #define C_CLIENT_LDIAPI_H
 
-#define LD_SDK_VERSION "1.3.0"
+#define LD_SDK_VERSION "1.3.1"
 
 #ifdef _WIN32
     #define LD_EXPORT(x) __declspec(dllexport) x
