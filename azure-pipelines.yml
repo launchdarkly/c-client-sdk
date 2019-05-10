@@ -24,18 +24,18 @@ jobs:
         inputs:
           targetFolder: $(Build.ArtifactStagingDirectory)
           sourceFolder: $(System.DefaultWorkingDirectory)
-          contents: 'ldapi.dll'
+          contents: 'ldclientapi.dll'
       - task: CopyFiles@2
         inputs:
           targetFolder: $(Build.ArtifactStagingDirectory)
           sourceFolder: $(System.DefaultWorkingDirectory)
-          contents: 'ldapi.lib'
+          contents: 'ldclientapi.lib'
       - task: PowerShell@2
         inputs:
           targetType: inline
           script: |
-            Rename-Item -Path "ldapi.dll" -NewName "windows-vs-64bit-ldapi.dll"
-            Rename-Item -Path "ldapi.lib" -NewName "windows-vs-64bit-ldapi.lib"
+            Rename-Item -Path "ldclientapi.dll" -NewName "windows-vs-64bit-ldclientapi.dll"
+            Rename-Item -Path "ldclientapi.lib" -NewName "windows-vs-64bit-ldclientapi.lib"
           workingDirectory: '$(Build.ArtifactStagingDirectory)'
         displayName: 'Rename Artifacts'
       - task: PublishBuildArtifacts@1

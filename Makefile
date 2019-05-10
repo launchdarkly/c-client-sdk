@@ -26,19 +26,19 @@ ifeq ($(ALTBUILD),mingw)
 	CXX=x86_64-w64-mingw32-g++
 endif
 
-all: libldapi.so libldapi.a libldapiplus.so test
+all: libldclientapi.so libldclientapi.a libldclientapiplus.so test
 
 clean:
 	rm -f *.o *.so *.a test
 
-libldapi.a: ldapi.h ldinternal.h $(COBJS)
-	$(AR) libldapi.a $(COBJS)
+libldclientapi.a: ldapi.h ldinternal.h $(COBJS)
+	$(AR) libldclientapi.a $(COBJS)
 
-libldapi.so: ldapi.h ldinternal.h $(COBJS)
-	$(CC) -o libldapi.so -fPIC -shared $(COBJS) $(LIBS)
+libldclientapi.so: ldapi.h ldinternal.h $(COBJS)
+	$(CC) -o libldclientapi.so -fPIC -shared $(COBJS) $(LIBS)
 
-libldapiplus.so: ldapi.h ldinternal.h $(COBJS) $(CXXOBJS)
-	$(CXX) -o libldapiplus.so -fPIC -shared $(COBJS) $(CXXOBJS) $(LIBS)
+libldclientapiplus.so: ldapi.h ldinternal.h $(COBJS) $(CXXOBJS)
+	$(CXX) -o libldclientapiplus.so -fPIC -shared $(COBJS) $(CXXOBJS) $(LIBS)
 
 test: ldapi.h test.o $(COBJS)
 	$(CC) -o test test.o $(COBJS) $(LIBS)
