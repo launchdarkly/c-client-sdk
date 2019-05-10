@@ -13,11 +13,11 @@ clean:
 
 curl: $(CURL)/lib/libcurl_a.lib
 
-test.exe: ldapi.h test.obj ldapi.dll
-	$(CC) /Fe: test.exe test.obj /link ldapi.lib
+test.exe: ldapi.h test.obj ldclientapi.dll
+	$(CC) /Fe: test.exe test.obj /link ldclientapi.lib
 
-ldapi.dll: ldapi.def ldapi.h $(COBJS) $(CURL)/lib/libcurl_a.lib
-	link /OUT:ldapi.dll /DLL /DEF:ldapi.def $(COBJS) $(CURL)/lib/libcurl_a.lib
+ldclientapi.dll: ldclientapi.def ldapi.h $(COBJS) $(CURL)/lib/libcurl_a.lib
+	link /OUT:ldclientapi.dll /DLL /DEF:ldclientapi.def $(COBJS) $(CURL)/lib/libcurl_a.lib
 
 $(CURL)/lib/libcurl_a.lib:
 	cd curl-7.59.0/winbuild

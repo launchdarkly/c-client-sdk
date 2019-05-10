@@ -1,4 +1,4 @@
-LIBRARY   ldapi
+LIBRARY   ldclientapi
 EXPORTS
    LDConfigNew
    LDConfigSetAllAttributesPrivate
