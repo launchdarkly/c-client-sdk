@@ -413,10 +413,16 @@ LDi_bgfeaturestreamer(void *const v)
             LDi_log(LD_LOG_ERROR, "mobile key not authorized, streaming failed");
             continue;
         } else if (response == -1) {
-            retries++;
-        } else {
-            retries = 0;
+            LDi_rdlock(&client->clientLock);
+            /* check if the stream was intentionally closed */
+            if (client->streamhandle) {
+                retries++;
+            } else {
+                retries = 0;
+            }
+            LDi_rdunlock(&client->clientLock);
         }
+
         if (retries) {
             unsigned int rng = 0;
             if (!LDi_random(&rng)) {
