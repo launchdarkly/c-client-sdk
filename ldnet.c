@@ -329,11 +329,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
         LDi_log(LD_LOG_DEBUG, "curl response code %d", (int)response_code);
         *response = response_code;
-    }
-    else if (res == CURLE_PARTIAL_FILE) {
-        *response = -2;
-    }
-    else {
+    } else {
         *response = -1;
     }
 

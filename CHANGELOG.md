@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.3.2] - 2019-06-20
+### Fixed
+- Fixed a bug where reconnecting in streaming mode sometimes erroneously waited for a timeout when switching users
+
 ## [1.3.1] - 2019-05-10
 ### Changed:
 - Renamed the build artifacts. They are now prefixed with `ldclientapi`.
