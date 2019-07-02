@@ -134,6 +134,7 @@ struct LDConfig_i {
     char *streamURI;
     bool useReport;
     char *proxyURI;
+    bool verifyPeer;
     bool useReasons;
 };
 

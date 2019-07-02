@@ -150,6 +150,10 @@ prepareShared(const char *const url, const LDConfig *const config,
         }
     }
 
+    if (curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config->verifyPeer) != CURLE_OK) {
+        LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_SSL_VERIFYPEER failed"); goto error;
+    }
+
     *r_curl = curl; *r_headers = headers;
 
     return true;

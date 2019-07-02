@@ -200,6 +200,14 @@ LD_EXPORT(void) LDConfigSetStreamURI(LDConfig *const config,
 LD_EXPORT(void) LDConfigSetProxyURI(LDConfig *const config,
     const char *const uri);
 
+/** @brief Set whether to verify the authenticity of the peer's certificate on network requests.
+ *
+ * By default peer verification is enabled. You may read more about what this means
+ * by reading the [libcurl](https://curl.haxx.se) documentation
+ * on the subject [here](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html). */
+LD_EXPORT(void) LDConfigSetVerifyPeer(LDConfig *const config,
+    const bool enabled);
+
 /** @brief Determines whether the `REPORT` or `GET` verb is used for calls to
  * LaunchDarkly. Do not use unless advised by LaunchDarkly. */
 LD_EXPORT(void) LDConfigSetUseReport(LDConfig *const config, const bool report);
