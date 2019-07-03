@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.4.0] - 2019-07-03
+### Added
+- Added the `LDConfigSetVerifyPeer` configuration option. This option allows disabling certificate verification, which may be useful for testing, or in unfortunate networking configurations. Note that certificate verification should not be disabled unless it is essential, as it makes the SDK vulnerable to man-in-the-middle attacks. (Thanks, [mstrater](https://github.com/mstrater)!)
+
 ## [1.3.2] - 2019-06-20
 ### Fixed
 - Fixed a bug where reconnecting in streaming mode sometimes erroneously waited for a timeout when switching users
