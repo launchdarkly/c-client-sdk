@@ -1,9 +1,11 @@
-LaunchDarkly Client-side SDK for C/C++
+LaunchDarkly Client-Side SDK for C/C++
 ===================================
 
-The LaunchDarkly Client-side SDK for C/C++ is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
+[![CircleCI](https://circleci.com/gh/launchdarkly/c-client-sdk.svg?style=svg)](https://circleci.com/gh/launchdarkly/c-client-sdk)
 
-For using LaunchDarkly in _server-side_ C/C++ applications, refer to our [Server-side C/C++ SDK](https://github.com/launchdarkly/c-server-sdk).
+The LaunchDarkly Client-Side SDK for C/C++ is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
+
+For using LaunchDarkly in _server-side_ C/C++ applications, refer to our [server-side C/C++ SDK](https://github.com/launchdarkly/c-server-sdk).
 
 LaunchDarkly overview
 -------------------------
