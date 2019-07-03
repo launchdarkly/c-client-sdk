@@ -18,6 +18,7 @@ EXPORTS
    LDConfigAddPrivateAttribute
    LDConfigAddSecondaryMobileKey
    LDConfigSetProxyURI
+   LDConfigSetVerifyPeer
    LDConfigSetUseEvaluationReasons
    LDConfigFree
 

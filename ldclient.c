@@ -61,6 +61,7 @@ LDConfigNew(const char *const mobileKey)
     config->useReport = false;
     config->useReasons = false;
     config->proxyURI = NULL;
+    config->verifyPeer = true;
 
     return config;
 }
@@ -164,6 +165,12 @@ void
 LDConfigSetProxyURI(LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config); LD_ASSERT(uri); LD_ASSERT(LDSetString(&config->proxyURI, uri));
+}
+
+void
+LDConfigSetVerifyPeer(LDConfig *const config, const bool enabled)
+{
+    LD_ASSERT(config); config->verifyPeer = enabled;
 }
 
 void
