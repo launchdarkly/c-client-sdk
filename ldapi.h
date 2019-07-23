@@ -274,6 +274,9 @@ LD_EXPORT(struct LDClient_i *) LDClientInit(LDConfig *const config,
  * device specific ID cannot be obtained then a random fallback is generated. */
 LD_EXPORT(LDUser *) LDUserNew(const char *const key);
 
+/** @brief Free a user object */
+LD_EXPORT(void) LDUserFree(LDUser *const user);
+
 /** @brief Mark the user as anonymous. */
 LD_EXPORT(void) LDUserSetAnonymous(LDUser *const user, const bool anon);
 

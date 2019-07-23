@@ -389,7 +389,7 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
     LDi_wrlock(&globalContext.sharedUserLock);
 
     if (user != globalContext.sharedUser) {
-        LDi_freeuser(globalContext.sharedUser);
+        LDUserFree(globalContext.sharedUser);
     }
 
     globalContext.sharedUser = user;
@@ -488,7 +488,7 @@ LDClientClose(LDClient *const client)
         clientCloseIsolated(clientIter);
     }
 
-    LDi_freeuser(globalContext.sharedUser);
+    LDUserFree(globalContext.sharedUser);
     LDConfigFree(globalContext.sharedConfig);
 
     globalContext.sharedConfig  = NULL;

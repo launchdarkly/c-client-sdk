@@ -27,6 +27,7 @@ EXPORTS
    LDClientGetForMobileKey
 
    LDUserNew
+   LDUserFree
    LDUserSetAnonymous
    LDUserSetIP
    LDUserSetFirstName

@@ -43,7 +43,7 @@ test1()
     cJSON_Delete(json);
     free(str);
 
-    LDi_freeuser(user);
+    LDUserFree(user);
 }
 
 /*
@@ -71,7 +71,7 @@ test2()
     cJSON_Delete(json);
     free(str);
 
-    LDi_freeuser(user);
+    LDUserFree(user);
 }
 
 /*
@@ -99,7 +99,7 @@ test3()
     cJSON_Delete(json);
     free(str);
 
-    LDi_freeuser(user);
+    LDUserFree(user);
 }
 
 int
