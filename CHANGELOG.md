@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.5.0] - 2019-07-26
+### Added
+- Added the `LDUserFree` function. This can be used to free a user object *before* it has been passed to the client
+### Fixed
+- A leak of HTTP headers set for requests to LaunchDarkly
+- A leak of the in memory flag store when `LDClientIdentify` is called. This was introduced in `1.2.0`
+- A leak of a structure when events are flushed but no events need to be sent
+
 ## [1.4.0] - 2019-07-03
 ### Added
 - Added the `LDConfigSetVerifyPeer` configuration option. This option allows disabling certificate verification, which may be useful for testing, or in unfortunate networking configurations. Note that certificate verification should not be disabled unless it is essential, as it makes the SDK vulnerable to man-in-the-middle attacks. (Thanks, [mstrater](https://github.com/mstrater)!)

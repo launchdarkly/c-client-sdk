@@ -8,7 +8,7 @@
 
 /** @brief The current SDK version string. This value adheres to semantic
  * versioning and is included in the HTTP user agent sent to LaunchDarkly. */
-#define LD_SDK_VERSION "1.4.0"
+#define LD_SDK_VERSION "1.5.0"
 
 /** @brief Used to ensure only intended symbols are exported in the binaries */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
