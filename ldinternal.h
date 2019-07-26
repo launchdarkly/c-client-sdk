@@ -181,8 +181,6 @@ unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 void LDi_freehash(LDNode *hash);
 void LDi_freenode(LDNode *node);
 
-void LDi_freeuser(LDUser *user);
-
 char *LDi_hashtostring(const LDNode *hash, bool versioned);
 cJSON *LDi_hashtojson(const LDNode *hash);
 cJSON *LDi_arraytojson(const LDNode *hash);

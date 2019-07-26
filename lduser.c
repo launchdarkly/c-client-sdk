@@ -42,7 +42,7 @@ LDUserNew(const char *const key)
 }
 
 void
-LDi_freeuser(LDUser *const user)
+LDUserFree(LDUser *const user)
 {
     if (!user) { return; }
     LDFree(user->key);

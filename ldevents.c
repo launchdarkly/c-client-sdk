@@ -296,17 +296,19 @@ LDi_geteventdata(LDClient *const client)
     collectSummary(client);
 
     LDi_wrlock(&client->eventLock);
-    cJSON *const events = client->eventArray;
-    client->eventArray = cJSON_CreateArray();
-    const int hadevents = client->numEvents;
-    client->numEvents = 0;
-    LDi_wrunlock(&client->eventLock);
 
-    if (hadevents) {
-        char *const data = cJSON_PrintUnformatted(events);
-        cJSON_Delete(events);
-        return data;
-    } else {
+    if (client->numEvents == 0) {
+        LDi_wrunlock(&client->eventLock);
         return NULL;
     }
+
+    cJSON *const events = client->eventArray;
+    client->eventArray = cJSON_CreateArray();
+    client->numEvents = 0;
+
+    LDi_wrunlock(&client->eventLock);
+
+    char *const data = cJSON_PrintUnformatted(events);
+    cJSON_Delete(events);
+    return data;
 }

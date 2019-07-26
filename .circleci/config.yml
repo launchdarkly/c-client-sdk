@@ -48,33 +48,6 @@ jobs:
       - store_artifacts:
           path: /tmp/artifacts
 
-  build-test-windows:
-    docker:
-      - image: ubuntu:18.04
-    steps:
-      - checkout
-      - run:
-          name: Add Wine
-          command: dpkg --add-architecture i386 && apt-get update -y && apt-get install -y wine-development wine32 wine64
-      - run:
-          name: Install build dependencies
-          command: apt-get install -y unzip wget make mingw-w64
-      - run:
-          name: Download Windows Curl
-          command: wget -O mingw.zip https://curl.haxx.se/windows/dl-7.62.0_1/curl-7.62.0_1-win64-mingw.zip && unzip mingw.zip
-      - run:
-          name: Download Windows SSL
-          command: wget -O openssl.zip https://bintray.com/vszakats/generic/download_file?file_path=openssl-1.1.1a-win64-mingw.zip && unzip openssl.zip
-      - run:
-          name: Copy Runtime Dependencies
-          command: cp openssl-1.1.1a-win64-mingw/libcrypto-1_1-x64.dll . && cp openssl-1.1.1a-win64-mingw/libssl-1_1-x64.dll . && cp curl-7.62.0-win64-mingw/bin/libcurl-x64.dll .
-      - run:
-          name: Cross Compile
-          command: make ALTBUILD=mingw
-      - run:
-          name: Test Emulated
-          command: wine ./test
-
 workflows:
   version: 2
   build_and_test_all:
@@ -82,4 +55,3 @@ workflows:
       - build-test-linux-recent
       - build-test-linux-historical
       - build-test-osx
-      - build-test-windows
