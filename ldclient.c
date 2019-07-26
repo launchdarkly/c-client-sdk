@@ -397,6 +397,7 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
         LDi_wrlock(&clientIter->clientLock);
 
+        LDi_freehash(clientIter->allFlags);
         clientIter->allFlags = NULL;
 
         if (clientIter->status == LDStatusInitialized) {

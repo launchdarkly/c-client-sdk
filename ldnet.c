@@ -104,6 +104,7 @@ prepareShared(const char *const url, const LDConfig *const config,
     void *const headerdata, WriteCB datacb, void *const data,
     const LDClient *const client)
 {
+    struct curl_slist *headers = NULL, *headerstmp = NULL;
     CURL *const curl = curl_easy_init();
 
     if (!curl) {
@@ -119,14 +120,15 @@ prepareShared(const char *const url, const LDConfig *const config,
         LDi_log(LD_LOG_CRITICAL, "snprintf during Authorization header creation failed"); goto error;
     }
 
-    struct curl_slist *headers = NULL;
-    if (!(headers = curl_slist_append(headers, headerauth))) {
+    if (!(headerstmp = curl_slist_append(headers, headerauth))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headerauth"); goto error;
     }
+    headers = headerstmp;
 
-    if (!(headers = curl_slist_append(headers, LD_USER_AGENT_HEADER))) {
+    if (!(headerstmp = curl_slist_append(headers, LD_USER_AGENT_HEADER))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headeragent"); goto error;
     }
+    headers = headerstmp;
 
     if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, headercb) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_HEADERFUNCTION failed"); goto error;
@@ -159,7 +161,8 @@ prepareShared(const char *const url, const LDConfig *const config,
     return true;
 
   error:
-    if (curl) { curl_easy_cleanup(curl); }
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(headers);
 
     return false;
 }
@@ -215,7 +218,7 @@ void
 LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, const char *), void cbhandle(LDClient *, int))
 {
     struct MemoryStruct headers; struct streamdata streamdata; struct cbhandlecontext handledata;
-    CURL *curl = NULL; struct curl_slist *headerlist = NULL;
+    CURL *curl = NULL; struct curl_slist *headerlist = NULL, *headertmp = NULL;
 
     handledata.client = client; handledata.cb = cbhandle;
 
@@ -281,49 +284,50 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed");
-            curl_easy_cleanup(curl); return;
+            goto cleanup;
         }
 
         const char* const headermime = "Content-Type: application/json";
-        if (!(headerlist = curl_slist_append(headerlist, headermime))) {
+        if (!(headertmp = curl_slist_append(headerlist, headermime))) {
             LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headermime");
-            curl_easy_cleanup(curl); return;
+            goto cleanup;
         }
+        headerlist = headertmp;
 
         if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonuser) != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed");
-            curl_easy_cleanup(curl); return;
+            goto cleanup;
         }
     }
 
     if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETFUNCTION, SocketCallback) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_OPENSOCKETFUNCTION failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETDATA, &handledata) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_OPENSOCKETDATA failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_HTTPHEADER failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_NOPROGRESS failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progressinspector) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_PROGRESSFUNCTION failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, (void *)&streamdata) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_PROGRESSDATA failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     LDi_log(LD_LOG_INFO, "connecting to stream %s", url);
@@ -337,7 +341,11 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         *response = -1;
     }
 
-    free(streamdata.mem.memory); free(headers.memory);
+  cleanup:
+    free(streamdata.mem.memory);
+    free(headers.memory);
+
+    curl_slist_free_all(headerlist);
 
     curl_easy_cleanup(curl);
 }
@@ -346,7 +354,8 @@ char *
 LDi_fetchfeaturemap(LDClient *const client, int *response)
 {
     struct MemoryStruct headers, data;
-    CURL *curl = NULL; struct curl_slist *headerlist = NULL;
+    CURL *curl = NULL;
+    struct curl_slist *headerlist = NULL, *headertmp = NULL;
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
@@ -407,24 +416,25 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
     if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed");
-            curl_easy_cleanup(curl); return NULL;
+            goto error;
         }
 
         const char *const headermime = "Content-Type: application/json";
-        if (!(headerlist = curl_slist_append(headerlist, headermime))) {
+        if (!(headertmp = curl_slist_append(headerlist, headermime))) {
             LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headermime");
-            curl_easy_cleanup(curl); return NULL;
+            goto error;
         }
+        headerlist = headertmp;
 
         if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonuser) != CURLE_OK) {
             LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed");
-            curl_easy_cleanup(curl); return NULL;
+            goto error;
         }
     }
 
     if (curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_HTTPHEADER failed");
-        curl_easy_cleanup(curl); return NULL;
+        goto error;
     }
 
     if (curl_easy_perform(curl) == CURLE_OK) {
@@ -437,16 +447,29 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
 
     free(headers.memory);
 
+    curl_slist_free_all(headerlist);
+
     curl_easy_cleanup(curl);
 
     return data.memory;
+
+  error:
+    free(data.memory);
+    free(headers.memory);
+
+    curl_slist_free_all(headerlist);
+
+    curl_easy_cleanup(curl);
+
+    return NULL;
 }
 
 void
 LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
 {
     struct MemoryStruct headers, data;
-    CURL *curl = NULL; struct curl_slist *headerlist = NULL;
+    CURL *curl = NULL;
+    struct curl_slist *headerlist = NULL, *headertmp = NULL;
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
@@ -463,25 +486,27 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
     }
 
     const char *const headermime = "Content-Type: application/json";
-    if (!(headerlist = curl_slist_append(headerlist, headermime))) {
+    if (!(headertmp = curl_slist_append(headerlist, headermime))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headermime");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
+    headerlist = headertmp;
 
     const char *const headerschema = "X-LaunchDarkly-Event-Schema: 3";
-    if (!(headerlist = curl_slist_append(headerlist, headerschema))) {
+    if (!(headertmp = curl_slist_append(headerlist, headerschema))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headerschema");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
+    headerlist = headertmp;
 
     if (curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_HTTPHEADER failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, eventdata) != CURLE_OK) {
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed");
-        curl_easy_cleanup(curl); return;
+        goto cleanup;
     }
 
     if (curl_easy_perform(curl) == CURLE_OK) {
@@ -492,7 +517,11 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
         *response = -1;
     }
 
-    free(data.memory); free(headers.memory);
+  cleanup:
+    free(data.memory);
+    free(headers.memory);
+
+    curl_slist_free_all(headerlist);
 
     curl_easy_cleanup(curl);
 }
