@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build-test-linux-recent:
+  build-test-linux:
     docker:
       - image: ubuntu:18.10
     steps:
@@ -19,17 +19,6 @@ jobs:
               cp libldclientapiplus.so /tmp/artifacts/linux-gcc-64bit-libldclientapiplus.so
       - store_artifacts:
           path: /tmp/artifacts
-
-  build-test-linux-historical:
-    docker:
-      - image: centos:6
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: yum install -y make gcc gcc-c++ libcurl-devel
-      - run: make
-      - run: make -C ./unit-tests all
 
   build-test-osx:
     macos:
@@ -52,6 +41,5 @@ workflows:
   version: 2
   build_and_test_all:
     jobs:
-      - build-test-linux-recent
-      - build-test-linux-historical
+      - build-test-linux
       - build-test-osx
