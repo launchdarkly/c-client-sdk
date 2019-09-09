@@ -136,6 +136,7 @@ struct LDConfig_i {
     char *proxyURI;
     bool verifyPeer;
     bool useReasons;
+    char *certFile;
 };
 
 struct LDUser_i {

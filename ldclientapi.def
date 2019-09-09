@@ -19,6 +19,7 @@ EXPORTS
    LDConfigAddSecondaryMobileKey
    LDConfigSetProxyURI
    LDConfigSetVerifyPeer
+   LDConfigSetSSLCertificateAuthority
    LDConfigSetUseEvaluationReasons
    LDConfigFree
 

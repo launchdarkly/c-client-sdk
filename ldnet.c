@@ -156,6 +156,13 @@ prepareShared(const char *const url, const LDConfig *const config,
         LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_SSL_VERIFYPEER failed"); goto error;
     }
 
+    /* Added by external applications to set SSL certificate */
+    if (config->certFile) {
+        if (curl_easy_setopt(curl, CURLOPT_CAINFO, config->certFile) != CURLE_OK) {
+            LDi_log(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CAINFO failed"); goto error;
+        }
+    }
+
     *r_curl = curl; *r_headers = headers;
 
     return true;

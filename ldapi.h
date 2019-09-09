@@ -200,11 +200,13 @@ LD_EXPORT(void) LDConfigSetStreamURI(LDConfig *const config,
 LD_EXPORT(void) LDConfigSetProxyURI(LDConfig *const config,
     const char *const uri);
 
-/** @brief Set whether to verify the authenticity of the peer's certificate on network requests.
+/** @brief Set whether to verify the authenticity of the peer's certificate on
+ * network requests.
  *
- * By default peer verification is enabled. You may read more about what this means
- * by reading the [libcurl](https://curl.haxx.se) documentation
- * on the subject [here](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html). */
+ * By default peer verification is enabled. You may read more about what this
+ * means by reading the [libcurl](https://curl.haxx.se) documentation on the
+ * subject [here](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html).
+ */
 LD_EXPORT(void) LDConfigSetVerifyPeer(LDConfig *const config,
     const bool enabled);
 
@@ -230,6 +232,16 @@ LD_EXPORT(void) LDConfigAddPrivateAttribute(LDConfig *const config,
  * function returns false on failure. */
 LD_EXPORT(bool) LDConfigAddSecondaryMobileKey(LDConfig *const config,
     const char *const name, const char *const key);
+
+/** @brief Set the path to the SSL certificate bundle used for peer
+ * authentication.
+ *
+ * This API is ineffective if LDConfigSetVerifyPeer is set to false. See
+ * [CURLOPT_CAINFO](https://curl.haxx.se/libcurl/c/CURLOPT_CAINFO.html) for
+ * more information. */
+LD_EXPORT(void) LDConfigSetSSLCertificateAuthority(LDConfig *config,
+    const char *certFile);
+
 
 /** @brief Free an existing `LDConfig` instance.
  *
