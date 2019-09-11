@@ -62,6 +62,7 @@ LDConfigNew(const char *const mobileKey)
     config->useReasons = false;
     config->proxyURI = NULL;
     config->verifyPeer = true;
+    config->certFile = NULL;
 
     return config;
 }
@@ -173,6 +174,11 @@ LDConfigSetVerifyPeer(LDConfig *const config, const bool enabled)
     LD_ASSERT(config); config->verifyPeer = enabled;
 }
 
+void LDConfigSetSSLCertificateAuthority(LDConfig *const config, const char *const certFile)
+{
+    LD_ASSERT(config); LD_ASSERT(LDSetString(&config->certFile, certFile));
+}
+
 void
 LDConfigFree(LDConfig *const config)
 {
@@ -182,6 +188,7 @@ LDConfigFree(LDConfig *const config)
     LDFree(config->mobileKey);
     LDFree(config->streamURI);
     LDFree(config->proxyURI);
+    LDFree(config->certFile);
     LDi_freehash(config->privateAttributeNames);
     LDi_freehash(config->secondaryMobileKeys);
     LDFree(config);

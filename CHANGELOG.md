@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.6.0] - 2019-09-11
+### Added
+- Added the `LDConfigSetSSLCertificateAuthority` function. This can be used to specify an alternative certificate authority (such as your own private authority). (Thanks, Aditya Kulkarni!)
+
 ## [1.5.0] - 2019-07-26
 ### Added
 - Added the `LDUserFree` function. This can be used to free a user object *before* it has been passed to the client
