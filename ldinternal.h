@@ -204,6 +204,8 @@ void LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res,
   const char *feature, LDNodeType type, double n, const char *s, LDNode *,
   double defaultn, const char *defaults, const LDNode *, bool detail);
 void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data);
+void LDi_recordtrackmetric(LDClient *const client, LDUser *const user,
+    const char *const name, LDNode *const data, const double metric);
 char *LDi_geteventdata(LDClient *client);
 void LDi_sendevents(LDClient *client, const char *eventdata, int *response);
 

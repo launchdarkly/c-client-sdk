@@ -390,6 +390,10 @@ LD_EXPORT(void) LDClientTrack(struct LDClient_i *const client,
 LD_EXPORT(void) LDClientTrackData(struct LDClient_i *const client,
     const char *const name, LDNode *const data);
 
+/** @brief Record a custom event and include custom data / a metric. */
+LD_EXPORT(void) LDClientTrackMetric(struct LDClient_i *const client,
+    const char *const name, LDNode *const data, const double metric);
+
 /** @brief  Returns a hash table of all flags. This must be freed with
  * `LDNodeFree`. */
 LD_EXPORT(LDNode *) LDAllFlags(struct LDClient_i *const client);
