@@ -25,15 +25,52 @@ enqueueEvent(LDClient *const client, cJSON *const event)
     client->numEvents++;
 }
 
+static cJSON *
+makeBaseEvent(LDClient *const client, LDUser *const lduser,
+    const char *const kind)
+{
+    cJSON *event, *jsonuser;
+
+    LD_ASSERT(event = cJSON_CreateObject());
+
+    cJSON_AddStringToObject(event, "kind", kind);
+    cJSON_AddNumberToObject(event, "creationDate", milliTimestamp());
+    LD_ASSERT(jsonuser = LDi_usertojson(client, lduser, true));
+    cJSON_AddItemToObject(event, "user", jsonuser);
+
+    return event;
+}
+
+static cJSON *
+makeTrackEvent(LDClient *const client, LDUser *const lduser,
+    const char *const name, LDNode *const data)
+{
+    cJSON *const event = makeBaseEvent(client, lduser, "custom");
+    cJSON_AddStringToObject(event, "key", name);
+
+    if (data != NULL) {
+        cJSON_AddItemToObject(event, "data", LDi_hashtojson(data));
+    }
+
+    return event;
+}
+
+static cJSON *
+makeTrackMetricEvent(LDClient *const client, LDUser *const lduser,
+    const char *const name, LDNode *const data, const double metric)
+{
+    cJSON *const event = makeTrackEvent(client, lduser, name, data);
+
+    cJSON_AddNumberToObject(event, "metricValue", metric);
+
+    return event;
+}
+
 void
 LDi_recordidentify(LDClient *const client, LDUser *const lduser)
 {
-    cJSON *json = cJSON_CreateObject();
-    cJSON_AddStringToObject(json, "kind", "identify");
+    cJSON *json = makeBaseEvent(client, lduser, "identify");
     cJSON_AddStringToObject(json, "key", lduser->key);
-    cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
-    cJSON *const juser = LDi_usertojson(client, lduser, true);
-    cJSON_AddItemToObject(json, "user", juser);
 
     LDi_wrlock(&client->eventLock);
 
@@ -229,10 +266,8 @@ LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const re
         return;
     }
 
-    cJSON *const json = cJSON_CreateObject();
-    cJSON_AddStringToObject(json, "kind", "feature");
+    cJSON *const json = makeBaseEvent(client, lduser, "feature");
     cJSON_AddStringToObject(json, "key", feature);
-    cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
 
     cJSON_AddNumberToObject(json, "version", res->flagversion ? res->flagversion : res->version);
 
@@ -258,35 +293,30 @@ LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const re
         cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
 
-    cJSON *const juser = LDi_usertojson(client, lduser, true);
-    cJSON_AddItemToObject(json, "user", juser);
-
     LDi_wrlock(&client->eventLock);
-
     enqueueEvent(client, json);
-
     LDi_wrunlock(&client->eventLock);
 }
 
 void
-LDi_recordtrack(LDClient *const client, LDUser *const user, const char *const name, LDNode *const data)
+LDi_recordtrack(LDClient *const client, LDUser *const user,
+    const char *const name, LDNode *const data)
 {
-    cJSON *const json = cJSON_CreateObject();
-    cJSON_AddStringToObject(json, "kind", "custom");
-    cJSON_AddStringToObject(json, "key", name);
-    cJSON_AddNumberToObject(json, "creationDate", milliTimestamp());
-
-    cJSON *const juser = LDi_usertojson(client, user, true);
-    cJSON_AddItemToObject(json, "user", juser);
-
-    if (data != NULL) {
-        cJSON_AddItemToObject(json, "data", LDi_hashtojson(data));
-    }
+    cJSON *const event = makeTrackEvent(client, user, name, data);
 
     LDi_wrlock(&client->eventLock);
+    enqueueEvent(client, event);
+    LDi_wrunlock(&client->eventLock);
+}
 
-    enqueueEvent(client, json);
+void
+LDi_recordtrackmetric(LDClient *const client, LDUser *const user,
+    const char *const name, LDNode *const data, const double metric)
+{
+    cJSON *const event = makeTrackMetricEvent(client, user, name, data, metric);
 
+    LDi_wrlock(&client->eventLock);
+    enqueueEvent(client, event);
     LDi_wrunlock(&client->eventLock);
 }
 

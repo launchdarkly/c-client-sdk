@@ -8,7 +8,7 @@
 
 /** @brief The current SDK version string. This value adheres to semantic
  * versioning and is included in the HTTP user agent sent to LaunchDarkly. */
-#define LD_SDK_VERSION "1.6.0"
+#define LD_SDK_VERSION "1.7.0"
 
 /** @brief Used to ensure only intended symbols are exported in the binaries */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
@@ -389,6 +389,10 @@ LD_EXPORT(void) LDClientTrack(struct LDClient_i *const client,
 /** @brief Record a custom event and include custom data. */
 LD_EXPORT(void) LDClientTrackData(struct LDClient_i *const client,
     const char *const name, LDNode *const data);
+
+/** @brief Record a custom event and include custom data / a metric. */
+LD_EXPORT(void) LDClientTrackMetric(struct LDClient_i *const client,
+    const char *const name, LDNode *const data, const double metric);
 
 /** @brief  Returns a hash table of all flags. This must be freed with
  * `LDNodeFree`. */

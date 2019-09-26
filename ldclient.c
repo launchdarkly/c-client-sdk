@@ -1013,9 +1013,20 @@ LDClientTrack(LDClient *const client, const char *const name)
 void
 LDClientTrackData(LDClient *const client, const char *const name, LDNode *const data)
 {
-    LD_ASSERT(client); LD_ASSERT(name); LD_ASSERT(data);
+    LD_ASSERT(client); LD_ASSERT(name);
     LDi_rdlock(&client->shared->sharedUserLock);
     LDi_recordtrack(client, client->shared->sharedUser, name, data);
+    LDi_rdunlock(&client->shared->sharedUserLock);
+}
+
+void
+LDClientTrackMetric(LDClient *const client, const char *const name,
+    LDNode *const data, const double metric)
+{
+    LD_ASSERT(client); LD_ASSERT(name);
+    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_recordtrackmetric(client, client->shared->sharedUser, name, data,
+        metric);
     LDi_rdunlock(&client->shared->sharedUserLock);
 }
 

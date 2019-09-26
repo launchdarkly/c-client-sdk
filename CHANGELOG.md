@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.7.0] - 2019-09-26
+### Added
+- Added `LDClientTrackMetric` which is an extended version of `LDClientTrackData` but with an extra associated metric value.
+
 ## [1.6.0] - 2019-09-11
 ### Added
 - Added the `LDConfigSetSSLCertificateAuthority` function. This can be used to specify an alternative certificate authority (such as your own private authority). (Thanks, Aditya Kulkarni!)
