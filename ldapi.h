@@ -402,7 +402,9 @@ LD_EXPORT(LDNode *) LDAllFlags(struct LDClient_i *const client);
 LD_EXPORT(bool) LDBoolVariation(struct LDClient_i *const client,
     const char *const featureKey, const bool fallback);
 
-/** @brief Evaluate Int flag */
+/** @brief Evaluate Int flag
+ *
+ * If the flag value is actually a float the result is truncated. */
 LD_EXPORT(int) LDIntVariation(struct LDClient_i *const client,
     const char *const featureKey, const int fallback);
 
@@ -428,7 +430,9 @@ LD_EXPORT(bool) LDBoolVariationDetail(struct LDClient_i *const client,
     const char *const featureKey, const bool fallback,
     LDVariationDetails *const details);
 
-/** @brief Evaluate Int flag with details */
+/** @brief Evaluate Int flag with details
+ *
+ * If the flag value is actually a float the result is truncated. */
 LD_EXPORT(int) LDIntVariationDetail(struct LDClient_i *const client,
     const char *const featureKey, const int fallback,
     LDVariationDetails *const details);
