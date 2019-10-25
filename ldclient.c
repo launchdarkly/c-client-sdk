@@ -246,7 +246,6 @@ LDi_clientinitisolated(struct LDGlobal_i *const shared,
     client->background = false;
     client->status = LDStatusInitializing;
     client->allFlags = NULL;
-    client->threads = 3;
 
     client->shouldstopstreaming = false;
     client->databuffer = NULL;
@@ -436,23 +435,16 @@ clientCloseIsolated(LDClient *const client)
     LDi_reinitializeconnection(client);
     LDi_wrunlock(&client->clientLock);
 
+    LDi_mtxenter(&client->condMtx);
     LDi_condsignal(&client->initCond);
     LDi_condsignal(&client->eventCond);
+    LDi_condsignal(&client->pollCond);
+    LDi_condsignal(&client->streamCond);
+    LDi_mtxleave(&client->condMtx);
 
-    /* wait for threads to die */
-    LDi_mtxenter(&client->initCondMtx);
-    while (true) {
-        LDi_wrlock(&client->clientLock);
-        if (client->threads == 0) {
-            LDi_updatestatus(client, LDStatusShutdown);
-            LDi_wrunlock(&client->clientLock);
-            break;
-        }
-        LDi_wrunlock(&client->clientLock);
-
-        LDi_condwait(&client->initCond, &client->initCondMtx, 5);
-    }
-    LDi_mtxleave(&client->initCondMtx);
+    LDi_jointhread(client->eventThread);
+    LDi_jointhread(client->pollingThread);
+    LDi_jointhread(client->streamingThread);
 
     LDi_freehash(client->allFlags);
 
@@ -478,10 +470,6 @@ clientCloseIsolated(LDClient *const client)
         LDFree(item->key); LDFree(item);
         item = next;
     }
-
-    LDi_jointhread(client->eventThread);
-    LDi_jointhread(client->pollingThread);
-    LDi_jointhread(client->streamingThread);
 
     LDFree(client);
 }

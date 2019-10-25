@@ -91,7 +91,6 @@ struct LDClient_i {
     LDStatus status;
     struct listener *listeners;
     /* thread management */
-    unsigned int threads;
     ld_thread_t eventThread;
     ld_thread_t pollingThread;
     ld_thread_t streamingThread;
