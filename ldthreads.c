@@ -26,21 +26,21 @@ LDi_bgeventsender(void *const v)
 
         if (status == LDStatusFailed || finalflush) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender");
-            client->threads--;
-            if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
 
-        int ms = client->shared->sharedConfig->eventsFlushIntervalMillis;
-        LDi_wrunlock(&client->clientLock);
+        const int ms = client->shared->sharedConfig->eventsFlushIntervalMillis;
 
         if (status != LDStatusShuttingdown) {
-            LDi_log(LD_LOG_TRACE, "bg sender sleeping");
             LDi_mtxenter(&client->condMtx);
+            LDi_wrunlock(&client->clientLock);
             LDi_condwait(&client->eventCond, &client->condMtx, ms);
             LDi_mtxleave(&client->condMtx);
+        } else {
+            LDi_wrunlock(&client->clientLock);
         }
+
         LDi_log(LD_LOG_TRACE, "bgsender running");
 
         LDi_rdlock(&client->clientLock);
@@ -57,38 +57,46 @@ LDi_bgeventsender(void *const v)
         char *const eventdata = LDi_geteventdata(client);
         if (!eventdata) { continue; }
 
-        bool sendfailed = false;
+        bool sendFailed = false;
         while (true) {
             int response = 0;
 
             LDi_sendevents(client, eventdata, &response);
 
-            if (response == 401 || response == 403) {
-                LDi_wrlock(&client->clientLock);
-                LDi_updatestatus(client, LDStatusFailed);
-                LDi_wrunlock(&client->clientLock);
+            if (response == 200 || response == 202) {
+                LDi_log(LD_LOG_TRACE, "successfuly sent event batch");
 
-                LDi_log(LD_LOG_ERROR, "mobile key not authorized, event sending failed");
+                sendFailed = false;
 
-                sendfailed = true; break;
-            } else if (response == -1) {
-                if (sendfailed) {
-                    break;
-                } else {
-                    sendfailed = true;
-                }
+                break;
             } else {
-                sendfailed = false; break;
-            }
+                if (sendFailed == true) {
+                    break;
+                }
 
-            LDi_millisleep(1000);
+                sendFailed = true;
+
+                if (response == 401 || response == 403) {
+                    LDi_wrlock(&client->clientLock);
+                    LDi_updatestatus(client, LDStatusFailed);
+                    LDi_wrunlock(&client->clientLock);
+
+                    LDi_log(LD_LOG_ERROR, "mobile key not authorized, event sending failed");
+
+                    break;
+                }
+
+                LDi_mtxenter(&client->condMtx);
+                LDi_condwait(&client->eventCond, &client->condMtx, 1000);
+                LDi_mtxleave(&client->condMtx);
+            }
         }
 
-        if (sendfailed) {
+        if (sendFailed) {
             LDi_log(LD_LOG_WARNING, "sending events failed deleting event batch");
         }
 
-        free(eventdata);
+        LDFree(eventdata);
     }
 }
 
@@ -105,8 +113,6 @@ LDi_bgfeaturepoller(void *const v)
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller");
-            client->threads--;
-            if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
@@ -122,13 +128,16 @@ LDi_bgfeaturepoller(void *const v)
 
         /* this triggers the first time the thread runs, so we don't have to wait */
         if (!skippolling && client->status == LDStatusInitializing) { ms = 0; }
-        LDi_wrunlock(&client->clientLock);
 
         if (ms > 0) {
             LDi_mtxenter(&client->condMtx);
+            LDi_wrunlock(&client->clientLock);
             LDi_condwait(&client->pollCond, &client->condMtx, ms);
             LDi_mtxleave(&client->condMtx);
+        } else {
+            LDi_wrunlock(&client->clientLock);
         }
+
         if (skippolling) { continue; }
 
         LDi_rdlock(&client->clientLock);
@@ -141,18 +150,23 @@ LDi_bgfeaturepoller(void *const v)
         int response = 0;
         char *const data = LDi_fetchfeaturemap(client, &response);
 
-        if (response == 401 || response == 403) {
+        if (response == 200) {
+            if (!data) { continue; }
+
+            if (LDi_clientsetflags(client, true, data, 1)) {
+                LDi_savehash(client);
+            }
+        } else if (response == 401 || response == 403) {
             LDi_wrlock(&client->clientLock);
             LDi_updatestatus(client, LDStatusFailed);
             LDi_wrunlock(&client->clientLock);
 
             LDi_log(LD_LOG_ERROR, "mobile key not authorized, polling failed");
+        } else {
+            LDi_log(LD_LOG_ERROR, "poll failed will retry again");
         }
-        if (!data) { continue; }
-        if (LDi_clientsetflags(client, true, data, 1)) {
-            LDi_savehash(client);
-        }
-        free(data);
+
+        LDFree(data);
     }
 }
 
@@ -252,18 +266,23 @@ onstreameventping(LDClient *const client)
     int response = 0;
     char *const data = LDi_fetchfeaturemap(client, &response);
 
-    if (response == 401 || response == 403) {
-        LDi_wrlock(&client->clientLock);
-        LDi_updatestatus(client, LDStatusFailed);
-        LDi_wrunlock(&client->clientLock);
+    if (response == 200) {
+        if (!data) { return; }
+
+        if (LDi_clientsetflags(client, true, data, 1)) {
+            LDi_rdlock(&client->shared->sharedUserLock);
+            LDi_savedata("features", client->shared->sharedUser->key, data);
+            LDi_rdunlock(&client->shared->sharedUserLock);
+        }
+    } else {
+        if (response == 401 || response == 403) {
+            LDi_wrlock(&client->clientLock);
+            LDi_updatestatus(client, LDStatusFailed);
+            LDi_wrunlock(&client->clientLock);
+        }
     }
-    if (!data) { return; }
-    if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_rdlock(&client->shared->sharedUserLock);
-        LDi_savedata("features", client->shared->sharedUser->key, data);
-        LDi_rdunlock(&client->shared->sharedUserLock);
-    }
-    free(data);
+
+    LDFree(data);
 }
 
 void
@@ -384,16 +403,31 @@ LDi_bgfeaturestreamer(void *const v)
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer");
-            client->threads--;
-            if (!client->threads) { LDi_condsignal(&client->initCond); }
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
 
         if (!client->shared->sharedConfig->streaming || client->offline || client->background) {
-            LDi_wrunlock(&client->clientLock);
             int ms = 30000;
+
+            if (retries) {
+                unsigned int rng = 0;
+                if (!LDi_random(&rng)) {
+                    LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender");
+                }
+
+                int backoff = 1000 * pow(2, retries - 2);
+                backoff += rng % backoff;
+                if (backoff > 3600 * 1000) {
+                    backoff = 3600 * 1000;
+                    retries--; /* avoid excessive incrementing */
+                }
+
+                ms = backoff;
+            }
+
             LDi_mtxenter(&client->condMtx);
+            LDi_wrunlock(&client->clientLock);
             LDi_condwait(&client->streamCond, &client->condMtx, ms);
             LDi_mtxleave(&client->condMtx);
             continue;
@@ -412,7 +446,7 @@ LDi_bgfeaturestreamer(void *const v)
 
             LDi_log(LD_LOG_ERROR, "mobile key not authorized, streaming failed");
             continue;
-        } else if (response == -1) {
+        } else {
             LDi_rdlock(&client->clientLock);
             /* check if the stream was intentionally closed */
             if (client->streamhandle) {
@@ -421,22 +455,6 @@ LDi_bgfeaturestreamer(void *const v)
                 retries = 0;
             }
             LDi_rdunlock(&client->clientLock);
-        }
-
-        if (retries) {
-            unsigned int rng = 0;
-            if (!LDi_random(&rng)) {
-                LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender");
-            }
-
-            int backoff = 1000 * pow(2, retries - 2);
-            backoff += rng % backoff;
-            if (backoff > 3600 * 1000) {
-                backoff = 3600 * 1000;
-                retries--; /* avoid excessive incrementing */
-            }
-
-            LDi_millisleep(backoff);
         }
     }
 }

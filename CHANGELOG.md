@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.7.1] - 2019-10-25
+### Fixed
+- Several race conditions in background threads causing lag when closing the client
+- Increased validation of HTTP responses
+- Simplified internal thread tracking logic
+- Increased test coverage and documentation of variation methods
+
 ## [1.7.0] - 2019-09-26
 ### Added
 - Added `LDClientTrackMetric` which is an extended version of `LDClientTrackData` but with an extra associated metric value.

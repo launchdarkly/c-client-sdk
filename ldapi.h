@@ -8,7 +8,7 @@
 
 /** @brief The current SDK version string. This value adheres to semantic
  * versioning and is included in the HTTP user agent sent to LaunchDarkly. */
-#define LD_SDK_VERSION "1.7.0"
+#define LD_SDK_VERSION "1.7.1"
 
 /** @brief Used to ensure only intended symbols are exported in the binaries */
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
@@ -402,7 +402,9 @@ LD_EXPORT(LDNode *) LDAllFlags(struct LDClient_i *const client);
 LD_EXPORT(bool) LDBoolVariation(struct LDClient_i *const client,
     const char *const featureKey, const bool fallback);
 
-/** @brief Evaluate Int flag */
+/** @brief Evaluate Int flag
+ *
+ * If the flag value is actually a float the result is truncated. */
 LD_EXPORT(int) LDIntVariation(struct LDClient_i *const client,
     const char *const featureKey, const int fallback);
 
@@ -428,7 +430,9 @@ LD_EXPORT(bool) LDBoolVariationDetail(struct LDClient_i *const client,
     const char *const featureKey, const bool fallback,
     LDVariationDetails *const details);
 
-/** @brief Evaluate Int flag with details */
+/** @brief Evaluate Int flag with details
+ *
+ * If the flag value is actually a float the result is truncated. */
 LD_EXPORT(int) LDIntVariationDetail(struct LDClient_i *const client,
     const char *const featureKey, const int fallback,
     LDVariationDetails *const details);
