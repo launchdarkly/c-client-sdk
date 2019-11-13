@@ -23,15 +23,6 @@ jobs:
       - run:
           name: Test
           command: ./.ldrelease/test.sh
-      - run:
-          name: Copy Artifacts
-          command: |
-              mkdir -p /tmp/artifacts
-              cp libldclientapi.a /tmp/artifacts/linux-gcc-64bit-libldclientapi.a
-              cp libldclientapi.so /tmp/artifacts/linux-gcc-64bit-libldclientapi.so
-              cp libldclientapiplus.so /tmp/artifacts/linux-gcc-64bit-libldclientapiplus.so
-      - store_artifacts:
-          path: /tmp/artifacts
 
   build-test-osx:
     macos:
@@ -44,15 +35,6 @@ jobs:
       - run:
           name: Test
           command: ./.ldrelease/test.sh
-      - run:
-          name: Copy Artifacts
-          command: |
-              mkdir -p /tmp/artifacts
-              cp libldclientapi.a /tmp/artifacts/osx-clang-64bit-libldclientapi.a
-              cp libldclientapi.so /tmp/artifacts/osx-clang-64bit-libldclientapi.so
-              cp libldclientapiplus.so /tmp/artifacts/osx-clang-64bit-libldclientapiplus.so
-      - store_artifacts:
-          path: /tmp/artifacts
 
   build-test-windows:
     executor:
