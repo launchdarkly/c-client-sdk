@@ -2,12 +2,9 @@ version: 2
 jobs:
   build-test-linux:
     docker:
-      - image: ubuntu:18.10
+      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: apt-get update -y && apt-get install -y build-essential libcurl4-openssl-dev
       - run: make
       - run: make -C ./unit-tests all
       - run:
