@@ -1,12 +1,28 @@
-version: 2
+version: 2.1
+
+orbs:
+   win: circleci/windows@1.0.0
+
+workflows:
+  version: 2
+  build_and_test_all:
+    jobs:
+      - build-test-linux
+      - build-test-osx
+      - build-test-windows
+
 jobs:
   build-test-linux:
     docker:
       - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
     steps:
       - checkout
-      - run: make
-      - run: make -C ./unit-tests all
+      - run:
+          name: Build
+          command: ./.ldrelease/build.sh
+      - run:
+          name: Test
+          command: ./.ldrelease/test.sh
       - run:
           name: Copy Artifacts
           command: |
@@ -22,8 +38,12 @@ jobs:
       xcode: "9.0"
     steps:
       - checkout
-      - run: make
-      - run: make -C ./unit-tests all
+      - run:
+          name: Build
+          command: ./.ldrelease/build.sh
+      - run:
+          name: Test
+          command: ./.ldrelease/test.sh
       - run:
           name: Copy Artifacts
           command: |
@@ -34,9 +54,15 @@ jobs:
       - store_artifacts:
           path: /tmp/artifacts
 
-workflows:
-  version: 2
-  build_and_test_all:
-    jobs:
-      - build-test-linux
-      - build-test-osx
+  build-test-windows:
+    executor:
+      name: win/vs2019
+      shell: powershell.exe
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: ./.ldrelease/build.ps1
+      - run:
+          name: Test
+          command: ./.ldrelease/test.ps1

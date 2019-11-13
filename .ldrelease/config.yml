@@ -1,0 +1,23 @@
+repo:
+  public: c-client-sdk
+  private: c-client-sdk-private
+
+circleci:
+  linux:
+    image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
+    env:
+      LD_LIBRARY_FILE_PREFIX: linux-gcc-64bit
+  mac:
+    xcode: "9.0"
+    env:
+      LD_LIBRARY_FILE_PREFIX: osx-clang-64bit
+  windows:
+    env:
+      LD_LIBRARY_FILE_PREFIX: windows-vs-64bit
+
+documentation:
+  title: LaunchDarkly Client-Side SDK for C/C++
+  githubPages: true
+
+sdk:
+  displayName: "C/C++ (client-side)"
