@@ -11,6 +11,8 @@
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
+#include <mach/clock.h>
+#include <mach/mach.h>
 #endif
 
 #include <stdlib.h>
@@ -157,7 +159,22 @@ LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
 {
     struct timespec ts;
 
-    clock_gettime(CLOCK_REALTIME, &ts);
+    #ifdef __APPLE__
+        kern_return_t status;
+        clock_serv_t clock_serve;
+        mach_timespec_t mach_timespec;
+        status = host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &clock_serve);
+        LD_ASSERT(status == KERN_SUCCESS);
+        status = clock_get_time(clock_serve, &mach_timespec);
+        LD_ASSERT(status == KERN_SUCCESS);
+        status = mach_port_deallocate(mach_task_self(), clock_serve);
+        LD_ASSERT(status == KERN_SUCCESS);
+        ts.tv_sec = mach_timespec.tv_sec;
+        ts.tv_nsec = mach_timespec.tv_nsec;
+    #else
+        clock_gettime(CLOCK_REALTIME, &ts);
+    #endif
+
     ts.tv_sec += ms / 1000;
     ts.tv_nsec += (ms % 1000) * 1000 * 1000;
     if (ts.tv_nsec > 1000 * 1000 * 1000) {
