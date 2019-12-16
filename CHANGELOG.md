@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.7.3] - 2019-12-16
+### Fixed:
+- Stopped using `clock_gettime` on OSX which is not supported for older OS versions.
+
 ## [1.7.2] - 2019-12-16
 ### Fixed:
 - Updated cJSON dependency to 1.7.12 (to resolve several known security vulnerabilities)
