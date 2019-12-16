@@ -12,7 +12,7 @@ ifeq ($(UNAME),Darwin)
 	LIBS+= -framework CoreFoundation -framework IOKit
 endif
 
-TESTS=test-store.test test-hooks.test test-userencoding.test test-deviceid.test test-multienv.test test-events.test test-variations.test
+TESTS=test-store.test test-hooks.test test-userencoding.test test-platform.test test-multienv.test test-events.test test-variations.test
 
 all: run-tests
 
