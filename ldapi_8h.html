@@ -126,7 +126,7 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a47b4f88c29987ea9bca4583775d590ee"><td class="memItemLeft" align="right" valign="top"><a id="a47b4f88c29987ea9bca4583775d590ee"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a47b4f88c29987ea9bca4583775d590ee">LD_SDK_VERSION</a>&#160;&#160;&#160;&quot;1.3.1&quot;</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a47b4f88c29987ea9bca4583775d590ee">LD_SDK_VERSION</a>&#160;&#160;&#160;&quot;1.7.2&quot;</td></tr>
 <tr class="memdesc:a47b4f88c29987ea9bca4583775d590ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current SDK version string. This value adheres to semantic versioning and is included in the HTTP user agent sent to LaunchDarkly. <br /></td></tr>
 <tr class="separator:a47b4f88c29987ea9bca4583775d590ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a419bec5cc15c192bcd1db79c35af6996"><td class="memItemLeft" align="right" valign="top"><a id="a419bec5cc15c192bcd1db79c35af6996"></a>
@@ -256,6 +256,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldap
 <tr class="memitem:ad6875a825fb632c94d5f83c87437579a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#ad6875a825fb632c94d5f83c87437579a">LDConfigSetProxyURI</a> (<a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *const config, const char *const uri)</td></tr>
 <tr class="memdesc:ad6875a825fb632c94d5f83c87437579a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the proxy server used for connecting to LaunchDarkly.  <a href="#ad6875a825fb632c94d5f83c87437579a">More...</a><br /></td></tr>
 <tr class="separator:ad6875a825fb632c94d5f83c87437579a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae18ea142d6151018b721a79da6d1cf3c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#ae18ea142d6151018b721a79da6d1cf3c">LDConfigSetVerifyPeer</a> (<a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *const config, const bool enabled)</td></tr>
+<tr class="memdesc:ae18ea142d6151018b721a79da6d1cf3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set whether to verify the authenticity of the peer's certificate on network requests.  <a href="#ae18ea142d6151018b721a79da6d1cf3c">More...</a><br /></td></tr>
+<tr class="separator:ae18ea142d6151018b721a79da6d1cf3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1c5c47a9a14cfc43cdc295c9c945b5a"><td class="memItemLeft" align="right" valign="top"><a id="ad1c5c47a9a14cfc43cdc295c9c945b5a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#ad1c5c47a9a14cfc43cdc295c9c945b5a">LDConfigSetUseReport</a> (<a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *const config, const bool report)</td></tr>
 <tr class="memdesc:ad1c5c47a9a14cfc43cdc295c9c945b5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines whether the <code>REPORT</code> or <code>GET</code> verb is used for calls to LaunchDarkly. Do not use unless advised by LaunchDarkly. <br /></td></tr>
@@ -271,6 +274,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldap
 <tr class="memitem:a3f05f1d71ef4ded85c7a2536c88ae197"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a3f05f1d71ef4ded85c7a2536c88ae197">LDConfigAddSecondaryMobileKey</a> (<a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *const config, const char *const name, const char *const key)</td></tr>
 <tr class="memdesc:a3f05f1d71ef4ded85c7a2536c88ae197"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add another mobile key to the list of secondary environments.  <a href="#a3f05f1d71ef4ded85c7a2536c88ae197">More...</a><br /></td></tr>
 <tr class="separator:a3f05f1d71ef4ded85c7a2536c88ae197"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cec4d4a720a40a4e8cad4f4533ca755"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a4cec4d4a720a40a4e8cad4f4533ca755">LDConfigSetSSLCertificateAuthority</a> (<a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *config, const char *certFile)</td></tr>
+<tr class="memdesc:a4cec4d4a720a40a4e8cad4f4533ca755"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the path to the SSL certificate bundle used for peer authentication.  <a href="#a4cec4d4a720a40a4e8cad4f4533ca755">More...</a><br /></td></tr>
+<tr class="separator:a4cec4d4a720a40a4e8cad4f4533ca755"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79e19ea7125b5b1707ba64a01e1f2d2a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a79e19ea7125b5b1707ba64a01e1f2d2a">LDConfigFree</a> (<a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *const config)</td></tr>
 <tr class="memdesc:a79e19ea7125b5b1707ba64a01e1f2d2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free an existing <code>LDConfig</code> instance.  <a href="#a79e19ea7125b5b1707ba64a01e1f2d2a">More...</a><br /></td></tr>
 <tr class="separator:a79e19ea7125b5b1707ba64a01e1f2d2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -287,6 +293,10 @@ struct LDClient_i *&#160;</td><td class="memItemRight" valign="bottom"><a class=
 <tr class="memitem:a4df01f9dab0e583fe28540df53eeb5ae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="ldapi_8h.html#a851fc73c6dbc1732e992dda5fa0f79b1">LDUser</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a4df01f9dab0e583fe28540df53eeb5ae">LDUserNew</a> (const char *const key)</td></tr>
 <tr class="memdesc:a4df01f9dab0e583fe28540df53eeb5ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate a new user.  <a href="#a4df01f9dab0e583fe28540df53eeb5ae">More...</a><br /></td></tr>
 <tr class="separator:a4df01f9dab0e583fe28540df53eeb5ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a174efbb24f2d474d817ccc2e9b2a21c0"><td class="memItemLeft" align="right" valign="top"><a id="a174efbb24f2d474d817ccc2e9b2a21c0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a174efbb24f2d474d817ccc2e9b2a21c0">LDUserFree</a> (<a class="el" href="ldapi_8h.html#a851fc73c6dbc1732e992dda5fa0f79b1">LDUser</a> *const user)</td></tr>
+<tr class="memdesc:a174efbb24f2d474d817ccc2e9b2a21c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free a user object. <br /></td></tr>
+<tr class="separator:a174efbb24f2d474d817ccc2e9b2a21c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a238f36668ddcccae4444e017464ce0b3"><td class="memItemLeft" align="right" valign="top"><a id="a238f36668ddcccae4444e017464ce0b3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a238f36668ddcccae4444e017464ce0b3">LDUserSetAnonymous</a> (<a class="el" href="ldapi_8h.html#a851fc73c6dbc1732e992dda5fa0f79b1">LDUser</a> *const user, const bool anon)</td></tr>
 <tr class="memdesc:a238f36668ddcccae4444e017464ce0b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark the user as anonymous. <br /></td></tr>
@@ -392,6 +402,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldap
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a2e647f78596102ba4f6da1bc9a0eba40">LDClientTrackData</a> (struct LDClient_i *const client, const char *const name, <a class="el" href="ldapi_8h.html#a49b5544b23523a87e660094beb3ffa8d">LDNode</a> *const data)</td></tr>
 <tr class="memdesc:a2e647f78596102ba4f6da1bc9a0eba40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record a custom event and include custom data. <br /></td></tr>
 <tr class="separator:a2e647f78596102ba4f6da1bc9a0eba40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31d47088cad15cdf470d4320d972b9a1"><td class="memItemLeft" align="right" valign="top"><a id="a31d47088cad15cdf470d4320d972b9a1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a31d47088cad15cdf470d4320d972b9a1">LDClientTrackMetric</a> (struct LDClient_i *const client, const char *const name, <a class="el" href="ldapi_8h.html#a49b5544b23523a87e660094beb3ffa8d">LDNode</a> *const data, const double metric)</td></tr>
+<tr class="memdesc:a31d47088cad15cdf470d4320d972b9a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record a custom event and include custom data / a metric. <br /></td></tr>
+<tr class="separator:a31d47088cad15cdf470d4320d972b9a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac1f7cf7dc04e4a8c5a530f5ef36e9d57"><td class="memItemLeft" align="right" valign="top"><a id="ac1f7cf7dc04e4a8c5a530f5ef36e9d57"></a>
 <a class="el" href="ldapi_8h.html#a49b5544b23523a87e660094beb3ffa8d">LDNode</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#ac1f7cf7dc04e4a8c5a530f5ef36e9d57">LDAllFlags</a> (struct LDClient_i *const client)</td></tr>
 <tr class="memdesc:ac1f7cf7dc04e4a8c5a530f5ef36e9d57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a hash table of all flags. This must be freed with <code>LDNodeFree</code>. <br /></td></tr>
@@ -400,9 +414,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldap
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#aa7ce4cb11b95c44ad3665c32fa62be69">LDBoolVariation</a> (struct LDClient_i *const client, const char *const featureKey, const bool fallback)</td></tr>
 <tr class="memdesc:aa7ce4cb11b95c44ad3665c32fa62be69"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate Bool flag. <br /></td></tr>
 <tr class="separator:aa7ce4cb11b95c44ad3665c32fa62be69"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeddff251f32d320c08aec309b3eb2705"><td class="memItemLeft" align="right" valign="top"><a id="aeddff251f32d320c08aec309b3eb2705"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#aeddff251f32d320c08aec309b3eb2705">LDIntVariation</a> (struct LDClient_i *const client, const char *const featureKey, const int fallback)</td></tr>
-<tr class="memdesc:aeddff251f32d320c08aec309b3eb2705"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate Int flag. <br /></td></tr>
+<tr class="memitem:aeddff251f32d320c08aec309b3eb2705"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#aeddff251f32d320c08aec309b3eb2705">LDIntVariation</a> (struct LDClient_i *const client, const char *const featureKey, const int fallback)</td></tr>
+<tr class="memdesc:aeddff251f32d320c08aec309b3eb2705"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate Int flag.  <a href="#aeddff251f32d320c08aec309b3eb2705">More...</a><br /></td></tr>
 <tr class="separator:aeddff251f32d320c08aec309b3eb2705"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a267ede3cb1300b0c91688f8dc9a59666"><td class="memItemLeft" align="right" valign="top"><a id="a267ede3cb1300b0c91688f8dc9a59666"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a267ede3cb1300b0c91688f8dc9a59666">LDDoubleVariation</a> (struct LDClient_i *const client, const char *const featureKey, const double fallback)</td></tr>
@@ -424,9 +437,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ld
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a4a114362834254d73cf9b806341e68cc">LDBoolVariationDetail</a> (struct LDClient_i *const client, const char *const featureKey, const bool fallback, <a class="el" href="structLDVariationDetails.html">LDVariationDetails</a> *const details)</td></tr>
 <tr class="memdesc:a4a114362834254d73cf9b806341e68cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate Bool flag with details. <br /></td></tr>
 <tr class="separator:a4a114362834254d73cf9b806341e68cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22c7e189eea74201d295b1febb0115f7"><td class="memItemLeft" align="right" valign="top"><a id="a22c7e189eea74201d295b1febb0115f7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a22c7e189eea74201d295b1febb0115f7">LDIntVariationDetail</a> (struct LDClient_i *const client, const char *const featureKey, const int fallback, <a class="el" href="structLDVariationDetails.html">LDVariationDetails</a> *const details)</td></tr>
-<tr class="memdesc:a22c7e189eea74201d295b1febb0115f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate Int flag with details. <br /></td></tr>
+<tr class="memitem:a22c7e189eea74201d295b1febb0115f7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a22c7e189eea74201d295b1febb0115f7">LDIntVariationDetail</a> (struct LDClient_i *const client, const char *const featureKey, const int fallback, <a class="el" href="structLDVariationDetails.html">LDVariationDetails</a> *const details)</td></tr>
+<tr class="memdesc:a22c7e189eea74201d295b1febb0115f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate Int flag with details.  <a href="#a22c7e189eea74201d295b1febb0115f7">More...</a><br /></td></tr>
 <tr class="separator:a22c7e189eea74201d295b1febb0115f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c1e9e6707bb3233686aef150a58f5b3"><td class="memItemLeft" align="right" valign="top"><a id="a6c1e9e6707bb3233686aef150a58f5b3"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldapi_8h.html#a6c1e9e6707bb3233686aef150a58f5b3">LDDoubleVariationDetail</a> (struct LDClient_i *const client, const char *const featureKey, const double fallback, <a class="el" href="structLDVariationDetails.html">LDVariationDetails</a> *const details)</td></tr>
@@ -880,6 +892,37 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldap
 
 </div>
 </div>
+<a id="a4cec4d4a720a40a4e8cad4f4533ca755"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cec4d4a720a40a4e8cad4f4533ca755">&#9670;&nbsp;</a></span>LDConfigSetSSLCertificateAuthority()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDConfigSetSSLCertificateAuthority </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *&#160;</td>
+          <td class="paramname"><em>config</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>certFile</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the path to the SSL certificate bundle used for peer authentication. </p>
+<p>This API is ineffective if LDConfigSetVerifyPeer is set to false. See <a href="https://curl.haxx.se/libcurl/c/CURLOPT_CAINFO.html">CURLOPT_CAINFO</a> for more information. </p>
+
+</div>
+</div>
 <a id="a2c11f27b1635c869a0fdf325d665d8fc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2c11f27b1635c869a0fdf325d665d8fc">&#9670;&nbsp;</a></span>LDConfigSetStreaming()</h2>
 
@@ -908,6 +951,117 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ldap
 
 <p>Enables or disables real-time streaming flag updates. </p>
 <p>Default: <code>true</code>. When set to <code>false</code>, an efficient caching polling mechanism is used. We do not recommend disabling <code>streaming</code> unless you have been instructed to do so by LaunchDarkly support. </p>
+
+</div>
+</div>
+<a id="ae18ea142d6151018b721a79da6d1cf3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae18ea142d6151018b721a79da6d1cf3c">&#9670;&nbsp;</a></span>LDConfigSetVerifyPeer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDConfigSetVerifyPeer </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="ldapi_8h.html#a8b75f0cc16670ef4051221ae00150ec2">LDConfig</a> *const&#160;</td>
+          <td class="paramname"><em>config</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>enabled</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set whether to verify the authenticity of the peer's certificate on network requests. </p>
+<p>By default peer verification is enabled. You may read more about what this means by reading the <a href="https://curl.haxx.se">libcurl</a> documentation on the subject <a href="https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html">here</a>. </p>
+
+</div>
+</div>
+<a id="aeddff251f32d320c08aec309b3eb2705"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeddff251f32d320c08aec309b3eb2705">&#9670;&nbsp;</a></span>LDIntVariation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int LDIntVariation </td>
+          <td>(</td>
+          <td class="paramtype">struct LDClient_i *const&#160;</td>
+          <td class="paramname"><em>client</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>featureKey</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>fallback</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Evaluate Int flag. </p>
+<p>If the flag value is actually a float the result is truncated. </p>
+
+</div>
+</div>
+<a id="a22c7e189eea74201d295b1febb0115f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22c7e189eea74201d295b1febb0115f7">&#9670;&nbsp;</a></span>LDIntVariationDetail()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int LDIntVariationDetail </td>
+          <td>(</td>
+          <td class="paramtype">struct LDClient_i *const&#160;</td>
+          <td class="paramname"><em>client</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>featureKey</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>fallback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structLDVariationDetails.html">LDVariationDetails</a> *const&#160;</td>
+          <td class="paramname"><em>details</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Evaluate Int flag with details. </p>
+<p>If the flag value is actually a float the result is truncated. </p>
 
 </div>
 </div>
