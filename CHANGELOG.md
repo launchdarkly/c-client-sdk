@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.7.2] - 2019-12-16
+### Fixed:
+- Updated cJSON dependency to 1.7.12 (to resolve several known security vulnerabilities)
+
 ## [1.7.1] - 2019-10-25
 ### Fixed
 - Several race conditions in background threads causing lag when closing the client
