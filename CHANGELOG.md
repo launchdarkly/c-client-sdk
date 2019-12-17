@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.7.4] - 2019-12-17
+### Changed:
+- Artifacts are now released as zip / tar files containing both binaries and headers. No SDK code changes associated with this version bump.
+
 ## [1.7.3] - 2019-12-16
 ### Fixed:
 - Stopped using `clock_gettime` on OSX which is not supported for older OS versions.
