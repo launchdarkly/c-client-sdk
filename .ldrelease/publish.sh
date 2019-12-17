@@ -13,6 +13,12 @@ set -e
 
 mkdir -p artifacts
 
-cp libldclientapi.a artifacts/${LD_LIBRARY_FILE_PREFIX}-libldclientapi.a
-cp libldclientapi.so artifacts/${LD_LIBRARY_FILE_PREFIX}-libldclientapi.so
-cp libldclientapiplus.so artifacts/${LD_LIBRARY_FILE_PREFIX}-libldclientapiplus.so
+HEADERS="ldapi.h uthash.h"
+
+zip artifacts/${LD_LIBRARY_FILE_PREFIX}-static.zip libldclientapi.a ${HEADERS}
+zip artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic.zip libldclientapi.so ${HEADERS}
+zip artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic-cpp.zip libldclientapiplus.so ${HEADERS}
+
+tar -cf artifacts/${LD_LIBRARY_FILE_PREFIX}-static.tar libldclientapi.a ${HEADERS}
+tar -cf artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic.tar libldclientapi.so ${HEADERS}
+tar -cf artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic-cpp.tar libldclientapiplus.so ${HEADERS}
