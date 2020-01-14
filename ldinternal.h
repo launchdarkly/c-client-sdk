@@ -206,7 +206,8 @@ void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *d
 void LDi_recordtrackmetric(LDClient *const client, LDUser *const user,
     const char *const name, LDNode *const data, const double metric);
 char *LDi_geteventdata(LDClient *client);
-void LDi_sendevents(LDClient *client, const char *eventdata, int *response);
+void LDi_sendevents(LDClient *client, const char *eventdata,
+    const char *const payloadUUID, int *response);
 
 void LDi_reinitializeconnection(LDClient *client);
 void LDi_startstopstreaming(LDClient *client, bool stopstreaming);
@@ -233,6 +234,9 @@ void LDi_initializerng();
 bool LDi_random(unsigned int *result);
 /* returns true on success, may leave buffer dirty */
 bool LDi_randomhex(char *buffer, size_t buffersize);
+/* fill a buffer with a new UUID */
+#define LD_UUID_SIZE 36
+bool LDi_UUIDv4(char *const buffer);
 /* returns a unique device identifier, returns NULL on failure */
 char *LDi_deviceid();
 

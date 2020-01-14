@@ -472,7 +472,8 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
 }
 
 void
-LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
+LDi_sendevents(LDClient *const client, const char *eventdata,
+    const char *const payloadUUID, int *response)
 {
     struct MemoryStruct headers, data;
     CURL *curl = NULL;
@@ -502,6 +503,23 @@ LDi_sendevents(LDClient *const client, const char *eventdata, int *response)
     const char *const headerschema = "X-LaunchDarkly-Event-Schema: 3";
     if (!(headertmp = curl_slist_append(headerlist, headerschema))) {
         LDi_log(LD_LOG_CRITICAL, "curl_slist_append failed for headerschema");
+        goto cleanup;
+    }
+    headerlist = headertmp;
+
+    /* This is done as a macro so that the string is a literal */
+    #define LD_PAYLOAD_ID_HEADER "X-LaunchDarkly-Payload-ID: "
+
+    /* do not need to add space for null termination because of sizeof */
+    char payloadIdHeader[sizeof(LD_PAYLOAD_ID_HEADER) + LD_UUID_SIZE];
+
+    LD_ASSERT(snprintf(payloadIdHeader, sizeof(payloadIdHeader),
+        "%s%s", LD_PAYLOAD_ID_HEADER, payloadUUID) ==
+        sizeof(payloadIdHeader) - 1);
+
+    #undef LD_PAYLOAD_ID_HEADER
+
+    if (!(headertmp = curl_slist_append(headerlist, payloadIdHeader))) {
         goto cleanup;
     }
     headerlist = headertmp;

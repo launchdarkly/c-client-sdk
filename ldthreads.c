@@ -54,6 +54,15 @@ LDi_bgeventsender(void *const v)
         }
         LDi_rdunlock(&client->clientLock);
 
+        char payloadId[LD_UUID_SIZE + 1];
+        payloadId[LD_UUID_SIZE] = 0;
+
+        if (!LDi_UUIDv4(payloadId)) {
+            LDi_log(LD_LOG_ERROR, "failed to generate payload identifier");
+
+            continue;
+        }
+
         char *const eventdata = LDi_geteventdata(client);
         if (!eventdata) { continue; }
 
@@ -61,7 +70,7 @@ LDi_bgeventsender(void *const v)
         while (true) {
             int response = 0;
 
-            LDi_sendevents(client, eventdata, &response);
+            LDi_sendevents(client, eventdata, payloadId, &response);
 
             if (response == 200 || response == 202) {
                 LDi_log(LD_LOG_TRACE, "successfuly sent event batch");
