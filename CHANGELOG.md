@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.7.5] - 2020-01-17
+### Fixed:
+- The SDK now specifies a uniquely identifiable request header when sending events to LaunchDarkly to ensure that events are only processed once, even if the SDK sends them two times due to a failed initial attempt.
+
 ## [1.7.4] - 2019-12-17
 ### Changed:
 - Artifacts are now released as zip / tar files containing both binaries and headers. No SDK code changes associated with this version bump.
