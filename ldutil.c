@@ -103,6 +103,21 @@ LDi_randomhex(char *const buffer, const size_t buffersize)
     return true;
 }
 
+bool
+LDi_UUIDv4(char *const buffer)
+{
+    if (!LDi_randomhex(buffer, LD_UUID_SIZE)) {
+        return false;
+    }
+
+    buffer[8]  = '-';
+    buffer[13] = '-';
+    buffer[18] = '-';
+    buffer[23] = '-';
+
+    return true;
+}
+
 ld_mutex_t LDi_allocmtx;
 unsigned long long LD_allocations;
 unsigned long long LD_frees;
