@@ -407,63 +407,120 @@ LDi_bgfeaturestreamer(void *const v)
     LDClient *const client = v;
 
     int retries = 0;
+
     while (true) {
-        LDi_wrlock(&client->clientLock);
+        /* Wait on any retry delays required. Status change such as shut down
+        will cause a short circuit */
+        if (retries) {
+            int delay = 0;
 
-        if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
-            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer");
-            LDi_wrunlock(&client->clientLock);
-            return THREAD_RETURN_DEFAULT;
-        }
-
-        if (!client->shared->sharedConfig->streaming || client->offline || client->background) {
-            int ms = 30000;
-
-            if (retries) {
+            if (retries == 1) {
+                delay = 1000;
+            } else {
                 unsigned int rng = 0;
-                if (!LDi_random(&rng)) {
-                    LDi_log(LD_LOG_CRITICAL, "rng failed in bgeventsender");
-                }
 
-                int backoff = 1000 * pow(2, retries - 2);
-                backoff += rng % backoff;
-                if (backoff > 3600 * 1000) {
-                    backoff = 3600 * 1000;
-                    retries--; /* avoid excessive incrementing */
-                }
+                LD_ASSERT(LDi_random(&rng));
 
-                ms = backoff;
+                delay = 1000 * pow(2, retries - 2);
+
+                delay += rng % delay;
+
+                if (delay > 30 * 1000) {
+                    delay = 30 * 1000;
+                }
             }
 
             LDi_mtxenter(&client->condMtx);
-            LDi_wrunlock(&client->clientLock);
-            LDi_condwait(&client->streamCond, &client->condMtx, ms);
+            LDi_condwait(&client->streamCond, &client->condMtx, delay);
             LDi_mtxleave(&client->condMtx);
+        }
+
+        LDi_wrlock(&client->clientLock);
+
+        /* Handle shutdown if initialized */
+        if (client->status == LDStatusFailed
+            || client->status == LDStatusShuttingdown)
+        {
+            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer");
+
+            LDi_wrunlock(&client->clientLock);
+
+            return THREAD_RETURN_DEFAULT;
+        }
+
+        /* If we are actually not supposed to be streaming just wait */
+        if (!client->shared->sharedConfig->streaming || client->offline
+            || client->background)
+        {
+            /* Ensures we skip directly to shutdown handler */
+            retries = 0;
+
+            LDi_mtxenter(&client->condMtx);
+            LDi_wrunlock(&client->clientLock);
+            LDi_condwait(&client->streamCond, &client->condMtx, 1000);
+            LDi_mtxleave(&client->condMtx);
+
             continue;
         }
 
         LDi_wrunlock(&client->clientLock);
 
+        const time_t startedOn = time(NULL);
+
         int response;
         /* this won't return until it disconnects */
         LDi_readstream(client,  &response, streamcallback, LDi_updatehandle);
 
-        if (response == 401 || response == 403) {
-            LDi_wrlock(&client->clientLock);
-            LDi_updatestatus(client, LDStatusFailed);
-            LDi_wrunlock(&client->clientLock);
+        if (response >= 400 && response < 500) {
+            bool permanentFailure = false;
 
-            LDi_log(LD_LOG_ERROR, "mobile key not authorized, streaming failed");
-            continue;
-        } else {
-            LDi_rdlock(&client->clientLock);
-            /* check if the stream was intentionally closed */
-            if (client->streamhandle) {
-                retries++;
-            } else {
-                retries = 0;
+            if (response == 401 || response == 403) {
+                LDi_log(LD_LOG_ERROR,
+                    "mobile key not authorized, streaming failed");
+
+                permanentFailure = true;
+            } else if (response != 400 && response != 408 && response != 429) {
+                LDi_log(LD_LOG_ERROR, "streaming unrecoverable response code");
+
+                permanentFailure = true;
             }
-            LDi_rdunlock(&client->clientLock);
+
+            if (permanentFailure) {
+                LDi_wrlock(&client->clientLock);
+                LDi_updatestatus(client, LDStatusFailed);
+                LDi_wrunlock(&client->clientLock);
+
+                LDi_log(LD_LOG_TRACE, "streaming permanent failure");
+
+                return THREAD_RETURN_DEFAULT;
+            }
+        }
+
+        LDi_rdlock(&client->clientLock);
+        const bool intentionallyClosed = client->streamhandle != 0;
+        LDi_rdunlock(&client->clientLock);
+
+        if (response == 200 && intentionallyClosed) {
+            retries = 0;
+        } else {
+            if (response == 200) {
+                if (time(NULL) > startedOn + 60) {
+                    LDi_log(LD_LOG_ERROR,
+                        "streaming failed after 60 seconds, retrying");
+
+                    retries = 0;
+                } else {
+                    LDi_log(LD_LOG_ERROR,
+                        "streaming failed within 60 seconds, backing off");
+
+                    retries++;
+                }
+            } else {
+                LDi_log(LD_LOG_ERROR,
+                    "streaming failed with recoverable error, backing off");
+
+                retries++;
+            }
         }
     }
 }
