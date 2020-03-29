@@ -500,7 +500,7 @@ LDi_bgfeaturestreamer(void *const v)
         const bool intentionallyClosed = client->streamhandle != 0;
         LDi_rdunlock(&client->clientLock);
 
-        if (response == 200 && intentionallyClosed) {
+        if (intentionallyClosed) {
             retries = 0;
         } else {
             if (response == 200) {
