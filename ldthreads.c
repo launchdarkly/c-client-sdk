@@ -497,7 +497,7 @@ LDi_bgfeaturestreamer(void *const v)
         }
 
         LDi_rdlock(&client->clientLock);
-        const bool intentionallyClosed = client->streamhandle != 0;
+        const bool intentionallyClosed = client->streamhandle == 0;
         LDi_rdunlock(&client->clientLock);
 
         if (intentionallyClosed) {
