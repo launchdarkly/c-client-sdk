@@ -589,99 +589,11 @@ LD_EXPORT(bool) LDClientUnregisterFeatureFlagListener(
     struct LDClient_i *const client, const char *const flagKey,
     LDlistenerfn listener);
 
-#if !defined(__cplusplus) && !defined(LD_C_API)
 /** @brief Opaque client object **/
 typedef struct LDClient_i LDClient;
-#endif
 
 #ifdef __cplusplus
 }
-
-class LD_EXPORT(LDClient) {
-    public:
-        static LDClient *Get(void);
-
-        static LDClient *Init(LDConfig *const client, LDUser *const user,
-            const unsigned int maxwaitmilli);
-
-        bool isInitialized(void);
-
-        bool awaitInitialized(const unsigned int timeoutmilli);
-
-        bool boolVariation(const std::string &flagKey, const bool fallback);
-
-        int intVariation(const std::string &flagKey, const int fallback);
-
-        double doubleVariation(const std::string &flagKey,
-            const double fallback);
-
-        std::string stringVariation(const std::string &flagKey,
-            const std::string &fallback);
-
-        char *stringVariation(const std::string &flagKey,
-            const std::string &fallback, char *const resultBuffer,
-            const size_t resultBufferSize);
-
-        LDNode *JSONVariation(const std::string &flagKey,
-            const LDNode *const fallback);
-
-        bool boolVariationDetail(const std::string &flagKey,
-            const bool fallback, LDVariationDetails *const details);
-
-        int intVariationDetail(const std::string &flagKey, const int fallback,
-            LDVariationDetails *const details);
-
-        double doubleVariationDetail(const std::string &flagKey,
-            const double fallback, LDVariationDetails *const details);
-
-        std::string stringVariationDetail(const std::string &flagKey,
-            const std::string &fallback, LDVariationDetails *const details);
-
-        char *stringVariationDetail(const std::string &flagKey,
-            const std::string &fallback, char *const resultBuffer,
-            const size_t resultBufferSize, LDVariationDetails *const details);
-
-        LDNode *JSONVariationDetail(const std::string &flagKey,
-            const LDNode *const fallback, LDVariationDetails *const details);
-
-        LDNode *getLockedFlags();
-
-        void unlockFlags();
-
-        LDNode *getAllFlags();
-
-        void setOffline();
-
-        void setOnline();
-
-        bool isOffline();
-
-        void setBackground(const bool background);
-
-        std::string saveFlags();
-
-        void restoreFlags(const std::string &flags);
-
-        void identify(LDUser *);
-
-        void track(const std::string &name);
-
-        void track(const std::string &name, LDNode *const data);
-
-        void flush(void);
-
-        void close(void);
-
-        void registerFeatureFlagListener(const std::string &name,
-            LDlistenerfn fn);
-
-        bool unregisterFeatureFlagListener(const std::string &name,
-            LDlistenerfn fn);
-
-    private:
-        struct LDClient_i *client;
-};
-
 #endif
 
 #endif /* C_CLIENT_LDIAPI_H */

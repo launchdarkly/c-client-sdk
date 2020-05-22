@@ -1,4 +1,3 @@
-
 # PowerShell helper functions for Windows build. These can't be built into Releaser because we also
 # need to use them for our regular CI job.
 

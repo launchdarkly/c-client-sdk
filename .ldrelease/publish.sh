@@ -2,23 +2,21 @@
 
 set -e
 
-# Releaser runs this script for both the Linux build and the Mac build. If we ever need them
-# to be different in more ways than just the filenames, we can instead provide linux-publish.sh
-# and mac-publish.sh
+# Releaser runs this script for both the Linux build and the Mac build. If we
+# ever need them to be different in more ways than just the filenames, we can
+# instead provide linux-publish.sh and mac-publish.sh
 
-# Note that we aren't publishing anything to a remote service, just putting the files where
-# Releaser will pick them up and attach them to the release.
+# Note that we aren't publishing anything to a remote service, just putting the
+# files where Releaser will pick them up and attach them to the release.
 
 # Note: LD_LIBRARY_FILE_PREFIX is set in .ldrelease/config.yml
 
 mkdir -p artifacts
 
-HEADERS="ldapi.h uthash.h"
+cd "${base}/build-static/release"
+zip -r "${base}/artifacts/${LD_LIBRARY_FILE_PREFIX}-static.zip" *
+tar -cf "${base}/artifacts/${LD_LIBRARY_FILE_PREFIX}-static.tar" *
 
-zip artifacts/${LD_LIBRARY_FILE_PREFIX}-static.zip libldclientapi.a ${HEADERS}
-zip artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic.zip libldclientapi.so ${HEADERS}
-zip artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic-cpp.zip libldclientapiplus.so ${HEADERS}
-
-tar -cf artifacts/${LD_LIBRARY_FILE_PREFIX}-static.tar libldclientapi.a ${HEADERS}
-tar -cf artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic.tar libldclientapi.so ${HEADERS}
-tar -cf artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic-cpp.tar libldclientapiplus.so ${HEADERS}
+cd "${base}/build-dynamic/release"
+zip -r "${base}/artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic.zip" *
+tar -cf "${base}/artifacts/${LD_LIBRARY_FILE_PREFIX}-dynamic.tar" *
