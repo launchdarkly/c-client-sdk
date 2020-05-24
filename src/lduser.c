@@ -15,12 +15,12 @@ LDUserNew(const char *const key)
             LDSetString(&user->key, deviceid);
             LDFree(deviceid);
         } else {
-            LDi_log(LD_LOG_WARNING, "Failed to get device ID falling back to random ID");
+            LD_LOG(LD_LOG_WARNING, "Failed to get device ID falling back to random ID");
             char randomkey[32 + 1] = { 0 };
             LDi_randomhex(randomkey, sizeof(randomkey) - 1);
             LDSetString(&user->key, randomkey);
         }
-        LDi_log(LD_LOG_INFO, "Setting user key to: %s", user->key);
+        LD_LOG_1(LD_LOG_INFO, "Setting user key to: %s", user->key);
         user->anonymous = true;
     }
     else {
@@ -141,7 +141,7 @@ LDUserAddPrivateAttribute(LDUser *const user, const char *const key)
     LDNode *const node = LDAlloc(sizeof(*node)); LD_ASSERT(node);
     memset(node, 0, sizeof(*node));
 
-    node->key = LDi_strdup(key);
+    node->key = LDStrDup(key);
     node->type = LDNodeBool;
     node->b = true;
     LD_ASSERT(node->key);

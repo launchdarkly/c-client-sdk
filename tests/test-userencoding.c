@@ -3,12 +3,6 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-void
-logger(const char *const s)
-{
-    printf("LD: %s\n", s);
-}
-
 /*
  * Test that turning a user into json looks like we expect.
  */
@@ -99,7 +93,7 @@ test3()
 int
 main(int argc, char **argv)
 {
-    LDSetLogFunction(1, logger);
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
 
     test1();
 

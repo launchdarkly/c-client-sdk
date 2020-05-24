@@ -186,9 +186,6 @@ cJSON *LDi_hashtojson(const LDNode *hash);
 cJSON *LDi_arraytojson(const LDNode *hash);
 LDNode *LDi_jsontohash(const cJSON *json, int flavor);
 
-char *LDi_strdup(const char *src);
-void *LDi_realloc(void *buffer, size_t futuresize);
-
 bool LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor);
 void LDi_savehash(LDClient *client);
 
@@ -218,7 +215,6 @@ void LDi_onstreameventdelete(LDClient *client, const char *data);
 char *LDi_usertojsontext(LDClient *client, LDUser *lduser, bool redact);
 cJSON *LDi_usertojson(LDClient *client, LDUser *lduser, bool redact);
 
-void LDi_log(int level, const char *fmt, ...);
 void (*LDi_statuscallback)(int);
 
 #define LD_ASSERT(condition) \

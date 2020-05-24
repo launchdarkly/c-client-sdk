@@ -16,7 +16,7 @@ static void
 enqueueEvent(LDClient *const client, cJSON *const event)
 {
     if (client->numEvents >= client->shared->sharedConfig->eventsCapacity) {
-        LDi_log(LD_LOG_WARNING, "event capacity exceeded");
+        LD_LOG(LD_LOG_WARNING, "event capacity exceeded");
         cJSON_Delete(event);
         return;
     }
@@ -103,11 +103,11 @@ addValueToHash(LDNode **hash, const char *const name, const int type,
         return LDNodeAddHash(hash, name, LDCloneHash(m));
         break;
     default:
-        LDi_log(LD_LOG_FATAL, "addValueToHash unhandled case");
+        LD_LOG(LD_LOG_FATAL, "addValueToHash unhandled case");
         abort();
         break;
     }
-};
+}
 
 static void
 addNodeToJSONObject(cJSON *const obj, const char *const key, LDNode *const node)
@@ -129,18 +129,18 @@ addNodeToJSONObject(cJSON *const obj, const char *const key, LDNode *const node)
         cJSON_AddItemToObject(obj, key, LDi_arraytojson(node->a));
         break;
     default:
-        LDi_log(LD_LOG_FATAL, "addNodeToJSONObject unhandled case");
+        LD_LOG(LD_LOG_FATAL, "addNodeToJSONObject unhandled case");
         abort();
         break;
     }
-};
+}
 
 static void
 summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *feature,
     const LDNodeType type, const double n, const char *const s, LDNode *const m,
     const double defaultn, const char *const defaults, const LDNode *const defaultm)
 {
-    LDi_log(LD_LOG_TRACE, "updating summary for %s", feature);
+    LD_LOG_1(LD_LOG_TRACE, "updating summary for %s", feature);
 
     LDi_wrlock(&client->eventLock);
 
@@ -172,7 +172,7 @@ summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *
     }
 
     if (keystatus < 0) {
-        LDi_log(LD_LOG_CRITICAL, "preparing key failed in summarizeEvent");
+        LD_LOG(LD_LOG_CRITICAL, "preparing key failed in summarizeEvent");
         LDi_wrunlock(&client->eventLock); return;
     }
 

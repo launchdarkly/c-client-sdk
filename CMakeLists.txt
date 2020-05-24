@@ -10,14 +10,20 @@ if(NOT DEFINED MSVC)
     set(LD_LIBRARIES pthread m)
 endif()
 
-set(LD_INCLUDE_PATHS "src" "include" ${CURL_INCLUDE_DIR})
+set(LD_INCLUDE_PATHS
+    "src"
+    "include"
+    "c-sdk-common/include"
+    "c-sdk-common/src"
+    ${CURL_INCLUDE_DIR}
+)
 
 if(APPLE)
     set(LD_INCLUDE_PATHS ${LD_INCLUDE_PATHS} "/usr/local/include")
     set(LD_PUBLIC_LIBRARIES "-framework CoreFoundation" "-framework IOKit")
 endif(APPLE)
 
-file(GLOB SOURCES "src/*")
+file(GLOB SOURCES "src/*" "c-sdk-common/src/*")
 
 set(LD_LIBRARIES ${LD_LIBRARIES} ${CURL_LIBRARIES})
 

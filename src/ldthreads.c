@@ -25,7 +25,7 @@ LDi_bgeventsender(void *const v)
         const LDStatus status = client->status;
 
         if (status == LDStatusFailed || finalflush) {
-            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgeventsender");
+            LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgeventsender");
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
@@ -41,7 +41,7 @@ LDi_bgeventsender(void *const v)
             LDi_wrunlock(&client->clientLock);
         }
 
-        LDi_log(LD_LOG_TRACE, "bgsender running");
+        LD_LOG(LD_LOG_TRACE, "bgsender running");
 
         LDi_rdlock(&client->clientLock);
         if (client->status == LDStatusShuttingdown) {
@@ -58,7 +58,7 @@ LDi_bgeventsender(void *const v)
         payloadId[LD_UUID_SIZE] = 0;
 
         if (!LDi_UUIDv4(payloadId)) {
-            LDi_log(LD_LOG_ERROR, "failed to generate payload identifier");
+            LD_LOG(LD_LOG_ERROR, "failed to generate payload identifier");
 
             continue;
         }
@@ -73,7 +73,7 @@ LDi_bgeventsender(void *const v)
             LDi_sendevents(client, eventdata, payloadId, &response);
 
             if (response == 200 || response == 202) {
-                LDi_log(LD_LOG_TRACE, "successfuly sent event batch");
+                LD_LOG(LD_LOG_TRACE, "successfuly sent event batch");
 
                 sendFailed = false;
 
@@ -90,7 +90,7 @@ LDi_bgeventsender(void *const v)
                     LDi_updatestatus(client, LDStatusFailed);
                     LDi_wrunlock(&client->clientLock);
 
-                    LDi_log(LD_LOG_ERROR, "mobile key not authorized, event sending failed");
+                    LD_LOG(LD_LOG_ERROR, "mobile key not authorized, event sending failed");
 
                     break;
                 }
@@ -102,7 +102,7 @@ LDi_bgeventsender(void *const v)
         }
 
         if (sendFailed) {
-            LDi_log(LD_LOG_WARNING, "sending events failed deleting event batch");
+            LD_LOG(LD_LOG_WARNING, "sending events failed deleting event batch");
         }
 
         LDFree(eventdata);
@@ -121,7 +121,7 @@ LDi_bgfeaturepoller(void *const v)
         LDi_wrlock(&client->clientLock);
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
-            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller");
+            LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller");
             LDi_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
@@ -170,9 +170,9 @@ LDi_bgfeaturepoller(void *const v)
             LDi_updatestatus(client, LDStatusFailed);
             LDi_wrunlock(&client->clientLock);
 
-            LDi_log(LD_LOG_ERROR, "mobile key not authorized, polling failed");
+            LD_LOG(LD_LOG_ERROR, "mobile key not authorized, polling failed");
         } else {
-            LDi_log(LD_LOG_ERROR, "poll failed will retry again");
+            LD_LOG(LD_LOG_ERROR, "poll failed will retry again");
         }
 
         LDFree(data);
@@ -238,7 +238,7 @@ LDi_onstreameventpatch(LDClient *const client, const char *const data)
     cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
-        LDi_log(LD_LOG_ERROR, "parsing patch failed");
+        LD_LOG(LD_LOG_ERROR, "parsing patch failed");
         return;
     }
 
@@ -252,7 +252,7 @@ LDi_onstreameventdelete(LDClient *const client, const char *const data)
     cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
-        LDi_log(LD_LOG_ERROR, "parsing delete patch failed");
+        LD_LOG(LD_LOG_ERROR, "parsing delete patch failed");
         return;
     }
 
@@ -340,18 +340,18 @@ streamcallback(LDClient *const client, const char *line)
 
     if (!line) {
         //should not happen from the networking side but is not fatal
-        LDi_log(LD_LOG_ERROR, "streamcallback got NULL line");
+        LD_LOG(LD_LOG_ERROR, "streamcallback got NULL line");
     } else if (line[0] == ':') {
         //skip comment
     } else if (line[0] == 0) {
         if (client->eventname[0] == 0) {
-            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but type was never set");
+            LD_LOG(LD_LOG_WARNING, "streamcallback got dispatch but type was never set");
         } else if (strcmp(client->eventname, "ping") == 0) {
             LDi_wrunlock(&client->clientLock);
             onstreameventping(client);
             LDi_wrlock(&client->clientLock);
         } else if (client->databuffer == NULL) {
-            LDi_log(LD_LOG_WARNING, "streamcallback got dispatch but data was never set");
+            LD_LOG(LD_LOG_WARNING, "streamcallback got dispatch but data was never set");
         } else if (strcmp(client->eventname, "put") == 0) {
             LDi_wrunlock(&client->clientLock);
             LDi_onstreameventput(client, client->databuffer);
@@ -365,7 +365,7 @@ streamcallback(LDClient *const client, const char *line)
             LDi_onstreameventdelete(client, client->databuffer);
             LDi_wrlock(&client->clientLock);
         } else {
-            LDi_log(LD_LOG_WARNING, "streamcallback unknown event name: %s", client->eventname);
+            LD_LOG_1(LD_LOG_WARNING, "streamcallback unknown event name: %s", client->eventname);
         }
 
         free(client->databuffer); client->databuffer = NULL; client->eventname[0] = 0;
@@ -391,7 +391,7 @@ streamcallback(LDClient *const client, const char *line)
 
         if (snprintf(client->eventname, sizeof(client->eventname), "%s", line) < 0) {
             LDi_wrunlock(&client->clientLock);
-            LDi_log(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing");
+            LD_LOG(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing");
             return 1;
         }
     }
@@ -441,7 +441,7 @@ LDi_bgfeaturestreamer(void *const v)
         if (client->status == LDStatusFailed
             || client->status == LDStatusShuttingdown)
         {
-            LDi_log(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer");
+            LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer");
 
             LDi_wrunlock(&client->clientLock);
 
@@ -475,12 +475,12 @@ LDi_bgfeaturestreamer(void *const v)
             bool permanentFailure = false;
 
             if (response == 401 || response == 403) {
-                LDi_log(LD_LOG_ERROR,
+                LD_LOG(LD_LOG_ERROR,
                     "mobile key not authorized, streaming failed");
 
                 permanentFailure = true;
             } else if (response != 400 && response != 408 && response != 429) {
-                LDi_log(LD_LOG_ERROR, "streaming unrecoverable response code");
+                LD_LOG(LD_LOG_ERROR, "streaming unrecoverable response code");
 
                 permanentFailure = true;
             }
@@ -490,7 +490,7 @@ LDi_bgfeaturestreamer(void *const v)
                 LDi_updatestatus(client, LDStatusFailed);
                 LDi_wrunlock(&client->clientLock);
 
-                LDi_log(LD_LOG_TRACE, "streaming permanent failure");
+                LD_LOG(LD_LOG_TRACE, "streaming permanent failure");
 
                 return THREAD_RETURN_DEFAULT;
             }
@@ -505,18 +505,18 @@ LDi_bgfeaturestreamer(void *const v)
         } else {
             if (response == 200) {
                 if (time(NULL) > startedOn + 60) {
-                    LDi_log(LD_LOG_ERROR,
+                    LD_LOG(LD_LOG_ERROR,
                         "streaming failed after 60 seconds, retrying");
 
                     retries = 0;
                 } else {
-                    LDi_log(LD_LOG_ERROR,
+                    LD_LOG(LD_LOG_ERROR,
                         "streaming failed within 60 seconds, backing off");
 
                     retries++;
                 }
             } else {
-                LDi_log(LD_LOG_ERROR,
+                LD_LOG(LD_LOG_ERROR,
                     "streaming failed with recoverable error, backing off");
 
                 retries++;

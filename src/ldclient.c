@@ -22,8 +22,6 @@ void (*LDi_statuscallback)(int);
 void
 LDi_earlyinit(void)
 {
-    LDi_mtxinit(&LDi_allocmtx);
-
     LDi_rwlockinit(&globalContext.sharedUserLock);
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -206,7 +204,7 @@ LDClient *
 LDClientGet()
 {
     return globalContext.primaryClient;
-};
+}
 
 struct LDClient_i *
 LDClientGetForMobileKey(const char *keyName)
@@ -231,7 +229,7 @@ LDi_clientinitisolated(struct LDGlobal_i *const shared,
     LDClient *const client = LDAlloc(sizeof(*client));
 
     if (!client) {
-        LDi_log(LD_LOG_CRITICAL, "no memory for the client");
+        LD_LOG(LD_LOG_CRITICAL, "no memory for the client");
         return NULL;
     }
 
@@ -576,12 +574,12 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     cJSON *const payload = cJSON_Parse(data);
 
     if (!payload) {
-        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags parsing failed");
+        LD_LOG(LD_LOG_ERROR, "LDi_clientsetflags parsing failed");
         return false;
     }
 
     if (!cJSON_IsObject(payload)) {
-        LDi_log(LD_LOG_ERROR, "LDi_clientsetflags did not get object");
+        LD_LOG(LD_LOG_ERROR, "LDi_clientsetflags did not get object");
         cJSON_Delete(payload);
         return false;
     }
@@ -899,7 +897,7 @@ LDi_StringAllocNode(LDClient *const client, const char *const key,
         value = fallback;
     }
 
-    char *const result = LDi_strdup(value);
+    char *const result = LDStrDup(value);
 
     LDi_rdlock(&client->shared->sharedUserLock);
     LDi_recordfeature(client, client->shared->sharedUser, node, key,
@@ -1036,7 +1034,7 @@ LDClientRegisterFeatureFlagListener(LDClient *const client, const char *const ke
     struct listener *const list = LDAlloc(sizeof(*list)); LD_ASSERT(list);
 
     list->fn = fn;
-    list->key = LDi_strdup(key);
+    list->key = LDStrDup(key);
     LD_ASSERT(list->key);
 
     LDi_wrlock(&client->clientLock);
@@ -1080,7 +1078,7 @@ LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
     HASH_FIND_STR(config->privateAttributeNames, key, lookup);
 
     if (lookup) {
-        LDi_log(LD_LOG_WARNING, "Attempted to add duplicate private Attribute");
+        LD_LOG(LD_LOG_WARNING, "Attempted to add duplicate private Attribute");
 
         return;
     }
@@ -1088,7 +1086,7 @@ LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
     LDNode *const node = LDAlloc(sizeof(*node)); LD_ASSERT(node);
     memset(node, 0, sizeof(*node));
 
-    node->key = LDi_strdup(key);
+    node->key = LDStrDup(key);
     LD_ASSERT(node->key);
 
     node->type = LDNodeNone;
@@ -1105,20 +1103,20 @@ LDConfigAddSecondaryMobileKey(LDConfig *const config, const char *const name,
     LD_ASSERT(config); LD_ASSERT(name); LD_ASSERT(key);
 
     if (strcmp(name, LDPrimaryEnvironmentName) == 0) {
-        LDi_log(LD_LOG_ERROR, "Attempted use the primary environment name as secondary");
+        LD_LOG(LD_LOG_ERROR, "Attempted use the primary environment name as secondary");
 
         return false;
     }
 
     if (strcmp(key, config->mobileKey) == 0) {
-        LDi_log(LD_LOG_ERROR, "Attempted to add primary key as secondary key");
+        LD_LOG(LD_LOG_ERROR, "Attempted to add primary key as secondary key");
 
         return false;
     }
 
     HASH_ITER(hh, config->secondaryMobileKeys, iter, tmp) {
         if (strcmp(iter->key, name) == 0 || strcmp(iter->s, key) == 0) {
-            LDi_log(LD_LOG_ERROR, "Attempted to add secondary key twice");
+            LD_LOG(LD_LOG_ERROR, "Attempted to add secondary key twice");
 
             return false;
         }

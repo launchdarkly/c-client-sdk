@@ -3,12 +3,6 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-void
-logger(const char *const s)
-{
-    printf("LD: %s\n", s);
-}
-
 bool fixed = false;
 
 void
@@ -24,7 +18,7 @@ hook(const char *const name, const int change)
 void
 test1(void)
 {
-    LDSetLogFunction(1, logger);
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
 
     LDConfig *const config = LDConfigNew("abc");
     LDConfigSetOffline(config, true);

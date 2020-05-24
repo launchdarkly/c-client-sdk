@@ -17,7 +17,7 @@ newnode(LDNode **const hash, const char *const key, const LDNodeType type)
 {
     LDNode *node = LDAlloc(sizeof(*node));
     memset(node, 0, sizeof(*node));
-    node->key = LDi_strdup(key);
+    node->key = LDStrDup(key);
     node->type = type;
     node->variation = -1;
     HASH_ADD_KEYPTR(hh, *hash, node->key, strlen(node->key), node);
@@ -50,7 +50,7 @@ LDNode *
 LDNodeAddString(LDNode **const hash, const char *const key, const char *const s)
 {
     LDNode *const node = newnode(hash, key, LDNodeString);
-    node->s = LDi_strdup(s);
+    node->s = LDStrDup(s);
     return node;
 }
 
@@ -109,7 +109,7 @@ LDNode *
 LDNodeAppendString(LDNode **const array, const char *const s)
 {
     LDNode *const node = appendnode(array, LDNodeString);
-    node->s = LDi_strdup(s);
+    node->s = LDStrDup(s);
     return node;
 }
 
@@ -291,7 +291,7 @@ LDi_hashtostring(const LDNode *const hash, const bool versioned)
     }
     char *const tmp = cJSON_PrintUnformatted(json); LD_ASSERT(tmp);
     cJSON_Delete(json);
-    char *const s = LDi_strdup(tmp); LD_ASSERT(s);
+    char *const s = LDStrDup(tmp); LD_ASSERT(s);
     free(tmp);
     return s;
 }
@@ -321,7 +321,7 @@ jsontoarray(const cJSON *const json)
             LD_ASSERT(child);
             LDNodeAppendHash(&array, child);
         } else {
-            LDi_log(LD_LOG_FATAL, "jsontoarray unhandled case");
+            LD_LOG(LD_LOG_FATAL, "jsontoarray unhandled case");
             abort();
         }
     }
@@ -366,7 +366,7 @@ LDi_jsontohash(const cJSON *const json, const int flavor)
                     } else if (cJSON_IsNull(valueitem)) {
                         variation = -1;
                     } else {
-                        LDi_log(LD_LOG_ERROR, "variation not number or null");
+                        LD_LOG(LD_LOG_ERROR, "variation not number or null");
                         variation = -1;
                     }
                 }
@@ -439,7 +439,7 @@ LDNodeToJSON(const LDNode *const node)
         json = LDi_hashtojson(node);
         break;
     default:
-        LDi_log(LD_LOG_FATAL, "LDNodeToJSON not Array or Object");
+        LD_LOG(LD_LOG_FATAL, "LDNodeToJSON not Array or Object");
         abort();
         break;
     }
@@ -465,7 +465,7 @@ LDNodeFromJSON(const char *const text)
     } else if (cJSON_IsObject(json)) {
         output = LDi_jsontohash(json, 0);
     } else {
-        LDi_log(LD_LOG_FATAL, "LDNodeFromJSON not Array or Object");
+        LD_LOG(LD_LOG_FATAL, "LDNodeFromJSON not Array or Object");
         abort();
     }
 
@@ -489,7 +489,7 @@ clonenode(const LDNode *const original)
 
     switch (original->type) {
     case LDNodeString:
-        clone->s = LDi_strdup(original->s);
+        clone->s = LDStrDup(original->s);
         break;
     case LDNodeHash:
         clone->h = LDCloneHash(original->h);
@@ -512,7 +512,7 @@ LDCloneHash(const LDNode *const original)
 
     for (const LDNode *node = original; node; node=node->hh.next) {
         LDNode *const clone = clonenode(node);
-        clone->key = LDi_strdup(node->key);
+        clone->key = LDStrDup(node->key);
         HASH_ADD_KEYPTR(hh, result, clone->key, strlen(clone->key), clone);
     }
 

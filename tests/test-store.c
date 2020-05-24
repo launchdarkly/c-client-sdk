@@ -3,12 +3,6 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-void
-logger(const char *const s)
-{
-    printf("LD: %s\n", s);
-}
-
 bool gotcallback = false;
 
 bool
@@ -85,7 +79,7 @@ test2(void)
 int
 main(int argc, char **argv)
 {
-    LDSetLogFunction(1, logger);
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
 
     test1();
 

@@ -29,10 +29,10 @@ LDi_savedata(const char *const dataname, const char *const username, const char 
     char fullname[1024];
 
     if (snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username) < 0) {
-        LDi_log(LD_LOG_ERROR, "LDi_savedata snprintf failed"); return;
+        LD_LOG(LD_LOG_ERROR, "LDi_savedata snprintf failed"); return;
     }
 
-    LDi_log(LD_LOG_INFO, "About to open abstract file %s", fullname);
+    LD_LOG_1(LD_LOG_INFO, "About to open abstract file %s", fullname);
 
     store_writestring(store_ctx, fullname, data);
 }
@@ -45,10 +45,10 @@ LDi_loaddata(const char *dataname, const char *username)
     char fullname[1024];
 
     if (snprintf(fullname, sizeof(fullname), "%s-%s", dataname, username) < 0) {
-        LDi_log(LD_LOG_ERROR, "LDi_loaddata snprintf failed"); return NULL;
+        LD_LOG(LD_LOG_ERROR, "LDi_loaddata snprintf failed"); return NULL;
     }
 
-    LDi_log(LD_LOG_INFO, "About to open abstract file %s", fullname);
+    LD_LOG_1(LD_LOG_INFO, "About to open abstract file %s", fullname);
 
     return store_readstring(store_ctx, fullname);
 }
@@ -63,13 +63,13 @@ fileopen(const char *const name, const char *const mode)
     char filename[1024];
 
     if (snprintf(filename, sizeof(filename), "LD-%s.txt", name) < 0) {
-        LDi_log(LD_LOG_ERROR, "fileopen snprintf failed"); return NULL;
+        LD_LOG(LD_LOG_ERROR, "fileopen snprintf failed"); return NULL;
     }
 
     FILE *const handle = fopen(filename, mode);
 
     if (!handle) {
-        LDi_log(LD_LOG_ERROR, "Failed to open %s", filename);
+        LD_LOG_1(LD_LOG_ERROR, "Failed to open %s", filename);
         return NULL;
     }
 
@@ -118,7 +118,7 @@ LD_store_fileread(void *const context, const char *const name)
             bufsize += bufspace;
             bufspace--;
 
-            void *const p = LDi_realloc(buf, bufsize);
+            void *const p = LDRealloc(buf, bufsize);
 
             if (!p) { LDFree(buf); return NULL; }
 

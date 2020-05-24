@@ -10,22 +10,16 @@
  * versioning and is included in the HTTP user agent sent to LaunchDarkly. */
 #define LD_SDK_VERSION "1.7.6"
 
-/** @brief Used to ensure only intended symbols are exported in the binaries */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-    #define LD_EXPORT(x) x
-#else
-    #ifdef _WIN32
-        #define LD_EXPORT(x) __declspec(dllexport) x
-    #else
-        #define LD_EXPORT(x) __attribute__((visibility("default"))) x
-    #endif
-#endif
-
 #ifdef __cplusplus
 #include <string>
 
 extern "C" {
 #endif
+
+#include <launchdarkly/export.h>
+#include <launchdarkly/logging.h>
+#include <launchdarkly/memory.h>
+#include "logging.h"
 
 #include <stdbool.h>
 
@@ -34,17 +28,6 @@ extern "C" {
 /** @brief The name of the primary environment for use with
  * `LDClientGetForMobileKey` */
 #define LDPrimaryEnvironmentName "default"
-
-/** @brief The log levels compatible with the logging interface */
-enum ld_log_level {
-    LD_LOG_FATAL = 0,
-    LD_LOG_CRITICAL,
-    LD_LOG_ERROR,
-    LD_LOG_WARNING,
-    LD_LOG_INFO,
-    LD_LOG_DEBUG,
-    LD_LOG_TRACE
-};
 
 /** @brief Current status of the client */
 typedef enum {
@@ -458,12 +441,6 @@ LD_EXPORT(LDNode *) LDJSONVariationDetail(struct LDClient_i *const client,
     const char *const key, const LDNode *const fallback,
     LDVariationDetails *const details);
 
-/** @brief Frees memory allocated by the SDK. */
-LD_EXPORT(void) LDFree(void *const ptr);
-
-/** @brief Allocate memory for usage by the SDK */
-LD_EXPORT(void *) LDAlloc(const size_t bytes);
-
 /** @brief Clear any memory associated with `LDVariationDetails`  */
 LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);
 
@@ -540,11 +517,6 @@ LD_EXPORT(LDNode *) LDNodeFromJSON(const char *const json);
 
 /** @brief Utility to convert a hash to a JSON object. */
 LD_EXPORT(char *) LDHashToJSON(const LDNode *const node);
-
-/** @brief Set the log function and log level. Increasing log levels result in
- * increasing output. */
-LD_EXPORT(void) LDSetLogFunction(const int userlevel,
-    void (userlogfn)(const char *const text));
 
 /** @brief Should write the `data` using the associated `context` to `name`.
  * Returns `true` for success. */
