@@ -24,21 +24,25 @@ testConditionWaitTimeout()
     ld_cond_t condition;
     ld_mutex_t lock;
 
-    LDi_condinit(&condition);
-    LDi_mtxinit(&lock);
+    LDi_cond_init(&condition);
+    LDi_mutex_init(&lock);
 
     start = time(NULL);
-    LDi_condwait(&condition, &lock, 2000);
+    LDi_mutex_lock(&lock);
+    LDi_cond_wait(&condition, &lock, 1000 * 2);
+    LDi_mutex_unlock(&lock);
     end = time(NULL);
-    LD_ASSERT(end - start > 1 && start - end < 3);
+    LD_ASSERT(end - start > 1 && end - start < 3);
 
-    LDi_conddestroy(&condition);
-    LDi_mtxdestroy(&lock);
+    LDi_cond_destroy(&condition);
+    LDi_mutex_destroy(&lock);
 }
 
 int
 main(int argc, char **argv)
 {
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+
     testDeviceId();
     testConditionWaitTimeout();
 }

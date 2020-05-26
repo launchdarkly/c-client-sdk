@@ -37,6 +37,8 @@ LDUserNew(const char *const key)
     user->avatar = NULL;
     user->custom = NULL;
     user->privateAttributeNames = NULL;
+    user->privateAttributeNames2 = NULL;
+    user->custom2 = NULL;
 
     return user;
 }

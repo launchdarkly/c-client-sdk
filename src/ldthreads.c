@@ -20,39 +20,39 @@ LDi_bgeventsender(void *const v)
     LDClient *const client = v; bool finalflush = false;
 
     while (true) {
-        LDi_wrlock(&client->clientLock);
+        LDi_rwlock_wrlock(&client->clientLock);
 
         const LDStatus status = client->status;
 
         if (status == LDStatusFailed || finalflush) {
             LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgeventsender");
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
 
         const int ms = client->shared->sharedConfig->eventsFlushIntervalMillis;
 
         if (status != LDStatusShuttingdown) {
-            LDi_mtxenter(&client->condMtx);
-            LDi_wrunlock(&client->clientLock);
-            LDi_condwait(&client->eventCond, &client->condMtx, ms);
-            LDi_mtxleave(&client->condMtx);
+            LDi_mutex_lock(&client->condMtx);
+            LDi_rwlock_wrunlock(&client->clientLock);
+            LDi_cond_wait(&client->eventCond, &client->condMtx, ms);
+            LDi_mutex_unlock(&client->condMtx);
         } else {
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
         }
 
         LD_LOG(LD_LOG_TRACE, "bgsender running");
 
-        LDi_rdlock(&client->clientLock);
+        LDi_rwlock_rdlock(&client->clientLock);
         if (client->status == LDStatusShuttingdown) {
             finalflush = true;
         }
 
         if (client->offline) {
-            LDi_rdunlock(&client->clientLock);
+            LDi_rwlock_rdunlock(&client->clientLock);
             continue;
         }
-        LDi_rdunlock(&client->clientLock);
+        LDi_rwlock_rdunlock(&client->clientLock);
 
         char payloadId[LD_UUID_SIZE + 1];
         payloadId[LD_UUID_SIZE] = 0;
@@ -86,18 +86,18 @@ LDi_bgeventsender(void *const v)
                 sendFailed = true;
 
                 if (response == 401 || response == 403) {
-                    LDi_wrlock(&client->clientLock);
+                    LDi_rwlock_wrlock(&client->clientLock);
                     LDi_updatestatus(client, LDStatusFailed);
-                    LDi_wrunlock(&client->clientLock);
+                    LDi_rwlock_wrunlock(&client->clientLock);
 
                     LD_LOG(LD_LOG_ERROR, "mobile key not authorized, event sending failed");
 
                     break;
                 }
 
-                LDi_mtxenter(&client->condMtx);
-                LDi_condwait(&client->eventCond, &client->condMtx, 1000);
-                LDi_mtxleave(&client->condMtx);
+                LDi_mutex_lock(&client->condMtx);
+                LDi_cond_wait(&client->eventCond, &client->condMtx, 1000);
+                LDi_mutex_unlock(&client->condMtx);
             }
         }
 
@@ -118,11 +118,11 @@ LDi_bgfeaturepoller(void *const v)
     LDClient *const client = v;
 
     while (true) {
-        LDi_wrlock(&client->clientLock);
+        LDi_rwlock_wrlock(&client->clientLock);
 
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
             LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller");
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
         }
 
@@ -139,22 +139,22 @@ LDi_bgfeaturepoller(void *const v)
         if (!skippolling && client->status == LDStatusInitializing) { ms = 0; }
 
         if (ms > 0) {
-            LDi_mtxenter(&client->condMtx);
-            LDi_wrunlock(&client->clientLock);
-            LDi_condwait(&client->pollCond, &client->condMtx, ms);
-            LDi_mtxleave(&client->condMtx);
+            LDi_mutex_lock(&client->condMtx);
+            LDi_rwlock_wrunlock(&client->clientLock);
+            LDi_cond_wait(&client->pollCond, &client->condMtx, ms);
+            LDi_mutex_unlock(&client->condMtx);
         } else {
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
         }
 
         if (skippolling) { continue; }
 
-        LDi_rdlock(&client->clientLock);
+        LDi_rwlock_rdlock(&client->clientLock);
         if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
-            LDi_rdunlock(&client->clientLock);
+            LDi_rwlock_rdunlock(&client->clientLock);
             continue;
         }
-        LDi_rdunlock(&client->clientLock);
+        LDi_rwlock_rdunlock(&client->clientLock);
 
         int response = 0;
         char *const data = LDi_fetchfeaturemap(client, &response);
@@ -166,9 +166,9 @@ LDi_bgfeaturepoller(void *const v)
                 LDi_savehash(client);
             }
         } else if (response == 401 || response == 403) {
-            LDi_wrlock(&client->clientLock);
+            LDi_rwlock_wrlock(&client->clientLock);
             LDi_updatestatus(client, LDStatusFailed);
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
 
             LD_LOG(LD_LOG_ERROR, "mobile key not authorized, polling failed");
         } else {
@@ -184,9 +184,9 @@ void
 LDi_onstreameventput(LDClient *const client, const char *const data)
 {
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_rdlock(&client->shared->sharedUserLock);
+        LDi_rwlock_rdlock(&client->shared->sharedUserLock);
         LDi_savedata("features", client->shared->sharedUser->key, data);
-        LDi_rdunlock(&client->shared->sharedUserLock);
+        LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     }
 }
 
@@ -199,7 +199,7 @@ applypatch(LDClient *const client, cJSON *const payload, const bool isdelete)
     }
     cJSON_Delete(payload);
 
-    LDi_wrlock(&client->clientLock);
+    LDi_rwlock_wrlock(&client->clientLock);
     LDNode *hash = client->allFlags;
     LDNode *node, *tmp;
     HASH_ITER(hh, patch, node, tmp) {
@@ -219,15 +219,15 @@ applypatch(LDClient *const client, cJSON *const payload, const bool isdelete)
         }
         for (struct listener *list = client->listeners; list; list = list->next) {
             if (strcmp(list->key, node->key) == 0) {
-                LDi_wrunlock(&client->clientLock);
+                LDi_rwlock_wrunlock(&client->clientLock);
                 list->fn(node->key, isdelete ? 1 : 0);
-                LDi_wrlock(&client->clientLock);
+                LDi_rwlock_wrlock(&client->clientLock);
             }
         }
     }
 
     client->allFlags = hash;
-    LDi_wrunlock(&client->clientLock);
+    LDi_rwlock_wrunlock(&client->clientLock);
 
     LDi_freehash(patch);
 }
@@ -263,14 +263,14 @@ LDi_onstreameventdelete(LDClient *const client, const char *const data)
 static void
 onstreameventping(LDClient *const client)
 {
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
 
     if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
-        LDi_rdunlock(&client->clientLock);
+        LDi_rwlock_rdunlock(&client->clientLock);
         return;
     }
 
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     int response = 0;
     char *const data = LDi_fetchfeaturemap(client, &response);
@@ -279,15 +279,15 @@ onstreameventping(LDClient *const client)
         if (!data) { return; }
 
         if (LDi_clientsetflags(client, true, data, 1)) {
-            LDi_rdlock(&client->shared->sharedUserLock);
+            LDi_rwlock_rdlock(&client->shared->sharedUserLock);
             LDi_savedata("features", client->shared->sharedUser->key, data);
-            LDi_rdunlock(&client->shared->sharedUserLock);
+            LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
         }
     } else {
         if (response == 401 || response == 403) {
-            LDi_wrlock(&client->clientLock);
+            LDi_rwlock_wrlock(&client->clientLock);
             LDi_updatestatus(client, LDStatusFailed);
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
         }
     }
 
@@ -298,16 +298,16 @@ void
 LDi_startstopstreaming(LDClient *const client, bool stopstreaming)
 {
     client->shouldstopstreaming = stopstreaming;
-    LDi_condsignal(&client->pollCond);
-    LDi_condsignal(&client->streamCond);
+    LDi_cond_signal(&client->pollCond);
+    LDi_cond_signal(&client->streamCond);
 }
 
 static void
 LDi_updatehandle(LDClient *const client, const int handle)
 {
-    LDi_wrlock(&client->clientLock);
+    LDi_rwlock_wrlock(&client->clientLock);
     client->streamhandle = handle;
-    LDi_wrunlock(&client->clientLock);
+    LDi_rwlock_wrunlock(&client->clientLock);
 }
 
 void
@@ -317,88 +317,35 @@ LDi_reinitializeconnection(LDClient *const client)
         LDi_cancelread(client->streamhandle);
         client->streamhandle = 0;
     }
-    LDi_condsignal(&client->pollCond);
-    LDi_condsignal(&client->streamCond);
+    LDi_cond_signal(&client->pollCond);
+    LDi_cond_signal(&client->streamCond);
 }
 
-/*
- * as far as event stream parsers go, this is pretty basic.
- * : -> comment gets eaten
- * event:type -> type is remembered for the next data lines
- * data:line -> line is processed according to last seen event type
- */
-static int
-streamcallback(LDClient *const client, const char *line)
+static bool
+LDi_onEvent(const char *const eventName, const char *const eventBuffer,
+    void *const rawContext)
 {
-    LDi_wrlock(&client->clientLock);
+    LDClient *client;
 
-    if (client->shouldstopstreaming) {
-        free(client->databuffer); client->databuffer = NULL; client->eventname[0] = 0;
-        LDi_wrunlock(&client->clientLock);
-        return 1;
+    LD_ASSERT(eventName);
+    LD_ASSERT(eventBuffer);
+    LD_ASSERT(rawContext);
+
+    client = (LDClient *)rawContext;
+
+    if (strcmp(eventName, "put") == 0) {
+        LDi_onstreameventput(client, eventBuffer);
+    } else if (strcmp(eventName, "patch") == 0) {
+        LDi_onstreameventpatch(client, eventBuffer);
+    } else if (strcmp(eventName, "delete") == 0) {
+        LDi_onstreameventdelete(client, eventBuffer);
+    } else if (strcmp(eventName, "ping") == 0) {
+        onstreameventping(client);
+    } else {
+        LD_LOG_1(LD_LOG_ERROR, "sse unknown event name: %s", eventName);
     }
 
-    if (!line) {
-        //should not happen from the networking side but is not fatal
-        LD_LOG(LD_LOG_ERROR, "streamcallback got NULL line");
-    } else if (line[0] == ':') {
-        //skip comment
-    } else if (line[0] == 0) {
-        if (client->eventname[0] == 0) {
-            LD_LOG(LD_LOG_WARNING, "streamcallback got dispatch but type was never set");
-        } else if (strcmp(client->eventname, "ping") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            onstreameventping(client);
-            LDi_wrlock(&client->clientLock);
-        } else if (client->databuffer == NULL) {
-            LD_LOG(LD_LOG_WARNING, "streamcallback got dispatch but data was never set");
-        } else if (strcmp(client->eventname, "put") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            LDi_onstreameventput(client, client->databuffer);
-            LDi_wrlock(&client->clientLock);
-        } else if (strcmp(client->eventname, "patch") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            LDi_onstreameventpatch(client, client->databuffer);
-            LDi_wrlock(&client->clientLock);
-        } else if (strcmp(client->eventname, "delete") == 0) {
-            LDi_wrunlock(&client->clientLock);
-            LDi_onstreameventdelete(client, client->databuffer);
-            LDi_wrlock(&client->clientLock);
-        } else {
-            LD_LOG_1(LD_LOG_WARNING, "streamcallback unknown event name: %s", client->eventname);
-        }
-
-        free(client->databuffer); client->databuffer = NULL; client->eventname[0] = 0;
-    } else if (strncmp(line, "data:", 5) == 0) {
-        line += 5; line += line[0] == ' ';
-
-        const bool nempty = client->databuffer != NULL;
-
-        const size_t linesize = strlen(line);
-
-        size_t currentsize = 0;
-        if (nempty) { currentsize = strlen(client->databuffer); }
-
-        client->databuffer = realloc(client->databuffer, linesize + currentsize + nempty + 1);
-
-        if (nempty) { client->databuffer[currentsize] = '\n'; }
-
-        memcpy(client->databuffer + currentsize + nempty, line, linesize);
-
-        client->databuffer[currentsize + nempty + linesize] = 0;
-    } else if (strncmp(line, "event:", 6) == 0) {
-        line += 6; line += line[0] == ' ';
-
-        if (snprintf(client->eventname, sizeof(client->eventname), "%s", line) < 0) {
-            LDi_wrunlock(&client->clientLock);
-            LD_LOG(LD_LOG_CRITICAL, "snprintf failed in streamcallback type processing");
-            return 1;
-        }
-    }
-
-    LDi_wrunlock(&client->clientLock);
-
-    return 0;
+    return true;
 }
 
 THREAD_RETURN
@@ -430,12 +377,12 @@ LDi_bgfeaturestreamer(void *const v)
                 }
             }
 
-            LDi_mtxenter(&client->condMtx);
-            LDi_condwait(&client->streamCond, &client->condMtx, delay);
-            LDi_mtxleave(&client->condMtx);
+            LDi_mutex_lock(&client->condMtx);
+            LDi_cond_wait(&client->streamCond, &client->condMtx, delay);
+            LDi_mutex_unlock(&client->condMtx);
         }
 
-        LDi_wrlock(&client->clientLock);
+        LDi_rwlock_wrlock(&client->clientLock);
 
         /* Handle shutdown if initialized */
         if (client->status == LDStatusFailed
@@ -443,7 +390,7 @@ LDi_bgfeaturestreamer(void *const v)
         {
             LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgfeaturestreamer");
 
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
 
             return THREAD_RETURN_DEFAULT;
         }
@@ -455,21 +402,30 @@ LDi_bgfeaturestreamer(void *const v)
             /* Ensures we skip directly to shutdown handler */
             retries = 0;
 
-            LDi_mtxenter(&client->condMtx);
-            LDi_wrunlock(&client->clientLock);
-            LDi_condwait(&client->streamCond, &client->condMtx, 1000);
-            LDi_mtxleave(&client->condMtx);
+            LDi_mutex_lock(&client->condMtx);
+            LDi_rwlock_wrunlock(&client->clientLock);
+            LDi_cond_wait(&client->streamCond, &client->condMtx, 1000);
+            LDi_mutex_unlock(&client->condMtx);
 
             continue;
         }
 
-        LDi_wrunlock(&client->clientLock);
+        LDi_rwlock_wrunlock(&client->clientLock);
 
         const time_t startedOn = time(NULL);
 
         int response;
-        /* this won't return until it disconnects */
-        LDi_readstream(client,  &response, streamcallback, LDi_updatehandle);
+
+        {
+            struct LDSSEParser parser;
+
+            LDSSEParserInitialize(&parser, LDi_onEvent, (void *)client);
+
+            /* this won't return until it disconnects */
+            LDi_readstream(client,  &response, &parser, LDi_updatehandle);
+
+            LDSSEParserDestroy(&parser);
+        }
 
         if (response >= 400 && response < 500) {
             bool permanentFailure = false;
@@ -486,9 +442,9 @@ LDi_bgfeaturestreamer(void *const v)
             }
 
             if (permanentFailure) {
-                LDi_wrlock(&client->clientLock);
+                LDi_rwlock_wrlock(&client->clientLock);
                 LDi_updatestatus(client, LDStatusFailed);
-                LDi_wrunlock(&client->clientLock);
+                LDi_rwlock_wrunlock(&client->clientLock);
 
                 LD_LOG(LD_LOG_TRACE, "streaming permanent failure");
 
@@ -496,9 +452,9 @@ LDi_bgfeaturestreamer(void *const v)
             }
         }
 
-        LDi_rdlock(&client->clientLock);
+        LDi_rwlock_rdlock(&client->clientLock);
         const bool intentionallyClosed = client->streamhandle == 0;
-        LDi_rdunlock(&client->clientLock);
+        LDi_rwlock_rdunlock(&client->clientLock);
 
         if (intentionallyClosed) {
             retries = 0;

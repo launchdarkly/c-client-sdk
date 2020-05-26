@@ -1,0 +1,241 @@
+#include <launchdarkly/memory.h>
+
+#include "assertion.h"
+#include "uthash.h"
+#include "store.h"
+
+static void
+LDi_storeFreeHash(struct LDStoreNode *flags)
+{
+    struct LDStoreNode *node, *tmp;
+
+    HASH_ITER(hh, flags, node, tmp) {
+        HASH_DEL(flags, node);
+
+        LDi_rc_destroy(&node->rc);
+    }
+}
+
+bool
+LDi_storeInitialize(struct LDStore *const store)
+{
+    LD_ASSERT(store);
+
+    if (!LDi_rwlock_init(&store->lock)) {
+        return false;
+    }
+
+    store->flags       = NULL;
+    store->initialized = false;
+
+    return true;
+}
+
+void
+LDi_storeDestroy(struct LDStore *const store)
+{
+    if (store) {
+        LDi_storeFreeHash(store->flags);
+        LDi_rwlock_destroy(&store->lock);
+    }
+}
+
+static void
+LDi_destroyStoreNode(void *const nodeRaw)
+{
+    struct LDStoreNode *node;
+
+    node = (struct LDStoreNode *)nodeRaw;
+
+    if (node) {
+        LDi_rc_destroy(&node->rc);
+        LDi_flag_destroy(&node->flag);
+    }
+}
+
+static struct LDStoreNode *
+LDi_allocateStoreNode(struct LDFlag flag)
+{
+    struct LDStoreNode *node;
+
+    if (!(node = LDAlloc(sizeof(struct LDStoreNode)))) {
+        return NULL;
+    }
+
+    if (!LDi_rc_initialize(&node->rc, (void *)node, LDi_destroyStoreNode)) {
+        LDFree(node);
+
+        return NULL;
+    }
+
+    node->flag = flag;
+
+    return node;
+}
+
+bool
+LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
+{
+    struct LDStoreNode *existing, *replacement;
+
+    LD_ASSERT(store);
+    LD_ASSERT(flag->key);
+
+    /* Allocate before lock even though it may be throw away to reduce lock
+    contention as old flags should be rare */
+    if (!(replacement = LDi_allocateStoreNode(flag))) {
+        LDi_flag_destroy(&flag);
+
+        return NULL;
+    }
+
+    LDi_rwlock_wrlock(&store->lock);
+
+    HASH_FIND_STR(store->flags, flag.key, existing);
+
+    if (existing && (flag.version >= existing->flag.version)) {
+        if (existing) {
+            HASH_DEL(store->flags, existing);
+            LDi_rc_decrement(&existing->rc);
+        }
+
+        HASH_ADD_KEYPTR(hh, store->flags, flag.key, strlen(flag.key),
+            replacement);
+    } else {
+        LDi_rc_destroy(&replacement->rc);
+    }
+
+    LDi_rwlock_wrunlock(&store->lock);
+
+    return true;
+}
+
+struct LDStoreNode *
+LDi_storeGet(struct LDStore *const store,
+    const char *const key)
+{
+    struct LDStoreNode *lookup;
+
+    LD_ASSERT(store);
+    LD_ASSERT(key);
+
+    LDi_rwlock_rdlock(&store->lock);
+    HASH_FIND_STR(store->flags, key, lookup);
+    LDi_rwlock_rdunlock(&store->lock);
+
+    if (lookup && !lookup->flag.deleted) {
+        LDi_rc_increment(&lookup->rc);
+
+        return lookup;
+    } else {
+        return NULL;
+    }
+}
+
+bool
+LDi_storeDelete(struct LDStore *const store, const char *const key,
+    const unsigned int version)
+{
+    struct LDFlag flag;
+
+    LD_ASSERT(store);
+    LD_ASSERT(key);
+
+    if (!(flag.key = LDStrDup(key))) {
+        return false;
+    }
+
+    flag.value                = NULL;
+    flag.version              = version;
+    flag.variation            = 0;
+    flag.trackEvents          = false;
+    flag.reason               = NULL;
+    flag.debugEventsUntilDate = 0;
+    flag.deleted              = true;
+
+    return LDi_storeUpsert(store, flag);
+}
+
+bool
+LDi_storePut(struct LDStore *const store, struct LDFlag *flags,
+    const unsigned int flagCount)
+{
+    size_t i;
+    bool failed;
+    struct LDStoreNode *flagsHash, *oldHash;
+
+    LD_ASSERT(store);
+
+    failed    = false;
+    flagsHash = NULL;
+
+    for (i = 0; i < flagCount; i++) {
+        if (failed) {
+            LDi_flag_destroy(&flags[i]);
+        } else {
+            struct LDStoreNode *node;
+
+            if (!(node = LDi_allocateStoreNode(flags[i]))) {
+                failed = true;
+
+                continue;
+            }
+
+            HASH_ADD_KEYPTR(hh, flagsHash, node->flag.key,
+                strlen(node->flag.key), node);
+        }
+    }
+
+    LDFree(flags);
+
+    if (failed) {
+        LDi_storeFreeHash(flagsHash);
+    } else {
+        LDi_rwlock_wrlock(&store->lock);
+        oldHash = store->flags;
+        store->flags = flagsHash;
+        store->initialized = true;
+        LDi_rwlock_wrunlock(&store->lock);
+
+        LDi_storeFreeHash(oldHash);
+    }
+
+    return !failed;
+}
+
+bool
+LDi_storeGetAll(struct LDStore *const store,
+    struct LDStoreNode **const flags, unsigned int *const flagCount)
+{
+    unsigned int count;
+    struct LDStoreNode *node, *tmp, *dupe, **iter;
+
+    LD_ASSERT(store);
+    LD_ASSERT(flags);
+    LD_ASSERT(flagCount);
+
+    LDi_rwlock_rdlock(&store->lock);
+
+    count = HASH_COUNT(store->flags);
+
+    if (!(dupe = LDAlloc(sizeof(struct LDStoreNode *) * count))) {
+        LDi_rwlock_rdunlock(&store->lock);
+
+        return false;
+    }
+
+    iter = &dupe;
+
+    HASH_ITER(hh, store->flags, node, tmp) {
+        *iter = node;
+        LDi_rc_increment(&node->rc);
+        iter++;
+    }
+
+    LDi_rwlock_rdunlock(&store->lock);
+
+    *flags     = dupe;
+    *flagCount = count;
+
+    return true;
+}

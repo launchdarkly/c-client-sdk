@@ -19,6 +19,9 @@ extern "C" {
 #include <launchdarkly/export.h>
 #include <launchdarkly/logging.h>
 #include <launchdarkly/memory.h>
+#include <launchdarkly/json.h>
+
+#include "concurrency.h"
 #include "logging.h"
 
 #include <stdbool.h>
@@ -371,11 +374,11 @@ LD_EXPORT(void) LDClientTrack(struct LDClient_i *const client,
 
 /** @brief Record a custom event and include custom data. */
 LD_EXPORT(void) LDClientTrackData(struct LDClient_i *const client,
-    const char *const name, LDNode *const data);
+    const char *const name, struct LDJSON *const data);
 
 /** @brief Record a custom event and include custom data / a metric. */
 LD_EXPORT(void) LDClientTrackMetric(struct LDClient_i *const client,
-    const char *const name, LDNode *const data, const double metric);
+    const char *const name, struct LDJSON *const data, const double metric);
 
 /** @brief  Returns a hash table of all flags. This must be freed with
  * `LDNodeFree`. */

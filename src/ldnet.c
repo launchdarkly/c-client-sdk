@@ -16,11 +16,11 @@ struct MemoryStruct {
 };
 
 struct streamdata {
-    int (*callback)(LDClient *client, const char *);
     struct MemoryStruct mem;
     time_t lastdatatime;
     double lastdataamt;
     LDClient *client;
+    struct LDSSEParser *parser;
 };
 
 struct cbhandlecontext {
@@ -51,37 +51,22 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 }
 
 static size_t
-StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+StreamWriteCallback(void *const contents, size_t size, size_t nmemb,
+    void *const rawContext)
 {
-    size_t realsize = size * nmemb;
-    struct streamdata *streamdata = userp;
-    struct MemoryStruct *mem = &streamdata->mem;
+    size_t realSize;
+    struct streamdata *context;
 
-    mem->memory = realloc(mem->memory, mem->size + realsize + 1);
-    if (mem->memory == NULL) {
-        /* out of memory! */
-        LD_LOG(LD_LOG_CRITICAL, "not enough memory (realloc returned NULL)");
-        return 0;
+    LD_ASSERT(rawContext);
+
+    realSize = size * nmemb;
+    context  = (struct streamdata *)rawContext;
+
+    if (LDSSEParserProcess(context->parser, contents, realSize)) {
+        return realSize;
     }
 
-    memcpy(&(mem->memory[mem->size]), contents, realsize);
-    mem->size += realsize;
-    mem->memory[mem->size] = 0;
-
-    char *nl;
-    nl = memchr(mem->memory, '\n', mem->size);
-    if (nl) {
-        size_t eaten = 0;
-        while (nl) {
-            *nl = 0;
-            streamdata->callback(streamdata->client, mem->memory + eaten);
-            eaten = nl - mem->memory + 1;
-            nl = memchr(mem->memory + eaten, '\n', mem->size - eaten);
-        }
-        mem->size -= eaten;
-        memmove(mem->memory, mem->memory + eaten, mem->size);
-    }
-    return realsize;
+    return 0;
 }
 
 static curl_socket_t
@@ -194,11 +179,11 @@ progressinspector(void *const v, double dltotal, double dlnow, double ultotal, d
         return 1;
     }
 
-    LDi_rdlock(&streamdata->client->clientLock);
+    LDi_rwlock_rdlock(&streamdata->client->clientLock);
     const bool failed = streamdata->client->status == LDStatusFailed;
     const bool stopping = streamdata->client->status == LDStatusShuttingdown;
     const bool offline = streamdata->client->offline;
-    LDi_rdunlock(&streamdata->client->clientLock);
+    LDi_rwlock_rdunlock(&streamdata->client->clientLock);
 
     if ( failed || stopping || offline ) {
         return 1;
@@ -222,22 +207,38 @@ LDi_cancelread(const int handle)
  * it doesn't return except after a disconnect. (or some other failure.)
  */
 void
-LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, const char *), void cbhandle(LDClient *, int))
+LDi_readstream(LDClient *const client, int *response,
+    struct LDSSEParser *const parser, void cbhandle(LDClient *, int))
 {
-    struct MemoryStruct headers; struct streamdata streamdata; struct cbhandlecontext handledata;
-    CURL *curl = NULL; struct curl_slist *headerlist = NULL, *headertmp = NULL;
+    struct MemoryStruct headers;
+    struct streamdata streamdata;
+    struct cbhandlecontext handledata;
+    CURL *curl;
+    struct curl_slist *headerlist, *headertmp;
+
+    LD_ASSERT(client);
+    LD_ASSERT(response);
+    LD_ASSERT(parser);
+    LD_ASSERT(cbhandle);
+
+    curl       = NULL;
+    headerlist = NULL;
+    headertmp  = NULL;
 
     handledata.client = client; handledata.cb = cbhandle;
 
-    memset(&headers, 0, sizeof(headers)); memset(&streamdata, 0, sizeof(streamdata));
+    memset(&headers, 0, sizeof(headers));
+    memset(&streamdata, 0, sizeof(streamdata));
 
-    streamdata.callback = cbdata; streamdata.lastdatatime = time(NULL); streamdata.client = client;
+    streamdata.parser       = parser;
+    streamdata.lastdatatime = time(NULL);
+    streamdata.client       = client;
 
-    LDi_rdlock(&client->clientLock);
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     char *const jsonuser = LDi_usertojsontext(client, client->shared->sharedUser, false);
-    LDi_rdunlock(&client->shared->sharedUserLock);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     if (!jsonuser) {
         LD_LOG(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed");
@@ -256,16 +257,16 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
         unsigned char *const b64text = LDi_base64_encode((unsigned char*)jsonuser, strlen(jsonuser), &b64len);
 
         if (!b64text) {
-            free(jsonuser);
+            LDFree(jsonuser);
             LD_LOG(LD_LOG_ERROR, "LDi_base64_encode == NULL in LDi_readstream"); return;
         }
 
         const int status = snprintf(url, sizeof(url), "%s/meval/%s",
             client->shared->sharedConfig->streamURI, b64text);
-        free(b64text);
+        LDFree(b64text);
 
         if (status < 0) {
-            free(jsonuser);
+            LDFree(jsonuser);
             LD_LOG(LD_LOG_ERROR, "snprintf !usereport failed"); return;
         }
     }
@@ -273,7 +274,7 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     if (client->shared->sharedConfig->useReasons) {
         const size_t len = strlen(url);
         if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
-            free(jsonuser);
+            LDFree(jsonuser);
             LD_LOG(LD_LOG_ERROR, "snprintf useReason failed"); return;
         }
     }
@@ -349,8 +350,8 @@ LDi_readstream(LDClient *const client, int *response, int cbdata(LDClient *, con
     }
 
   cleanup:
-    free(streamdata.mem.memory);
-    free(headers.memory);
+    LDFree(streamdata.mem.memory);
+    LDFree(headers.memory);
 
     curl_slist_free_all(headerlist);
 
@@ -366,11 +367,11 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
-    LDi_rdlock(&client->clientLock);
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     char *const jsonuser = LDi_usertojsontext(client, client->shared->sharedUser, false);
-    LDi_rdunlock(&client->shared->sharedUserLock);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     if (!jsonuser) {
         LD_LOG(LD_LOG_CRITICAL, "cJSON_PrintUnformatted == NULL in LDi_readstream failed");

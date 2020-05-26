@@ -22,7 +22,7 @@ void (*LDi_statuscallback)(int);
 void
 LDi_earlyinit(void)
 {
-    LDi_rwlockinit(&globalContext.sharedUserLock);
+    LDi_rwlock_init(&globalContext.sharedUserLock);
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
@@ -61,6 +61,8 @@ LDConfigNew(const char *const mobileKey)
     config->proxyURI = NULL;
     config->verifyPeer = true;
     config->certFile = NULL;
+    /* defaulting to true for now will be removed later */
+    config->inlineUsersInEvents = true;
 
     return config;
 }
@@ -235,9 +237,9 @@ LDi_clientinitisolated(struct LDGlobal_i *const shared,
 
     memset(client, 0, sizeof(*client));
 
-    LDi_rwlockinit(&client->clientLock);
+    LDi_rwlock_init(&client->clientLock);
 
-    LDi_wrlock(&client->clientLock);
+    LDi_rwlock_wrlock(&client->clientLock);
 
     client->shared = shared;
     client->offline = shared->sharedConfig->offline;
@@ -251,38 +253,41 @@ LDi_clientinitisolated(struct LDGlobal_i *const shared,
 
     LD_ASSERT(LDSetString(&client->mobileKey, mobileKey));
 
-    LDi_rwlockinit(&client->eventLock);
+    LD_ASSERT(client->eventProcessor =
+        LDi_newEventProcessor(shared->sharedConfig));
+
+    LDi_rwlock_init(&client->eventLock);
     client->eventArray = cJSON_CreateArray();
     client->numEvents = 0;
     client->summaryEvent = LDNodeCreateHash();
     client->summaryStart = 0;
 
-    LDi_mtxinit(&client->initCondMtx);
-    LDi_condinit(&client->initCond);
+    LDi_mutex_init(&client->initCondMtx);
+    LDi_cond_init(&client->initCond);
 
-    LDi_mtxinit(&client->condMtx);
+    LDi_mutex_init(&client->condMtx);
 
-    LDi_condinit(&client->eventCond);
-    LDi_condinit(&client->pollCond);
-    LDi_condinit(&client->streamCond);
+    LDi_cond_init(&client->eventCond);
+    LDi_cond_init(&client->pollCond);
+    LDi_cond_init(&client->streamCond);
 
-    LDi_createthread(&client->eventThread, LDi_bgeventsender, client);
-    LDi_createthread(&client->pollingThread, LDi_bgfeaturepoller, client);
-    LDi_createthread(&client->streamingThread, LDi_bgfeaturestreamer, client);
+    LDi_thread_create(&client->eventThread, LDi_bgeventsender, client);
+    LDi_thread_create(&client->pollingThread, LDi_bgfeaturepoller, client);
+    LDi_thread_create(&client->streamingThread, LDi_bgfeaturestreamer, client);
 
-    LDi_rdlock(&shared->sharedUserLock);
+    LDi_rwlock_rdlock(&shared->sharedUserLock);
     char *const flags = LDi_loaddata("features", shared->sharedUser->key);
-    LDi_rdunlock(&shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&shared->sharedUserLock);
 
     if (flags) {
         LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
 
-    LDi_rdlock(&shared->sharedUserLock);
+    LDi_rwlock_rdlock(&shared->sharedUserLock);
     LDi_recordidentify(client, shared->sharedUser);
-    LDi_rdunlock(&shared->sharedUserLock);
-    LDi_wrunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&shared->sharedUserLock);
+    LDi_rwlock_wrunlock(&client->clientLock);
 
     return client;
 }
@@ -344,9 +349,9 @@ LDClientSetOffline(LDClient *const client)
     LDClient *clientIter, *tmp;
 
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
-        LDi_wrlock(&clientIter->clientLock);
+        LDi_rwlock_wrlock(&clientIter->clientLock);
         clientIter->offline = true;
-        LDi_wrunlock(&clientIter->clientLock);
+        LDi_rwlock_wrunlock(&clientIter->clientLock);
     }
 }
 
@@ -356,10 +361,10 @@ LDClientSetOnline(LDClient *const client)
     LDClient *clientIter, *tmp;
 
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
-        LDi_wrlock(&clientIter->clientLock);
+        LDi_rwlock_wrlock(&clientIter->clientLock);
         clientIter->offline = false;
         LDi_updatestatus(clientIter, LDStatusInitializing);
-        LDi_wrunlock(&clientIter->clientLock);
+        LDi_rwlock_wrunlock(&clientIter->clientLock);
     }
 }
 
@@ -367,9 +372,9 @@ bool
 LDClientIsOffline(LDClient *const client)
 {
     LD_ASSERT(client);
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     bool offline = client->offline;
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
     return offline;
 }
 
@@ -377,10 +382,10 @@ void
 LDClientSetBackground(LDClient *const client, const bool background)
 {
     LD_ASSERT(client);
-    LDi_wrlock(&client->clientLock);
+    LDi_rwlock_wrlock(&client->clientLock);
     client->background = background;
     LDi_startstopstreaming(client, background);
-    LDi_wrunlock(&client->clientLock);
+    LDi_rwlock_wrunlock(&client->clientLock);
 }
 
 void
@@ -390,7 +395,7 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
 
     LD_ASSERT(client); LD_ASSERT(user);
 
-    LDi_wrlock(&globalContext.sharedUserLock);
+    LDi_rwlock_wrlock(&globalContext.sharedUserLock);
 
     if (user != globalContext.sharedUser) {
         LDUserFree(globalContext.sharedUser);
@@ -399,7 +404,7 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
     globalContext.sharedUser = user;
 
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
-        LDi_wrlock(&clientIter->clientLock);
+        LDi_rwlock_wrlock(&clientIter->clientLock);
 
         LDi_freehash(clientIter->allFlags);
         clientIter->allFlags = NULL;
@@ -417,10 +422,10 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
         LDi_reinitializeconnection(clientIter);
         LDi_recordidentify(clientIter, user);
 
-        LDi_wrunlock(&clientIter->clientLock);
+        LDi_rwlock_wrunlock(&clientIter->clientLock);
     }
 
-    LDi_wrunlock(&globalContext.sharedUserLock);
+    LDi_rwlock_wrunlock(&globalContext.sharedUserLock);
 }
 
 void
@@ -428,37 +433,38 @@ clientCloseIsolated(LDClient *const client)
 {
     LD_ASSERT(client);
 
-    LDi_wrlock(&client->clientLock);
+    LDi_rwlock_wrlock(&client->clientLock);
     LDi_updatestatus(client, LDStatusShuttingdown);
     LDi_reinitializeconnection(client);
-    LDi_wrunlock(&client->clientLock);
+    LDi_rwlock_wrunlock(&client->clientLock);
 
-    LDi_mtxenter(&client->condMtx);
-    LDi_condsignal(&client->initCond);
-    LDi_condsignal(&client->eventCond);
-    LDi_condsignal(&client->pollCond);
-    LDi_condsignal(&client->streamCond);
-    LDi_mtxleave(&client->condMtx);
+    LDi_mutex_lock(&client->condMtx);
+    LDi_cond_signal(&client->initCond);
+    LDi_cond_signal(&client->eventCond);
+    LDi_cond_signal(&client->pollCond);
+    LDi_cond_signal(&client->streamCond);
+    LDi_mutex_unlock(&client->condMtx);
 
-    LDi_jointhread(client->eventThread);
-    LDi_jointhread(client->pollingThread);
-    LDi_jointhread(client->streamingThread);
+    LDi_thread_join(&client->eventThread);
+    LDi_thread_join(&client->pollingThread);
+    LDi_thread_join(&client->streamingThread);
 
+    LDi_freeEventProcessor(client->eventProcessor);
     LDi_freehash(client->allFlags);
 
     cJSON_Delete(client->eventArray);
     /* may exist if flush failed */
     LDi_freehash(client->summaryEvent);
 
-    LDi_rwlockdestroy(&client->clientLock);
-    LDi_rwlockdestroy(&client->eventLock);
+    LDi_rwlock_destroy(&client->clientLock);
+    LDi_rwlock_destroy(&client->eventLock);
 
-    LDi_mtxdestroy(&client->initCondMtx);
-    LDi_mtxdestroy(&client->condMtx);
+    LDi_mutex_destroy(&client->initCondMtx);
+    LDi_mutex_destroy(&client->condMtx);
 
-    LDi_conddestroy(&client->initCond);
-    LDi_conddestroy(&client->eventCond);
-    LDi_conddestroy(&client->pollCond);
+    LDi_cond_destroy(&client->initCond);
+    LDi_cond_destroy(&client->eventCond);
+    LDi_cond_destroy(&client->pollCond);
     LDFree(client->mobileKey);
     LDFree(client->databuffer);
 
@@ -494,23 +500,23 @@ LDNode *
 LDClientGetLockedFlags(LDClient *const client)
 {
     LD_ASSERT(client);
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     return client->allFlags;
 }
 
 void LDClientUnlockFlags(struct LDClient_i *const client)
 {
     LD_ASSERT(client);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 }
 
 bool
 LDClientIsInitialized(LDClient *const client)
 {
     LD_ASSERT(client);
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     bool isinit = client->status == LDStatusInitialized;
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
     return isinit;
 }
 
@@ -518,21 +524,21 @@ bool
 LDClientAwaitInitialized(LDClient *const client, const unsigned int timeoutmilli)
 {
     LD_ASSERT(client);
-    LDi_mtxenter(&client->initCondMtx);
-    LDi_rdlock(&client->clientLock);
+    LDi_mutex_lock(&client->initCondMtx);
+    LDi_rwlock_rdlock(&client->clientLock);
     if (client->status == LDStatusInitialized) {
-        LDi_rdunlock(&client->clientLock);
-        LDi_mtxleave(&client->initCondMtx);
+        LDi_rwlock_rdunlock(&client->clientLock);
+        LDi_mutex_unlock(&client->initCondMtx);
         return true;
     }
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
-    LDi_condwait(&client->initCond, &client->initCondMtx, timeoutmilli);
-    LDi_mtxleave(&client->initCondMtx);
+    LDi_cond_wait(&client->initCond, &client->initCondMtx, timeoutmilli);
+    LDi_mutex_unlock(&client->initCondMtx);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     bool isinit = client->status == LDStatusInitialized;
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
     return isinit;
 }
 
@@ -549,9 +555,9 @@ char *
 LDClientSaveFlags(LDClient *const client)
 {
     LD_ASSERT(client);
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     char *const serialized = LDi_hashtostring(client->allFlags, true);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
     return serialized;
 }
 
@@ -560,9 +566,9 @@ LDClientRestoreFlags(LDClient *const client, const char *const data)
 {
     LD_ASSERT(client); LD_ASSERT(data);
     if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_rdlock(&client->shared->sharedUserLock);
+        LDi_rwlock_rdlock(&client->shared->sharedUserLock);
         LDi_savedata("features", client->shared->sharedUser->key, data);
-        LDi_rdunlock(&client->shared->sharedUserLock);
+        LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     }
 }
 
@@ -589,7 +595,7 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     cJSON_Delete(payload);
 
     if (needlock) {
-        LDi_wrlock(&client->clientLock);
+        LDi_rwlock_wrlock(&client->clientLock);
     }
 
     LDNode *const oldhash = client->allFlags;
@@ -601,9 +607,9 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
 
         for (struct listener *list = client->listeners; list; list = list->next) {
             if (strcmp(list->key, oldnode->key) == 0) {
-                LDi_wrunlock(&client->clientLock);
+                LDi_rwlock_wrunlock(&client->clientLock);
                 list->fn(oldnode->key, newnode == NULL);
-                LDi_wrlock(&client->clientLock);
+                LDi_rwlock_wrlock(&client->clientLock);
             }
         }
     }
@@ -615,7 +621,7 @@ LDi_clientsetflags(LDClient *const client, const bool needlock, const char *cons
     }
 
     if (needlock) {
-        LDi_wrunlock(&client->clientLock);
+        LDi_rwlock_wrunlock(&client->clientLock);
     }
 
     LDi_freehash(oldhash);
@@ -627,12 +633,12 @@ void
 LDi_savehash(LDClient *const client)
 {
     LD_ASSERT(client);
-    LDi_rdlock(&client->clientLock);
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     char *const serialized = LDi_hashtostring(client->allFlags, true);
     LDi_savedata("features", client->shared->sharedUser->key, serialized);
-    LDi_rdunlock(&client->shared->sharedUserLock);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
     LDFree(serialized);
 }
 
@@ -640,9 +646,9 @@ LDNode *
 LDAllFlags(LDClient *const client)
 {
     LD_ASSERT(client);
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *const clone = LDCloneHash(client->allFlags);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
     return clone;
 }
 
@@ -684,10 +690,10 @@ LDi_BoolNode(LDClient *const client, const char *const key, const bool fallback,
         result = fallback;
     }
 
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_recordfeature(client, client->shared->sharedUser, node, key, LDNodeBool,
         (double)result, NULL, NULL, (double)fallback, NULL, NULL, (bool)selected);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -700,11 +706,11 @@ LDBoolVariationDetail(LDClient *const client, const char *const key,
 {
     LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *selected = NULL;
     const bool value = LDi_BoolNode(client, key, fallback, &selected);
     fillDetails(selected, details, LDNodeBool);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -714,9 +720,9 @@ LDBoolVariation(LDClient *const client, const char *const key, const bool fallba
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     const bool value = LDi_BoolNode(client, key, fallback, NULL);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -735,11 +741,11 @@ LDi_IntNode(LDClient *const client, const char *const key,
         result = fallback;
     }
 
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_recordfeature(client, client->shared->sharedUser, node, key,
         LDNodeNumber, (double)result, NULL, NULL, (double)fallback, NULL, NULL,
         (bool)selected);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -752,11 +758,11 @@ LDIntVariationDetail(LDClient *const client, const char *const key,
 {
     LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *selected = NULL;
     const int value = LDi_IntNode(client, key, fallback, &selected);
     fillDetails(selected, details, LDNodeNumber);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -766,9 +772,9 @@ LDIntVariation(LDClient *const client, const char *const key, const int fallback
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     const int value = LDi_IntNode(client, key, fallback, NULL);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -787,10 +793,10 @@ LDi_DoubleNode(LDClient *const client, const char *const key,
         result = fallback;
     }
 
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_recordfeature(client, client->shared->sharedUser, node, key,
         LDNodeNumber, result, NULL, NULL, fallback, NULL, NULL, (bool)selected);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -803,11 +809,11 @@ LDDoubleVariationDetail(LDClient *const client, const char *const key,
 {
     LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *selected = NULL;
     const double value = LDi_DoubleNode(client, key, fallback, &selected);
     fillDetails(selected, details, LDNodeNumber);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -817,9 +823,9 @@ LDDoubleVariation(LDClient *const client, const char *const key, const double fa
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     const double value = LDi_DoubleNode(client, key, fallback, NULL);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -845,10 +851,10 @@ LDi_StringNode(LDClient *const client, const char *const key,
     memcpy(buffer, result, len);
     buffer[len] = 0;
 
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_recordfeature(client, client->shared->sharedUser, node, key,
         LDNodeString, 0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -861,11 +867,11 @@ LDStringVariationDetail(LDClient *const client, const char *const key,
 {
     LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));  LD_ASSERT(details);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *selected = NULL;
     char* const value = LDi_StringNode(client, key, fallback, buffer, space, &selected);
     fillDetails(selected, details, LDNodeString);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -876,9 +882,9 @@ LDStringVariation(LDClient *const client, const char *const key,
 {
     LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     char* const value = LDi_StringNode(client, key, fallback, buffer, space, NULL);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -899,10 +905,10 @@ LDi_StringAllocNode(LDClient *const client, const char *const key,
 
     char *const result = LDStrDup(value);
 
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_recordfeature(client, client->shared->sharedUser, node, key,
         LDNodeString, 0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -915,11 +921,11 @@ LDStringVariationAllocDetail(LDClient *const client, const char *const key,
 {
     LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *selected = NULL;
     char *const value = LDi_StringAllocNode(client, key, fallback, &selected);
     fillDetails(selected, details, LDNodeString);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -929,9 +935,9 @@ LDStringVariationAlloc(LDClient *const client, const char *const key, const char
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     char *const value = LDi_StringAllocNode(client, key, fallback, NULL);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -950,10 +956,10 @@ LDi_JSONNode(LDClient *const client, const char *const key,
         result = LDCloneHash(fallback);
     }
 
-    LDi_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_recordfeature(client, client->shared->sharedUser, node, key,
         LDNodeHash, 0.0, NULL, result, 0.0, NULL, fallback, (bool)selected);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (selected) { *selected = node; }
 
@@ -966,11 +972,11 @@ LDJSONVariationDetail(LDClient *const client, const char *const key,
 {
     LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *selected = NULL;
     LDNode *const value = LDi_JSONNode(client, key, fallback, &selected);
     fillDetails(selected, details, LDNodeHash);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -980,9 +986,9 @@ LDJSONVariation(LDClient *const client, const char *const key, const LDNode *con
 {
     LD_ASSERT(client); LD_ASSERT(key);
 
-    LDi_rdlock(&client->clientLock);
+    LDi_rwlock_rdlock(&client->clientLock);
     LDNode *const value = LDi_JSONNode(client, key, fallback, NULL);
-    LDi_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->clientLock);
 
     return value;
 }
@@ -990,30 +996,39 @@ LDJSONVariation(LDClient *const client, const char *const key, const LDNode *con
 void
 LDClientTrack(LDClient *const client, const char *const name)
 {
-    LD_ASSERT(client); LD_ASSERT(name);
-    LDi_rdlock(&client->shared->sharedUserLock);
-    LDi_recordtrack(client, client->shared->sharedUser, name, NULL);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LD_ASSERT(client);
+    LD_ASSERT(name);
+
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
+    LDi_track(client->eventProcessor, client->shared->sharedUser, name,
+        NULL, 0, false);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 }
 
 void
-LDClientTrackData(LDClient *const client, const char *const name, LDNode *const data)
+LDClientTrackData(LDClient *const client, const char *const name,
+    struct LDJSON *const data)
 {
-    LD_ASSERT(client); LD_ASSERT(name);
-    LDi_rdlock(&client->shared->sharedUserLock);
-    LDi_recordtrack(client, client->shared->sharedUser, name, data);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LD_ASSERT(client);
+    LD_ASSERT(name);
+
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
+    LDi_track(client->eventProcessor, client->shared->sharedUser, name,
+        data, 0, false);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 }
 
 void
 LDClientTrackMetric(LDClient *const client, const char *const name,
-    LDNode *const data, const double metric)
+    struct LDJSON *const data, const double metric)
 {
-    LD_ASSERT(client); LD_ASSERT(name);
-    LDi_rdlock(&client->shared->sharedUserLock);
-    LDi_recordtrackmetric(client, client->shared->sharedUser, name, data,
-        metric);
-    LDi_rdunlock(&client->shared->sharedUserLock);
+    LD_ASSERT(client);
+    LD_ASSERT(name);
+
+    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
+    LDi_track(client->eventProcessor, client->shared->sharedUser, name,
+        data, 0, false);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 }
 
 void
@@ -1022,7 +1037,7 @@ LDClientFlush(LDClient *const client)
     LDClient *clientIter, *tmp;
 
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
-        LDi_condsignal(&clientIter->eventCond);
+        LDi_cond_signal(&clientIter->eventCond);
     }
 }
 
@@ -1037,10 +1052,10 @@ LDClientRegisterFeatureFlagListener(LDClient *const client, const char *const ke
     list->key = LDStrDup(key);
     LD_ASSERT(list->key);
 
-    LDi_wrlock(&client->clientLock);
+    LDi_rwlock_wrlock(&client->clientLock);
     list->next = client->listeners;
     client->listeners = list;
-    LDi_wrunlock(&client->clientLock);
+    LDi_rwlock_wrunlock(&client->clientLock);
 }
 
 bool
@@ -1050,7 +1065,7 @@ LDClientUnregisterFeatureFlagListener(LDClient *const client, const char *const 
 
     struct listener *list = NULL, *prev = NULL;
 
-    LDi_wrlock(&client->clientLock);
+    LDi_rwlock_wrlock(&client->clientLock);
     for (list = client->listeners; list; prev = list, list = list->next) {
         if (list->fn == fn && strcmp(key, list->key)) {
             if (prev) {
@@ -1063,7 +1078,7 @@ LDClientUnregisterFeatureFlagListener(LDClient *const client, const char *const 
             break;
         }
     }
-    LDi_wrunlock(&client->clientLock);
+    LDi_rwlock_wrunlock(&client->clientLock);
 
     return list != NULL;
 }
@@ -1133,13 +1148,13 @@ LDi_updatestatus(struct LDClient_i *const client, const LDStatus status)
     if (client->status != status) {
         client->status = status;
         if (LDi_statuscallback) {
-            LDi_wrunlock(&client->clientLock);
+            LDi_rwlock_wrunlock(&client->clientLock);
             LDi_statuscallback(status);
-            LDi_wrlock(&client->clientLock);
+            LDi_rwlock_wrlock(&client->clientLock);
         }
    }
-   LDi_condsignal(&client->initCond);
-};
+   LDi_cond_signal(&client->initCond);
+}
 
 void LDFreeDetailContents(LDVariationDetails details)
 {

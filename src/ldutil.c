@@ -20,27 +20,6 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-/*
- * set a string value, copying the memory, and freeing the old.
- */
-bool
-LDSetString(char **const target, const char *const value)
-{
-    if (target) {
-        LDFree(*target);
-        if (value) {
-            *target = LDStrDup(value);
-            if (*target) {
-                return true;
-            }
-        } else {
-            *target = NULL;
-            return true;
-        }
-    }
-    return false;
-}
-
 void
 LDi_millisleep(int ms)
 {
@@ -60,29 +39,9 @@ static ld_mutex_t LDi_rngmtx;
 void
 LDi_initializerng(){
 #ifndef _WINDOWS
-    LDi_mtxinit(&LDi_rngmtx);
+    LDi_mutex_init(&LDi_rngmtx);
     LDi_rngstate = time(NULL);
 #endif
-}
-
-bool
-LDi_random(unsigned int *const result)
-{
-    if(!result) { return false; }
-
-#ifndef _WINDOWS
-    LDi_mtxenter(&LDi_rngmtx);
-    const int generated = rand_r(&LDi_rngstate);
-    LDi_mtxleave(&LDi_rngmtx);
-#else
-    unsigned int generated;
-    if (rand_s(&generated)) {
-        return false;
-    }
-#endif
-
-    *result = generated;
-    return true;
 }
 
 bool
@@ -102,84 +61,10 @@ LDi_randomhex(char *const buffer, const size_t buffersize)
 
     return true;
 }
-
-bool
-LDi_UUIDv4(char *const buffer)
-{
-    if (!LDi_randomhex(buffer, LD_UUID_SIZE)) {
-        return false;
-    }
-
-    buffer[8]  = '-';
-    buffer[13] = '-';
-    buffer[18] = '-';
-    buffer[23] = '-';
-
-    return true;
-}
-
 /*
  * some functions to help with threads.
  */
-#ifndef _WINDOWS
-/* posix */
-void
-LDi_condwait(pthread_cond_t *cond, pthread_mutex_t *mtx, int ms)
-{
-    struct timespec ts;
-
-    #ifdef __APPLE__
-        kern_return_t status;
-        clock_serv_t clock_serve;
-        mach_timespec_t mach_timespec;
-        status = host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &clock_serve);
-        LD_ASSERT(status == KERN_SUCCESS);
-        status = clock_get_time(clock_serve, &mach_timespec);
-        LD_ASSERT(status == KERN_SUCCESS);
-        status = mach_port_deallocate(mach_task_self(), clock_serve);
-        LD_ASSERT(status == KERN_SUCCESS);
-        ts.tv_sec = mach_timespec.tv_sec;
-        ts.tv_nsec = mach_timespec.tv_nsec;
-    #else
-        clock_gettime(CLOCK_REALTIME, &ts);
-    #endif
-
-    ts.tv_sec += ms / 1000;
-    ts.tv_nsec += (ms % 1000) * 1000 * 1000;
-    if (ts.tv_nsec > 1000 * 1000 * 1000) {
-        ts.tv_sec += 1;
-        ts.tv_nsec -= 1000 * 1000 * 1000;
-    }
-
-    pthread_cond_timedwait(cond, mtx, &ts);
-}
-
-void
-LDi_condsignal(pthread_cond_t *cond)
-{
-    pthread_cond_broadcast(cond);
-}
-#else
-/* windows */
-void
-LDi_condwait(CONDITION_VARIABLE *cond, CRITICAL_SECTION *mtx, int ms)
-{
-    SleepConditionVariableCS(cond, mtx, ms);
-
-}
-
-void
-LDi_condsignal(CONDITION_VARIABLE *cond)
-{
-    WakeAllConditionVariable(cond);
-}
-
-void
-LDi_createthread(HANDLE *thread, LPTHREAD_START_ROUTINE fn, void *arg)
-{
-    DWORD id;
-    *thread = CreateThread(NULL, 0, fn, arg, 0, &id);
-}
+#ifdef _WINDOWS
 
 static BOOL CALLBACK
 OneTimeCaller(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *lpContext)

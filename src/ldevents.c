@@ -72,11 +72,11 @@ LDi_recordidentify(LDClient *const client, LDUser *const lduser)
     cJSON *json = makeBaseEvent(client, lduser, "identify");
     cJSON_AddStringToObject(json, "key", lduser->key);
 
-    LDi_wrlock(&client->eventLock);
+    LDi_rwlock_wrlock(&client->eventLock);
 
     enqueueEvent(client, json);
 
-    LDi_wrunlock(&client->eventLock);
+    LDi_rwlock_wrunlock(&client->eventLock);
 }
 
 /*
@@ -142,7 +142,7 @@ summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *
 {
     LD_LOG_1(LD_LOG_TRACE, "updating summary for %s", feature);
 
-    LDi_wrlock(&client->eventLock);
+    LDi_rwlock_wrlock(&client->eventLock);
 
     LDNode *summary = LDNodeLookup(client->summaryEvent, feature);
 
@@ -173,7 +173,7 @@ summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *
 
     if (keystatus < 0) {
         LD_LOG(LD_LOG_CRITICAL, "preparing key failed in summarizeEvent");
-        LDi_wrunlock(&client->eventLock); return;
+        LDi_rwlock_wrunlock(&client->eventLock); return;
     }
 
     LDNode *counter = LDNodeLookup(summary->h, countername);
@@ -191,16 +191,16 @@ summarizeEvent(LDClient *const client, LDUser *lduser, LDNode *res, const char *
 
     counter->track++;
 
-    LDi_wrunlock(&client->eventLock);
+    LDi_rwlock_wrunlock(&client->eventLock);
 }
 
 static void
 collectSummary(LDClient *const client)
 {
-    LDi_wrlock(&client->eventLock);
+    LDi_rwlock_wrlock(&client->eventLock);
 
     if (client->summaryStart == 0) {
-        LDi_wrunlock(&client->eventLock);
+        LDi_rwlock_wrunlock(&client->eventLock);
         return;
     }
 
@@ -252,7 +252,7 @@ collectSummary(LDClient *const client)
 
     enqueueEvent(client, json);
 
-    LDi_wrunlock(&client->eventLock);
+    LDi_rwlock_wrunlock(&client->eventLock);
 }
 
 void
@@ -293,9 +293,9 @@ LDi_recordfeature(LDClient *const client, LDUser *const lduser, LDNode *const re
         cJSON_AddItemToObject(json, "default", LDi_hashtojson(defaultm));
     }
 
-    LDi_wrlock(&client->eventLock);
+    LDi_rwlock_wrlock(&client->eventLock);
     enqueueEvent(client, json);
-    LDi_wrunlock(&client->eventLock);
+    LDi_rwlock_wrunlock(&client->eventLock);
 }
 
 void
@@ -304,9 +304,9 @@ LDi_recordtrack(LDClient *const client, LDUser *const user,
 {
     cJSON *const event = makeTrackEvent(client, user, name, data);
 
-    LDi_wrlock(&client->eventLock);
+    LDi_rwlock_wrlock(&client->eventLock);
     enqueueEvent(client, event);
-    LDi_wrunlock(&client->eventLock);
+    LDi_rwlock_wrunlock(&client->eventLock);
 }
 
 void
@@ -315,9 +315,9 @@ LDi_recordtrackmetric(LDClient *const client, LDUser *const user,
 {
     cJSON *const event = makeTrackMetricEvent(client, user, name, data, metric);
 
-    LDi_wrlock(&client->eventLock);
+    LDi_rwlock_wrlock(&client->eventLock);
     enqueueEvent(client, event);
-    LDi_wrunlock(&client->eventLock);
+    LDi_rwlock_wrunlock(&client->eventLock);
 }
 
 char *
@@ -325,10 +325,10 @@ LDi_geteventdata(LDClient *const client)
 {
     collectSummary(client);
 
-    LDi_wrlock(&client->eventLock);
+    LDi_rwlock_wrlock(&client->eventLock);
 
     if (client->numEvents == 0) {
-        LDi_wrunlock(&client->eventLock);
+        LDi_rwlock_wrunlock(&client->eventLock);
         return NULL;
     }
 
@@ -336,7 +336,7 @@ LDi_geteventdata(LDClient *const client)
     client->eventArray = cJSON_CreateArray();
     client->numEvents = 0;
 
-    LDi_wrunlock(&client->eventLock);
+    LDi_rwlock_wrunlock(&client->eventLock);
 
     char *const data = cJSON_PrintUnformatted(events);
     cJSON_Delete(events);
