@@ -41,53 +41,6 @@ typedef enum {
     LDStatusShutdown
 } LDStatus;
 
-/** @brief JSON equivalent types used by `LDNode`. */
-typedef enum {
-    LDNodeNone = 0,
-    LDNodeString,
-    LDNodeNumber,
-    LDNodeBool,
-    LDNodeHash,
-    LDNodeArray,
-} LDNodeType;
-
-/** @brief A Node node will have a type, one of string, number, bool, hash,
- * or array. The corresponding union field, s, n, b, h, or a will be set. */
-typedef struct LDNode_i {
-    union {
-        /** @brief Key when object. */
-        char *key;
-        /** @brief Key when array. */
-        unsigned int idx;
-    };
-    /** @brief Node type. */
-    LDNodeType type;
-    /** @brief Node value. */
-    union {
-        bool b;
-        char *s;
-        double n;
-        struct LDNode_i *h;
-        struct LDNode_i *a;
-    };
-    /** @brief Hash handle used for hash tables. */
-    UT_hash_handle hh;
-    /** @brief Internal version tracking. */
-    int version;
-    /** @brief Internal variation tracking. */
-    int variation;
-    /** @brief Internal version tracking. */
-    int flagversion;
-    /** @brief Internal track timing. */
-    double track;
-    /** @brief Internal evaluation reason. */
-    struct LDNode_i* reason;
-#ifdef __cplusplus
-    struct LDNode_i *lookup(const std::string &key);
-    struct LDNode_i *index(unsigned int idx);
-#endif
-} LDNode;
-
 /** @brief To use detail variations you must provide a pointer to an
  * `LDVariationDetails` struct that will be filled by the evaluation function.
  *
@@ -95,7 +48,7 @@ typedef struct LDNode_i {
  * `LDFreeDetailContents` when they are no longer needed. */
 typedef struct {
     int variationIndex;
-    struct LDNode_i* reason;
+    struct LDJSON *reason;
 } LDVariationDetails;
 
 /** @brief Opaque configuration object */
@@ -205,10 +158,9 @@ LD_EXPORT(void) LDConfigSetUseReport(LDConfig *const config, const bool report);
 LD_EXPORT(void) LDConfigSetUseEvaluationReasons(LDConfig *const config,
     const bool reasons);
 
-/** @brief Add a user attribute name to the private list which will not be
- * recorded for all users. */
-LD_EXPORT(void) LDConfigAddPrivateAttribute(LDConfig *const config,
-    const char *const name);
+/** @brief Private attribute list which will not be recorded for all users. */
+LD_EXPORT(void) LDConfigSetPrivateAttributes(LDConfig *const config,
+    struct LDJSON *attributes);
 
 /** @brief Add another mobile key to the list of secondary environments.
  *
@@ -299,18 +251,13 @@ LD_EXPORT(void) LDUserSetAvatar(LDUser *const user, const char *const str);
 /** @brief Set the user's secondary key. */
 LD_EXPORT(void) LDUserSetSecondary(LDUser *const user, const char *const str);
 
-/** @brief Set custom attributes from JSON object string */
-LD_EXPORT(bool) LDUserSetCustomAttributesJSON(LDUser *const user,
-    const char *const jstring);
+/** Set the user's private fields, must be arroy of strings */
+LD_EXPORT(void) LDUserSetPrivateAttributes(LDUser *const user,
+    struct LDJSON *const privateAttributes);
 
-/** @brief Set custom attributes with `LDNode` */
-LD_EXPORT(void) LDUserSetCustomAttributes(LDUser *const user,
-    LDNode *const custom);
-
-/** @brief Add an attribute name to the private list which will not be
- * recorded. */
-LD_EXPORT(void) LDUserAddPrivateAttribute(LDUser *const user,
-    const char *const attribute);
+/** @brief Set the user's custom field */
+LD_EXPORT(void) LDUserSetCustomAttributesJSON(LDUser *const user,
+    struct LDJSON *const custom);
 
 /** @brief Get JSON string containing all flags */
 LD_EXPORT(char *) LDClientSaveFlags(struct LDClient_i *const client);
@@ -362,12 +309,6 @@ LD_EXPORT(void) LDClientClose(struct LDClient_i *const client);
 /** @brief Add handler for when client status changes */
 LD_EXPORT(void) LDSetClientStatusCallback(void (callback)(int status));
 
-/** @brief Access the flag store must unlock with LDClientUnlockFlags */
-LD_EXPORT(LDNode *) LDClientGetLockedFlags(struct LDClient_i *const client);
-
-/** @brief Unlock flag store after direct access */
-LD_EXPORT(void) LDClientUnlockFlags(struct LDClient_i *const client);
-
 /** @brief Record a custom event. */
 LD_EXPORT(void) LDClientTrack(struct LDClient_i *const client,
     const char *const name);
@@ -380,9 +321,9 @@ LD_EXPORT(void) LDClientTrackData(struct LDClient_i *const client,
 LD_EXPORT(void) LDClientTrackMetric(struct LDClient_i *const client,
     const char *const name, struct LDJSON *const data, const double metric);
 
-/** @brief  Returns a hash table of all flags. This must be freed with
- * `LDNodeFree`. */
-LD_EXPORT(LDNode *) LDAllFlags(struct LDClient_i *const client);
+/** @brief  Returns an object of all flags. This must be freed with
+ * `LDJSONFree`. */
+LD_EXPORT(struct LDJSON *) LDAllFlags(struct LDClient_i *const client);
 
 /** @brief Evaluate Bool flag */
 LD_EXPORT(bool) LDBoolVariation(struct LDClient_i *const client,
@@ -408,8 +349,8 @@ LD_EXPORT(char *) LDStringVariation(struct LDClient_i *const client,
     char *const resultBuffer, const size_t resultBufferSize);
 
 /** @brief Evaluate JSON flag */
-LD_EXPORT(LDNode *) LDJSONVariation(struct LDClient_i *const client,
-    const char *const featureKey, const LDNode *const fallback);
+LD_EXPORT(struct LDJSON *) LDJSONVariation(struct LDClient_i *const client,
+    const char *const featureKey, struct LDJSON *const fallback);
 
 /** @brief Evaluate Bool flag with details */
 LD_EXPORT(bool) LDBoolVariationDetail(struct LDClient_i *const client,
@@ -440,86 +381,12 @@ LD_EXPORT(char *) LDStringVariationDetail(struct LDClient_i *const client,
     LDVariationDetails *const details);
 
 /** @brief Evaluate JSON flag with details */
-LD_EXPORT(LDNode *) LDJSONVariationDetail(struct LDClient_i *const client,
-    const char *const key, const LDNode *const fallback,
-    LDVariationDetails *const details);
+LD_EXPORT(struct LDJSON *) LDJSONVariationDetail(
+    struct LDClient_i *const client, const char *const key,
+    struct LDJSON *const fallback, LDVariationDetails *const details);
 
 /** @brief Clear any memory associated with `LDVariationDetails`  */
 LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);
-
-/** @brief Create a new empty hash.
- *
- * (Implementation note: empty hash is a `NULL` pointer, not indicative of
- * failure). */
-LD_EXPORT(LDNode *) LDNodeCreateHash(void);
-
-/** @brief Add Bool value to a hash */
-LD_EXPORT(LDNode *) LDNodeAddBool(LDNode **const hash, const char *const key,
-    const bool b);
-
-/** @brief Add Number value to a hash */
-LD_EXPORT(LDNode *) LDNodeAddNumber(LDNode **const hash, const char *const key,
-    const double n);
-
-/** @brief Add String value to a hash */
-LD_EXPORT(LDNode *) LDNodeAddString(LDNode **const hash, const char *const key,
-    const char *const s);
-
-/** @brief Add Hash value to a hash */
-LD_EXPORT(LDNode *) LDNodeAddHash(LDNode **const hash, const char *const key,
-    LDNode *const h);
-
-/** @brief Add Array value to a hash */
-LD_EXPORT(LDNode *) LDNodeAddArray(LDNode **const hash, const char *const key,
-    LDNode *const a);
-
-/** @brief Find a node in a hash. */
-LD_EXPORT(LDNode *) LDNodeLookup(const LDNode *const hash,
-    const char *const key);
-
-/** @brief Free a hash and all internal memory. */
-LD_EXPORT(void) LDNodeFree(LDNode **const hash);
-
-/** @brief Return the number of elements in a hash or array. */
-LD_EXPORT(unsigned int) LDNodeCount(const LDNode *const hash);
-
-/** @brief Return a deep copy of a hash */
-LD_EXPORT(LDNode *) LDCloneHash(const LDNode *const original);
-
-/** @brief Create a new empty array */
-LD_EXPORT(LDNode *) LDNodeCreateArray(void);
-
-/** @brief Append Bool value to an array */
-LD_EXPORT(LDNode *) LDNodeAppendBool(LDNode **const array, const bool b);
-
-/** @brief Append Number value to an array */
-LD_EXPORT(LDNode *) LDNodeAppendNumber(LDNode **const array, const double n);
-
-/** @brief Append String value to an array */
-LD_EXPORT(LDNode *) LDNodeAppendString(LDNode **const array,
-    const char *const s);
-
-/** @brief Append existing node to an array */
-LD_EXPORT(LDNode *) LDNodeAppendArray(LDNode **const array, LDNode *const a);
-
-/** @brief Add existing node to an array */
-LD_EXPORT(LDNode *) LDNodeAppendHash(LDNode **const array, LDNode *const h);
-
-/** @brief Lookup node at a given index in an Array */
-LD_EXPORT(LDNode *) LDNodeIndex(const LDNode *const array,
-    const unsigned int idx);
-
-/** @brief Deep copy array */
-LD_EXPORT(LDNode *) LDCloneArray(const LDNode *const original);
-
-/** @brief Serialize `LDNode` to JSON */
-LD_EXPORT(char *) LDNodeToJSON(const LDNode *const node);
-
-/** @brief Deserialize JSON into `LDNode` */
-LD_EXPORT(LDNode *) LDNodeFromJSON(const char *const json);
-
-/** @brief Utility to convert a hash to a JSON object. */
-LD_EXPORT(char *) LDHashToJSON(const LDNode *const node);
 
 /** @brief Should write the `data` using the associated `context` to `name`.
  * Returns `true` for success. */

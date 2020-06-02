@@ -82,24 +82,31 @@ void LDi_once(ld_once_t *once, void (*fn)(void))
 #endif
 
 char *
-LDi_usertojsontext(LDClient *const client, LDUser *const user, const bool redact)
+LDi_usertojsontext(const LDClient *const client, const LDUser *const user,
+    const bool redact)
 {
-    cJSON *const jsonuser = LDi_usertojson(client, user, redact);
+    struct LDJSON *userJSON;
+    char *userText;
 
-    if (!jsonuser) {
+    userJSON = LDi_userToJSON(client->shared->sharedConfig, user, redact);
+
+    if (!userJSON) {
         LD_LOG(LD_LOG_ERROR, "LDi_usertojson failed in LDi_usertojsontext");
+
         return NULL;
     }
 
-    char *const textuser = cJSON_PrintUnformatted(jsonuser);
-    cJSON_Delete(jsonuser);
+    userText = LDJSONSerialize(userJSON);
 
-    if (!textuser) {
-        LD_LOG(LD_LOG_ERROR, "cJSON_PrintUnformatted failed in LDi_usertojsontext");
+    LDJSONFree(userJSON);
+
+    if (!userText) {
+        LD_LOG(LD_LOG_ERROR, "LDJSONSerialize failed in LDi_usertojsontext");
+
         return NULL;
     }
 
-    return textuser;
+    return userText;
 }
 
 /* -1 on error, otherwise read size */

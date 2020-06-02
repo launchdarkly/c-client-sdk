@@ -3,90 +3,80 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-/*
- * Test that turning a user into json looks like we expect.
- */
 void
-test1()
+testBasicSerialization()
 {
-    LDUser *const user = LDUserNew("username");
+    LDUser *user;
+    struct LDJSON *custom, *tmp, *userJSON;
+    char *userSerialized, *expected;
+
+    LD_ASSERT(custom = LDNewObject());
+    LD_ASSERT(tmp = LDNewNumber(10));
+    LD_ASSERT(LDObjectSetKey(custom, "excellence", tmp));
+    LD_ASSERT(tmp = LDNewBool(true));
+    LD_ASSERT(LDObjectSetKey(custom, "bossmode", tmp));
+    LD_ASSERT(tmp = LDNewText("krell"));
+    LD_ASSERT(LDObjectSetKey(custom, "species", tmp));
+
+    LD_ASSERT(user = LDUserNew("username"));
     LDUserSetFirstName(user, "Tsrif");
     LDUserSetLastName(user, "Tsal");
     LDUserSetAvatar(user, "pirate");
-    user->custom = LDNodeCreateHash();
-    LDNodeAddNumber(&user->custom, "excellence", 10);
-    LDNodeAddBool(&user->custom, "bossmode", true);
-    LDNodeAddString(&user->custom, "species", "krell");
+    LDUserSetCustomAttributesJSON(user, custom);
 
-    cJSON *const json = LDi_usertojson(NULL, user, true);
-    char *const str = cJSON_PrintUnformatted(json);
+    LD_ASSERT(userJSON = LDi_userToJSON(NULL, user, true));
+    LD_ASSERT(userSerialized = LDJSONSerialize(userJSON));
 
-    const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
-        "\"avatar\":\"pirate\",\"custom\":{\"excellence\":10,\"bossmode\":true,\"species\":\"krell\"}}";
+    expected =
+        "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
+        "\"avatar\":\"pirate\",\"custom\":{\"excellence\":10,\"bossmode\":true,"
+        "\"species\":\"krell\"}}";
 
-    if (strcmp(str, expected) != 0) {
-        printf("ERROR: User json %s was not expected\n", str);
-    }
+    LD_ASSERT(strcmp(userSerialized, expected) == 0);
 
-    cJSON_Delete(json);
-    free(str);
-
+    LDJSONFree(userJSON);
+    LDFree(userSerialized);
     LDUserFree(user);
 }
 
-/*
- * test setting json directly. also has a list of custom attributes.
- */
 void
-test2()
+testPrivateAttributes()
 {
-    LDUser *const user = LDUserNew("username");
-    LDUserSetFirstName(user, "Tsrif");
-    LDUserSetLastName(user, "Tsal");
-    LDUserSetAvatar(user, "pirate");
-    LDUserSetCustomAttributesJSON(user, "{\"toppings\": [\"pineapple\", \"ham\"]}");
+    LDUser *user;
+    struct LDJSON *userJSON, *privateAttributes, *customAttributes, *tmp, *tmp2;
+    char *userSerialized, *expected;
 
-    cJSON *const json = LDi_usertojson(NULL, user, true);
-    char *const str = cJSON_PrintUnformatted(json);
+    LD_ASSERT(privateAttributes = LDNewArray());
+    LD_ASSERT(tmp = LDNewText("count"));
+    LD_ASSERT(LDArrayPush(privateAttributes, tmp));
+    LD_ASSERT(tmp = LDNewText("avatar"));
+    LD_ASSERT(LDArrayPush(privateAttributes, tmp));
 
-    const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"lastName\":\"Tsal\","
-        "\"avatar\":\"pirate\",\"custom\":{\"toppings\":[\"pineapple\",\"ham\"]}}";
+    LD_ASSERT(customAttributes = LDNewObject());
+    LD_ASSERT(tmp = LDNewNumber(23));
+    LD_ASSERT(LDObjectSetKey(customAttributes, "count", tmp));
+    LD_ASSERT(tmp = LDNewArray());
+    LD_ASSERT(tmp2 = LDNewText("apple"));
+    LD_ASSERT(LDArrayPush(tmp, tmp2));
+    LD_ASSERT(LDObjectSetKey(customAttributes, "food", tmp));
 
-    if (strcmp(str, expected) != 0) {
-        printf("ERROR: User json %s was not expected\n", str);
-    }
-
-    cJSON_Delete(json);
-    free(str);
-
-    LDUserFree(user);
-}
-
-/*
- * Test private attributes
- */
-void
-test3()
-{
-    LDUser *const user = LDUserNew("username");
+    LD_ASSERT(user = LDUserNew("username"));
     LDUserSetFirstName(user, "Tsrif");
     LDUserSetAvatar(user, "pirate");
-    LDUserSetCustomAttributesJSON(user, "{\"food\": [\"apple\"], \"count\": 23}");
-    LDUserAddPrivateAttribute(user, "count");
-    LDUserAddPrivateAttribute(user, "avatar");
+    LDUserSetCustomAttributesJSON(user, customAttributes);
+    LDUserSetPrivateAttributes(user, privateAttributes);
 
-    cJSON *const json = LDi_usertojson(NULL, user, true);
-    char *const str = cJSON_PrintUnformatted(json);
+    LD_ASSERT(userJSON = LDi_userToJSON(NULL, user, true));
+    LD_ASSERT(userSerialized = LDJSONSerialize(userJSON));
 
-    const char *const expected = "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"custom\":{\"food\":[\"apple\"]},\"privateAttrs\":[\"avatar\",\"count\"]}";
+    expected =
+        "{\"key\":\"username\",\"firstName\":\"Tsrif\",\"custom\":"
+        "{\"food\":[\"apple\"]},\"privateAttrs\":[\"avatar\",\"count\"]}";
 
-    if (strcmp(str, expected) != 0) {
-        printf("ERROR: User json %s was not expected\n", str);
-    }
+    LD_ASSERT(strcmp(userSerialized, expected) == 0);
 
-    cJSON_Delete(json);
-    free(str);
-
+    LDJSONFree(userJSON);
+    LDFree(userSerialized);
     LDUserFree(user);
 }
 
@@ -95,14 +85,8 @@ main(int argc, char **argv)
 {
     LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
 
-    test1();
+    testBasicSerialization();
+    testPrivateAttributes();
 
-    test2();
-
-    test3();
-
-    extern unsigned long long LD_allocations, LD_frees;
-
-    // printf("Memory consumed: %lld allocs %lld frees\n", LD_allocations, LD_frees);
     return 0;
 }

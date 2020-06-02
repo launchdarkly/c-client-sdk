@@ -12,6 +12,7 @@
 #include "utility.h"
 #include "sse.h"
 #include "event_processor.h"
+#include "store.h"
 
 #ifndef _WINDOWS
 
@@ -35,7 +36,6 @@ struct listener {
 struct LDClient_i {
     struct LDGlobal_i *shared;
     char *mobileKey;
-    LDNode *allFlags;
     ld_rwlock_t clientLock;
     bool offline;
     bool background;
@@ -51,16 +51,9 @@ struct LDClient_i {
     ld_mutex_t condMtx;
     /* streaming state */
     bool shouldstopstreaming;
-    char eventname[256];
-    char *databuffer;
     int streamhandle;
-    /* event state */
-    ld_rwlock_t eventLock;
-    cJSON *eventArray;
-    int numEvents;
-    LDNode *summaryEvent;
-    double summaryStart;
     struct EventProcessor *eventProcessor;
+    struct LDStore store;
     /* init cond */
     ld_cond_t initCond;
     ld_mutex_t initCondMtx;
@@ -79,8 +72,6 @@ struct LDConfig_i {
     char *mobileKey;
     bool offline;
     int pollingIntervalMillis;
-    LDNode *privateAttributeNames;
-    LDNode *secondaryMobileKeys;
     bool streaming;
     char *streamURI;
     bool useReport;
@@ -89,6 +80,10 @@ struct LDConfig_i {
     bool useReasons;
     char *certFile;
     bool inlineUsersInEvents;
+    /* map of name -> key */
+    struct LDJSON *secondaryMobileKeys;
+    /* array of strings */
+    struct LDJSON *privateAttributeNames;
 };
 
 struct LDUser_i {
@@ -101,10 +96,8 @@ struct LDUser_i {
     char *email;
     char *name;
     char *avatar;
-    LDNode *custom;
-    LDNode *privateAttributeNames;
-    struct LDJSON *privateAttributeNames2;
-    struct LDJSON *custom2;
+    struct LDJSON *privateAttributeNames;
+    struct LDJSON *custom;
 };
 
 struct LDGlobal_i {
@@ -115,34 +108,11 @@ struct LDGlobal_i {
     ld_rwlock_t sharedUserLock;
 };
 
-struct IdentifyEvent {
-    char *kind;
-    char *key;
-    double creationDate;
-};
-
-struct FeatureRequestEvent {
-    char *kind;
-    char *key;
-    LDNode *value;
-    LDNode Default;
-};
-
 LDClient *LDi_clientinitisolated(struct LDGlobal_i *shared,
     const char *mobileKey);
 
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
-void LDi_freehash(LDNode *hash);
-void LDi_freenode(LDNode *node);
-
-char *LDi_hashtostring(const LDNode *hash, bool versioned);
-cJSON *LDi_hashtojson(const LDNode *hash);
-cJSON *LDi_arraytojson(const LDNode *hash);
-LDNode *LDi_jsontohash(const cJSON *json, int flavor);
-
-bool LDi_clientsetflags(LDClient *client, bool needlock, const char *data, int flavor);
-void LDi_savehash(LDClient *client);
 
 void LDi_cancelread(int handle);
 char *LDi_fetchfeaturemap(LDClient *client, int *response);
@@ -151,14 +121,6 @@ void LDi_readstream(LDClient *const client, int *response,
     struct LDSSEParser *const parser,
     void cbhandle(LDClient *client, int handle));
 
-void LDi_recordidentify(LDClient *client, LDUser *lduser);
-void LDi_recordfeature(LDClient *client, LDUser *lduser, LDNode *res,
-  const char *feature, LDNodeType type, double n, const char *s, LDNode *,
-  double defaultn, const char *defaults, const LDNode *, bool detail);
-void LDi_recordtrack(LDClient *client, LDUser *user, const char *name, LDNode *data);
-void LDi_recordtrackmetric(LDClient *const client, LDUser *const user,
-    const char *const name, LDNode *const data, const double metric);
-char *LDi_geteventdata(LDClient *client);
 void LDi_sendevents(LDClient *client, const char *eventdata,
     const char *const payloadUUID, int *response);
 
@@ -168,8 +130,15 @@ void LDi_onstreameventput(LDClient *client, const char *data);
 void LDi_onstreameventpatch(LDClient *client, const char *data);
 void LDi_onstreameventdelete(LDClient *client, const char *data);
 
-char *LDi_usertojsontext(LDClient *client, LDUser *lduser, bool redact);
-cJSON *LDi_usertojson(LDClient *client, LDUser *lduser, bool redact);
+char *LDi_usertojsontext(const LDClient *const client,
+    const LDUser *const lduser, bool redact);
+
+struct LDJSON *
+LDi_userToJSON(
+    const LDConfig *const config,
+    const LDUser *const   lduser,
+    const bool            redact
+);
 
 void (*LDi_statuscallback)(int);
 

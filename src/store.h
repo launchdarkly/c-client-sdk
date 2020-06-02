@@ -35,4 +35,4 @@ struct LDStoreNode *LDi_storeGet(struct LDStore *const store,
     const char *const key);
 
 bool LDi_storeGetAll(struct LDStore *const store,
-    struct LDStoreNode **const flags, unsigned int *const flagCount);
+    struct LDStoreNode ***const flags, unsigned int *const flagCount);

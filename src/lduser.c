@@ -35,10 +35,8 @@ LDUserNew(const char *const key)
     user->email = NULL;
     user->name = NULL;
     user->avatar = NULL;
-    user->custom = NULL;
     user->privateAttributeNames = NULL;
-    user->privateAttributeNames2 = NULL;
-    user->custom2 = NULL;
+    user->custom = NULL;
 
     return user;
 }
@@ -54,50 +52,140 @@ LDUserFree(LDUser *const user)
     LDFree(user->email);
     LDFree(user->name);
     LDFree(user->avatar);
-    LDi_freehash(user->custom);
-    LDi_freehash(user->privateAttributeNames);
+    LDJSONFree(user->custom);
+    LDJSONFree(user->privateAttributeNames);
     LDFree(user);
 }
 
-static bool
-isPrivateAttr(LDClient *const client, LDUser *const user, const char *const key)
+bool
+LDi_textInArray(const struct LDJSON *const array, const char *const text)
 {
+    struct LDJSON *iter;
+
+    LD_ASSERT(text);
+
+    if (array == NULL) {
+        return false;
+    }
+
+    for (iter = LDGetIter(array); iter; iter = LDIterNext(iter)) {
+        if (strcmp(LDGetText(iter), text) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool
+isPrivateAttr(
+    const LDConfig *const config,
+    const LDUser *const   user,
+    const char *const     key
+) {
     bool global = false;
 
-    if (client) {
-        global = client->shared->sharedConfig->allAttributesPrivate  ||
-            (LDNodeLookup(client->shared->sharedConfig->privateAttributeNames, key) != NULL);
+    if (config) {
+        global = config->allAttributesPrivate ||
+            LDi_textInArray(config->privateAttributeNames, key);
     }
 
-    return global || (LDNodeLookup(user->privateAttributeNames, key) != NULL);
+    return global || LDi_textInArray(user->privateAttributeNames, key);
 }
 
-static void
-addHidden(cJSON **ref, const char *const value){
-    if (!(*ref)) { *ref = cJSON_CreateArray(); }
-    cJSON_AddItemToArray(*ref, cJSON_CreateString(value));
+static bool
+addHidden(struct LDJSON **const ref, const char *const value){
+    struct LDJSON *text;
+
+    LD_ASSERT(ref);
+    LD_ASSERT(value);
+
+    text = NULL;
+
+    if (!(*ref)) {
+        *ref = LDNewArray();
+
+        if (!(*ref)) {
+            return false;
+        }
+    }
+
+    if (!(text = LDNewText(value))) {
+        return false;
+    }
+
+    LDArrayPush(*ref, text);
+
+    return true;
 }
 
-cJSON *
-LDi_usertojson(LDClient *const client, LDUser *const lduser, const bool redact)
-{
-    cJSON *const json = cJSON_CreateObject();
+struct LDJSON *
+LDi_userToJSON(
+    const LDConfig *const config,
+    const LDUser *const   lduser,
+    const bool            redact
+) {
+    struct LDJSON *hidden, *json, *temp;
 
-    cJSON_AddStringToObject(json, "key", lduser->key);
+    LD_ASSERT(lduser);
+
+    hidden = NULL;
+    json   = NULL;
+    temp   = NULL;
+
+    if (!(json = LDNewObject())) {
+        return NULL;
+    }
+
+    if (!(temp = LDNewText(lduser->key))) {
+        LDJSONFree(json);
+
+        return NULL;
+    }
+
+    if (!LDObjectSetKey(json, "key", temp)) {
+        LDJSONFree(temp);
+        LDJSONFree(json);
+
+        return NULL;
+    }
 
     if (lduser->anonymous) {
-        cJSON_AddBoolToObject(json, "anonymous", lduser->anonymous);
-    }
+        if (!(temp = LDNewBool(lduser->anonymous))) {
+            LDJSONFree(json);
 
-    cJSON *hidden = NULL;
+            return NULL;
+        }
+
+        if (!LDObjectSetKey(json, "anonymous", temp)) {
+            LDJSONFree(temp);
+            LDJSONFree(json);
+
+            return NULL;
+        }
+    }
 
     #define addstring(field)                                                   \
         if (lduser->field) {                                                   \
-            if (redact && isPrivateAttr(client, lduser, #field)) {             \
-                addHidden(&hidden, #field);                                    \
+            if (redact && isPrivateAttr(config, lduser, #field)) {             \
+                if (!addHidden(&hidden, #field)) {                             \
+                    LDJSONFree(json);                                          \
+                                                                               \
+                    return NULL;                                               \
+                }                                                              \
             }                                                                  \
             else {                                                             \
-                cJSON_AddStringToObject(json, #field, lduser->field);          \
+                if (!(temp = LDNewText(lduser->field))) {                      \
+                    LDJSONFree(json);                                          \
+                                                                               \
+                    return NULL;                                               \
+                }                                                              \
+                                                                               \
+                if (!LDObjectSetKey(json, #field, temp)) {                     \
+                    LDJSONFree(json);                                          \
+                                                                               \
+                    return NULL;                                               \
+                }                                                              \
             }                                                                  \
         }                                                                      \
 
@@ -110,74 +198,81 @@ LDi_usertojson(LDClient *const client, LDUser *const lduser, const bool redact)
     addstring(avatar);
 
     if (lduser->custom) {
-        cJSON *const custom = LDi_hashtojson(lduser->custom);
-        if (redact && cJSON_IsObject(custom)) {
-            for (cJSON *item = custom->child; item;) {
-                cJSON *const next = item->next; //must record next to make delete safe
-                if (isPrivateAttr(client, lduser, item->string)) {
-                    addHidden(&hidden, item->string);
-                    cJSON *const current = cJSON_DetachItemFromObjectCaseSensitive(custom, item->string);
-                    cJSON_Delete(current);
+        struct LDJSON *const custom = LDJSONDuplicate(lduser->custom);
+
+        if (!custom) {
+            LDJSONFree(json);
+
+            return NULL;
+        }
+
+        if (redact && LDJSONGetType(custom) == LDObject) {
+            struct LDJSON *item = LDGetIter(custom);
+
+            while(item) {
+                /* must record next to make delete safe */
+                struct LDJSON *const next = LDIterNext(item);
+
+                if (isPrivateAttr(config, lduser, LDIterKey(item))) {
+                    if (!addHidden(&hidden, LDIterKey(item))) {
+                        LDJSONFree(json);
+                        LDJSONFree(custom);
+
+                        return NULL;
+                    }
+
+                    LDObjectDeleteKey(custom, LDIterKey(item));
                 }
+
                 item = next;
             }
         }
-        cJSON_AddItemToObject(json, "custom", custom);
+
+        if (!LDObjectSetKey(json, "custom", custom)) {
+            LDJSONFree(custom);
+            LDJSONFree(json);
+
+            return NULL;
+        }
     }
 
     if (hidden) {
-        cJSON_AddItemToObject(json, "privateAttrs", hidden);
+        if (!LDObjectSetKey(json, "privateAttrs", hidden)) {
+            LDJSONFree(json);
+
+            return NULL;
+        }
     }
 
     return json;
 
     #undef addstring
-    #undef addhidden
 }
 
 void
-LDUserAddPrivateAttribute(LDUser *const user, const char *const key)
-{
-    LD_ASSERT(user); LD_ASSERT(key);
-
-    LDNode *const node = LDAlloc(sizeof(*node)); LD_ASSERT(node);
-    memset(node, 0, sizeof(*node));
-
-    node->key = LDStrDup(key);
-    node->type = LDNodeBool;
-    node->b = true;
-    LD_ASSERT(node->key);
-
-    HASH_ADD_KEYPTR(hh, user->privateAttributeNames, node->key, strlen(node->key), node);
-}
-
-bool
-LDUserSetCustomAttributesJSON(LDUser *const user, const char *const jstring)
+LDUserSetCustomAttributesJSON(LDUser *const user, struct LDJSON *const custom)
 {
     LD_ASSERT(user);
 
-    if (jstring) {
-        cJSON *const json = cJSON_Parse(jstring);
-        if (!json) {
-            return false;
-        }
-        user->custom = LDi_jsontohash(json, 0);
-        cJSON_Delete(json);
-    }
-    else {
-        LDi_freehash(user->custom);
-        user->custom = NULL;
+    if (user->custom) {
+        LDJSONFree(user->custom);
     }
 
-    return true;
-}
-
-void
-LDUserSetCustomAttributes(LDUser *const user, LDNode *const custom)
-{
-    LD_ASSERT(user);
-    LDi_freehash(user->custom);
     user->custom = custom;
+}
+
+void
+LDUserSetPrivateAttributes(LDUser *const user,
+    struct LDJSON *const privateAttributes)
+{
+    LD_ASSERT(user);
+    LD_ASSERT(LDJSONGetType(privateAttributes) == LDArray);
+
+    if (user->privateAttributeNames) {
+        LDJSONFree(user->privateAttributeNames);
+    }
+
+    user->privateAttributeNames = privateAttributes;
 }
 
 void

@@ -1,3 +1,5 @@
+#include <errno.h>
+
 #include "assertion.h"
 #include "utility.h"
 #include "logging.h"
@@ -499,10 +501,12 @@ LDi_cond_wait_imp(ld_cond_t *const cond, ld_mutex_t *const mutex,
         }
 
         if ((status = pthread_cond_timedwait(cond, mutex, &ts)) != 0) {
-            LD_LOG_1(LD_LOG_CRITICAL, "pthread_cond_timedwait failed: %s",
-                strerror(status));
+            if (status != ETIMEDOUT) {
+                LD_LOG_1(LD_LOG_CRITICAL, "pthread_cond_timedwait failed: %s",
+                    strerror(status));
 
-            goto done;
+                goto done;
+            }
         }
     #endif
 

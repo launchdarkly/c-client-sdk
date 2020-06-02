@@ -6,8 +6,11 @@
 #endif
 #include <math.h>
 
+#include <launchdarkly/json.h>
+
 #include "ldapi.h"
 #include "ldinternal.h"
+#include "flag.h"
 
 /*
  * all the code that runs in the background here.
@@ -20,6 +23,9 @@ LDi_bgeventsender(void *const v)
     LDClient *const client = v; bool finalflush = false;
 
     while (true) {
+        struct LDJSON *payloadJSON;
+        char *payloadSerialized;
+
         LDi_rwlock_wrlock(&client->clientLock);
 
         const LDStatus status = client->status;
@@ -63,14 +69,20 @@ LDi_bgeventsender(void *const v)
             continue;
         }
 
-        char *const eventdata = LDi_geteventdata(client);
-        if (!eventdata) { continue; }
+        LD_ASSERT(LDi_bundleEventPayload(client->eventProcessor, &payloadJSON));
+
+        if (payloadJSON == NULL) {
+            continue;
+        }
+
+        LD_ASSERT(payloadSerialized = LDJSONSerialize(payloadJSON));
+        LDJSONFree(payloadJSON);
 
         bool sendFailed = false;
         while (true) {
             int response = 0;
 
-            LDi_sendevents(client, eventdata, payloadId, &response);
+            LDi_sendevents(client, payloadSerialized, payloadId, &response);
 
             if (response == 200 || response == 202) {
                 LD_LOG(LD_LOG_TRACE, "successfuly sent event batch");
@@ -105,7 +117,7 @@ LDi_bgeventsender(void *const v)
             LD_LOG(LD_LOG_WARNING, "sending events failed deleting event batch");
         }
 
-        LDFree(eventdata);
+        LDFree(payloadSerialized);
     }
 }
 
@@ -162,9 +174,7 @@ LDi_bgfeaturepoller(void *const v)
         if (response == 200) {
             if (!data) { continue; }
 
-            if (LDi_clientsetflags(client, true, data, 1)) {
-                LDi_savehash(client);
-            }
+            LDi_onstreameventput(client, data);
         } else if (response == 401 || response == 403) {
             LDi_rwlock_wrlock(&client->clientLock);
             LDi_updatestatus(client, LDStatusFailed);
@@ -183,86 +193,144 @@ LDi_bgfeaturepoller(void *const v)
 void
 LDi_onstreameventput(LDClient *const client, const char *const data)
 {
-    if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-        LDi_savedata("features", client->shared->sharedUser->key, data);
-        LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-    }
-}
+    struct LDJSON *payload, *payloadIter;
+    struct LDFlag *flags, *flagsIter;
+    unsigned int flagCount;
 
-static void
-applypatch(LDClient *const client, cJSON *const payload, const bool isdelete)
-{
-    LDNode *patch = NULL;
-    if (cJSON_IsObject(payload)) {
-        patch = LDi_jsontohash(payload, 2);
+    payload = NULL;
+
+    if (!(payload = LDJSONDeserialize(data))) {
+        goto cleanup;
     }
-    cJSON_Delete(payload);
+
+    if (LDJSONGetType(payload) != LDObject) {
+        goto cleanup;
+    }
+
+    flagCount = LDCollectionGetSize(payload);
+
+    if (flagCount == 0) {
+        LDi_storePut(&client->store, NULL, 0);
+
+        goto cleanup;
+    }
+
+    if (!(flags = LDAlloc(sizeof(struct LDFlag) * flagCount))) {
+        goto cleanup;
+    }
+
+    LD_ASSERT(flagsIter = flags);
+    LD_ASSERT(payloadIter = LDGetIter(payload));
+
+    for (payloadIter = LDGetIter(payload); payloadIter != NULL;
+        payloadIter = LDIterNext(payloadIter))
+    {
+        if (!LDi_flag_parse(flagsIter, LDIterKey(payloadIter), payloadIter)) {
+            goto cleanup;
+        }
+
+        flagsIter++;
+    }
+
+    LDi_storePut(&client->store, flags, flagCount);
 
     LDi_rwlock_wrlock(&client->clientLock);
-    LDNode *hash = client->allFlags;
-    LDNode *node, *tmp;
-    HASH_ITER(hh, patch, node, tmp) {
-        LDNode *res = NULL;
-        HASH_FIND_STR(hash, node->key, res);
-        if (res && res->version > node->version) {
-            /* stale patch, skip */
-            continue;
-        }
-        if (res) {
-            HASH_DEL(hash, res);
-            LDi_freenode(res);
-        }
-        if (!isdelete) {
-            HASH_DEL(patch, node);
-            HASH_ADD_KEYPTR(hh, hash, node->key, strlen(node->key), node);
-        }
-        for (struct listener *list = client->listeners; list; list = list->next) {
-            if (strcmp(list->key, node->key) == 0) {
-                LDi_rwlock_wrunlock(&client->clientLock);
-                list->fn(node->key, isdelete ? 1 : 0);
-                LDi_rwlock_wrlock(&client->clientLock);
-            }
-        }
-    }
-
-    client->allFlags = hash;
+    LDi_updatestatus(client, LDStatusInitialized);
     LDi_rwlock_wrunlock(&client->clientLock);
 
-    LDi_freehash(patch);
+  cleanup:
+    LDJSONFree(payload);
 }
 
 void
 LDi_onstreameventpatch(LDClient *const client, const char *const data)
 {
-    cJSON *const payload = cJSON_Parse(data);
+    struct LDJSON *payload;
+    struct LDFlag flag;
 
-    if (!payload) {
-        LD_LOG(LD_LOG_ERROR, "parsing patch failed");
-        return;
+    LD_ASSERT(client);
+    LD_ASSERT(data);
+
+    payload = NULL;
+
+    if (!(payload = LDJSONDeserialize(data))) {
+        LD_LOG(LD_LOG_ERROR, "failed to deserialize patch discarding update");
+
+        goto cleanup;
     }
 
-    applypatch(client, payload, false);
-    LDi_savehash(client);
+    if (!LDi_flag_parse(&flag, NULL, payload)) {
+        LD_LOG(LD_LOG_ERROR, "failed to parse flag patch discarding update");
+
+        goto cleanup;
+    }
+
+    if (!LDi_storeUpsert(&client->store, flag)) {
+        LD_LOG(LD_LOG_ERROR, "failed to upsert flag");
+
+        goto cleanup;
+    }
+
+  cleanup:
+    LDJSONFree(payload);
 }
 
 void
 LDi_onstreameventdelete(LDClient *const client, const char *const data)
 {
-    cJSON *const payload = cJSON_Parse(data);
+    struct LDJSON *payload, *tmp;
+    const char *key;
+    unsigned int version;
 
-    if (!payload) {
-        LD_LOG(LD_LOG_ERROR, "parsing delete patch failed");
-        return;
+    LD_ASSERT(client);
+    LD_ASSERT(data);
+
+    payload = NULL;
+
+    if (!(payload = LDJSONDeserialize(data))) {
+        LD_LOG(LD_LOG_ERROR, "failed to parse delete discarding update");
+
+        goto cleanup;
     }
 
-    applypatch(client, payload, 1);
-    LDi_savehash(client);
+    if (LDJSONGetType(payload) != LDObject) {
+        goto cleanup;
+    }
+
+    if (!(tmp = LDObjectLookup(payload, "version"))) {
+        goto cleanup;
+    }
+
+    if (LDJSONGetType(tmp) != LDNumber) {
+        goto cleanup;
+    }
+
+    version = LDGetNumber(tmp);
+
+    if (!(tmp = LDObjectLookup(payload, "key"))) {
+        goto cleanup;
+    }
+
+    if (LDJSONGetType(tmp) != LDText) {
+        goto cleanup;
+    }
+
+    key = LDGetText(tmp);
+
+    if (!LDi_storeDelete(&client->store, key, version)) {
+        LD_LOG(LD_LOG_ERROR, "failed to delete flag");
+
+        goto cleanup;
+    }
+
+  cleanup:
+    LDJSONFree(payload);
 }
 
 static void
 onstreameventping(LDClient *const client)
 {
+    /*
     LDi_rwlock_rdlock(&client->clientLock);
 
     if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
@@ -292,6 +360,7 @@ onstreameventping(LDClient *const client)
     }
 
     LDFree(data);
+    */
 }
 
 void

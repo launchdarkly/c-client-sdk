@@ -5,6 +5,20 @@
 #include "store.h"
 
 static void
+LDi_destroyStoreNode(void *const nodeRaw)
+{
+    struct LDStoreNode *node;
+
+    node = (struct LDStoreNode *)nodeRaw;
+
+    if (node) {
+        LDi_rc_destroy(&node->rc);
+        LDi_flag_destroy(&node->flag);
+        LDFree(nodeRaw);
+    }
+}
+
+static void
 LDi_storeFreeHash(struct LDStoreNode *flags)
 {
     struct LDStoreNode *node, *tmp;
@@ -12,7 +26,7 @@ LDi_storeFreeHash(struct LDStoreNode *flags)
     HASH_ITER(hh, flags, node, tmp) {
         HASH_DEL(flags, node);
 
-        LDi_rc_destroy(&node->rc);
+        LDi_destroyStoreNode(node);
     }
 }
 
@@ -37,19 +51,6 @@ LDi_storeDestroy(struct LDStore *const store)
     if (store) {
         LDi_storeFreeHash(store->flags);
         LDi_rwlock_destroy(&store->lock);
-    }
-}
-
-static void
-LDi_destroyStoreNode(void *const nodeRaw)
-{
-    struct LDStoreNode *node;
-
-    node = (struct LDStoreNode *)nodeRaw;
-
-    if (node) {
-        LDi_rc_destroy(&node->rc);
-        LDi_flag_destroy(&node->flag);
     }
 }
 
@@ -93,7 +94,7 @@ LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
 
     HASH_FIND_STR(store->flags, flag.key, existing);
 
-    if (existing && (flag.version >= existing->flag.version)) {
+    if ((existing && (flag.version >= existing->flag.version)) || !existing) {
         if (existing) {
             HASH_DEL(store->flags, existing);
             LDi_rc_decrement(&existing->rc);
@@ -205,10 +206,10 @@ LDi_storePut(struct LDStore *const store, struct LDFlag *flags,
 
 bool
 LDi_storeGetAll(struct LDStore *const store,
-    struct LDStoreNode **const flags, unsigned int *const flagCount)
+    struct LDStoreNode ***const flags, unsigned int *const flagCount)
 {
     unsigned int count;
-    struct LDStoreNode *node, *tmp, *dupe, **iter;
+    struct LDStoreNode *node, *tmp, **dupe, **iter;
 
     LD_ASSERT(store);
     LD_ASSERT(flags);
@@ -224,7 +225,7 @@ LDi_storeGetAll(struct LDStore *const store,
         return false;
     }
 
-    iter = &dupe;
+    iter = dupe;
 
     HASH_ITER(hh, store->flags, node, tmp) {
         *iter = node;

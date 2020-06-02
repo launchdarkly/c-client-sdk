@@ -37,7 +37,9 @@ target_link_libraries(ldclientapi
 )
 
 target_include_directories(ldclientapi
-    PUBLIC "include"
+    PUBLIC  "include"
+            "c-sdk-common/include"
+            "c-sdk-common/src"
     PRIVATE ${LD_INCLUDE_PATHS}
 )
 

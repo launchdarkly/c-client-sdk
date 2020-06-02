@@ -44,6 +44,7 @@ LDConfigNew(const char *const mobileKey)
     LD_ASSERT(LDSetString(&config->eventsURI, "https://mobile.launchdarkly.com"));
     LD_ASSERT(LDSetString(&config->mobileKey, mobileKey));
     LD_ASSERT(LDSetString(&config->streamURI, "https://clientstream.launchdarkly.com"));
+    LD_ASSERT(config->secondaryMobileKeys = LDNewObject());
 
     config->allAttributesPrivate = false;
     config->backgroundPollingIntervalMillis = 3600000;
@@ -54,7 +55,6 @@ LDConfigNew(const char *const mobileKey)
     config->offline = false;
     config->pollingIntervalMillis = 300000;
     config->privateAttributeNames = NULL;
-    config->secondaryMobileKeys = NULL;
     config->streaming = true;
     config->useReport = false;
     config->useReasons = false;
@@ -189,8 +189,8 @@ LDConfigFree(LDConfig *const config)
     LDFree(config->streamURI);
     LDFree(config->proxyURI);
     LDFree(config->certFile);
-    LDi_freehash(config->privateAttributeNames);
-    LDi_freehash(config->secondaryMobileKeys);
+    LDJSONFree(config->privateAttributeNames);
+    LDJSONFree(config->secondaryMobileKeys);
     LDFree(config);
 }
 
@@ -245,22 +245,15 @@ LDi_clientinitisolated(struct LDGlobal_i *const shared,
     client->offline = shared->sharedConfig->offline;
     client->background = false;
     client->status = LDStatusInitializing;
-    client->allFlags = NULL;
 
     client->shouldstopstreaming = false;
-    client->databuffer = NULL;
     client->streamhandle = 0;
 
     LD_ASSERT(LDSetString(&client->mobileKey, mobileKey));
 
     LD_ASSERT(client->eventProcessor =
         LDi_newEventProcessor(shared->sharedConfig));
-
-    LDi_rwlock_init(&client->eventLock);
-    client->eventArray = cJSON_CreateArray();
-    client->numEvents = 0;
-    client->summaryEvent = LDNodeCreateHash();
-    client->summaryStart = 0;
+    LD_ASSERT(LDi_storeInitialize(&client->store));
 
     LDi_mutex_init(&client->initCondMtx);
     LDi_cond_init(&client->initCond);
@@ -276,16 +269,17 @@ LDi_clientinitisolated(struct LDGlobal_i *const shared,
     LDi_thread_create(&client->streamingThread, LDi_bgfeaturestreamer, client);
 
     LDi_rwlock_rdlock(&shared->sharedUserLock);
-    char *const flags = LDi_loaddata("features", shared->sharedUser->key);
+    char *const flags = NULL;
+    // char *const flags = LDi_loaddata("features", shared->sharedUser->key);
     LDi_rwlock_rdunlock(&shared->sharedUserLock);
 
     if (flags) {
-        LDi_clientsetflags(client, false, flags, 1);
+        // LDi_clientsetflags(client, false, flags, 1);
         LDFree(flags);
     }
 
     LDi_rwlock_rdlock(&shared->sharedUserLock);
-    LDi_recordidentify(client, shared->sharedUser);
+    LD_ASSERT(LDi_identify(client->eventProcessor, shared->sharedUser));
     LDi_rwlock_rdunlock(&shared->sharedUserLock);
     LDi_rwlock_wrunlock(&client->clientLock);
 
@@ -296,7 +290,7 @@ LDClient *
 LDClientInit(LDConfig *const config, LDUser *const user,
     const unsigned int maxwaitmilli)
 {
-    const LDNode *secondaryKey, *tmp;
+    struct LDJSON *secondaryKey, *tmp;
 
     LD_ASSERT(config); LD_ASSERT(user); LD_ASSERT(!globalContext.primaryClient);
 
@@ -314,14 +308,20 @@ LDClientInit(LDConfig *const config, LDUser *const user,
         LDPrimaryEnvironmentName, strlen(LDPrimaryEnvironmentName),
         globalContext.primaryClient);
 
-    HASH_ITER(hh, config->secondaryMobileKeys, secondaryKey, tmp) {
+    for (secondaryKey = LDGetIter(config->secondaryMobileKeys); secondaryKey;
+        secondaryKey = LDIterNext(secondaryKey))
+    {
+        const char *name;
+
+        LD_ASSERT(name = LDIterKey(secondaryKey));
+
         LDClient *const secondaryClient = LDi_clientinitisolated(&globalContext,
-            secondaryKey->s);
+            LDGetText(secondaryKey));
 
         LD_ASSERT(secondaryClient);
 
-        HASH_ADD_KEYPTR(hh, globalContext.clientTable, secondaryKey->key,
-            strlen(secondaryKey->key), secondaryClient);
+        HASH_ADD_KEYPTR(hh, globalContext.clientTable, name, strlen(name),
+            secondaryClient);
     }
 
     if (maxwaitmilli) {
@@ -393,7 +393,8 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
 {
     LDClient *clientIter, *tmp;
 
-    LD_ASSERT(client); LD_ASSERT(user);
+    LD_ASSERT(client);
+    LD_ASSERT(user);
 
     LDi_rwlock_wrlock(&globalContext.sharedUserLock);
 
@@ -406,21 +407,18 @@ LDClientIdentify(LDClient *const client, LDUser *const user)
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
         LDi_rwlock_wrlock(&clientIter->clientLock);
 
-        LDi_freehash(clientIter->allFlags);
-        clientIter->allFlags = NULL;
+        LDi_updatestatus(client, LDStatusInitializing);
 
-        if (clientIter->status == LDStatusInitialized) {
-            LDi_updatestatus(client, LDStatusInitializing);
-        }
-
-        char *const flags = LDi_loaddata("features", user->key);
+        /*
+        TODO load for specific user
+        char *const flags = NULL;
         if (flags) {
-            LDi_clientsetflags(clientIter, false, flags, 1);
             LDFree(flags);
         }
+        */
 
         LDi_reinitializeconnection(clientIter);
-        LDi_recordidentify(clientIter, user);
+        LD_ASSERT(LDi_identify(clientIter->eventProcessor, user));
 
         LDi_rwlock_wrunlock(&clientIter->clientLock);
     }
@@ -450,14 +448,9 @@ clientCloseIsolated(LDClient *const client)
     LDi_thread_join(&client->streamingThread);
 
     LDi_freeEventProcessor(client->eventProcessor);
-    LDi_freehash(client->allFlags);
-
-    cJSON_Delete(client->eventArray);
-    /* may exist if flush failed */
-    LDi_freehash(client->summaryEvent);
+    LDi_storeDestroy(&client->store);
 
     LDi_rwlock_destroy(&client->clientLock);
-    LDi_rwlock_destroy(&client->eventLock);
 
     LDi_mutex_destroy(&client->initCondMtx);
     LDi_mutex_destroy(&client->condMtx);
@@ -466,7 +459,6 @@ clientCloseIsolated(LDClient *const client)
     LDi_cond_destroy(&client->eventCond);
     LDi_cond_destroy(&client->pollCond);
     LDFree(client->mobileKey);
-    LDFree(client->databuffer);
 
     for (struct listener *item = client->listeners; item;) {
         /* must record next to make delete safe */
@@ -494,20 +486,6 @@ LDClientClose(LDClient *const client)
     globalContext.sharedConfig  = NULL;
     globalContext.primaryClient = NULL;
     globalContext.clientTable   = NULL;
-}
-
-LDNode *
-LDClientGetLockedFlags(LDClient *const client)
-{
-    LD_ASSERT(client);
-    LDi_rwlock_rdlock(&client->clientLock);
-    return client->allFlags;
-}
-
-void LDClientUnlockFlags(struct LDClient_i *const client)
-{
-    LD_ASSERT(client);
-    LDi_rwlock_rdunlock(&client->clientLock);
 }
 
 bool
@@ -548,108 +526,44 @@ LDSetClientStatusCallback(void (callback)(int))
     LDi_statuscallback = callback;
 }
 
-/*
- * save and restore flags
- */
 char *
 LDClientSaveFlags(LDClient *const client)
 {
-    LD_ASSERT(client);
-    LDi_rwlock_rdlock(&client->clientLock);
-    char *const serialized = LDi_hashtostring(client->allFlags, true);
-    LDi_rwlock_rdunlock(&client->clientLock);
-    return serialized;
+    /* blank for now */
 }
 
 void
 LDClientRestoreFlags(LDClient *const client, const char *const data)
 {
-    LD_ASSERT(client); LD_ASSERT(data);
-    if (LDi_clientsetflags(client, true, data, 1)) {
-        LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-        LDi_savedata("features", client->shared->sharedUser->key, data);
-        LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-    }
+    /* blank for now */
 }
 
-bool
-LDi_clientsetflags(LDClient *const client, const bool needlock, const char *const data, const int flavor)
-{
-    LD_ASSERT(client); LD_ASSERT(data);
-
-    cJSON *const payload = cJSON_Parse(data);
-
-    if (!payload) {
-        LD_LOG(LD_LOG_ERROR, "LDi_clientsetflags parsing failed");
-        return false;
-    }
-
-    if (!cJSON_IsObject(payload)) {
-        LD_LOG(LD_LOG_ERROR, "LDi_clientsetflags did not get object");
-        cJSON_Delete(payload);
-        return false;
-    }
-
-    LDNode *const newhash = LDi_jsontohash(payload, flavor);
-
-    cJSON_Delete(payload);
-
-    if (needlock) {
-        LDi_rwlock_wrlock(&client->clientLock);
-    }
-
-    LDNode *const oldhash = client->allFlags;
-
-    LDNode *oldnode, *tmp;
-    HASH_ITER(hh, oldhash, oldnode, tmp) {
-        LDNode *newnode = NULL;
-        HASH_FIND_STR(newhash, oldnode->key, newnode);
-
-        for (struct listener *list = client->listeners; list; list = list->next) {
-            if (strcmp(list->key, oldnode->key) == 0) {
-                LDi_rwlock_wrunlock(&client->clientLock);
-                list->fn(oldnode->key, newnode == NULL);
-                LDi_rwlock_wrlock(&client->clientLock);
-            }
-        }
-    }
-
-    client->allFlags = newhash;
-
-    if (client->status == LDStatusInitializing) {
-        LDi_updatestatus(client, LDStatusInitialized);
-    }
-
-    if (needlock) {
-        LDi_rwlock_wrunlock(&client->clientLock);
-    }
-
-    LDi_freehash(oldhash);
-
-    return true;
-}
-
-void
-LDi_savehash(LDClient *const client)
-{
-    LD_ASSERT(client);
-    LDi_rwlock_rdlock(&client->clientLock);
-    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    char *const serialized = LDi_hashtostring(client->allFlags, true);
-    LDi_savedata("features", client->shared->sharedUser->key, serialized);
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-    LDi_rwlock_rdunlock(&client->clientLock);
-    LDFree(serialized);
-}
-
-LDNode *
+struct LDJSON *
 LDAllFlags(LDClient *const client)
 {
+    struct LDJSON *result;
+    struct LDStoreNode **flags;
+    unsigned int flagCount, i;
+
     LD_ASSERT(client);
-    LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *const clone = LDCloneHash(client->allFlags);
-    LDi_rwlock_rdunlock(&client->clientLock);
-    return clone;
+
+    LD_ASSERT(result = LDNewObject());
+
+    LD_ASSERT(LDi_storeGetAll(&client->store, &flags, &flagCount));
+
+    for (i = 0; i < flagCount; i++) {
+        struct LDJSON *tmp;
+
+        LD_ASSERT(tmp = LDJSONDuplicate(flags[i]->flag.value));
+
+        LD_ASSERT(LDObjectSetKey(result, flags[i]->flag.key, tmp));
+
+        LDi_rc_decrement(&flags[i]->rc);
+    }
+
+    LDFree(flags);
+
+    return result;
 }
 
 /*
@@ -657,340 +571,403 @@ LDAllFlags(LDClient *const client)
  */
 
 static void
-fillDetails(const LDNode *const node, LDVariationDetails *const details, const LDNodeType type)
+fillDetails(const struct LDStoreNode *const node,
+    LDVariationDetails *const details, const LDJSONType type)
 {
+    LD_ASSERT(details);
+
     if (node) {
-        if (node->type == type || node->type == LDNodeNone) {
-            details->reason = LDCloneHash(node->reason);
-            details->variationIndex = node->variation;
+        if (type == LDNull || LDJSONGetType(node->flag.value) == type ||
+            LDJSONGetType(node->flag.value) == LDNull)
+        {
+            details->reason         = LDJSONDuplicate(node->flag.reason);
+            details->variationIndex = node->flag.variation;
         } else {
-            details->reason = LDNodeCreateHash();
+            details->reason         = LDNewObject();
             details->variationIndex = -1;
-            LDNodeAddString(&details->reason, "kind", "ERROR");
-            LDNodeAddString(&details->reason, "errorKind", "WRONG_TYPE");
+
+            LDObjectSetKey(details->reason, "kind",
+                LDNewText("ERROR"));
+            LDObjectSetKey(details->reason, "errorKind",
+                LDNewText("WRONG_TYPE"));
         }
     } else {
-        details->reason = LDNodeCreateHash();
+        details->reason         = LDNewObject();
         details->variationIndex = -1;
-        LDNodeAddString(&details->reason, "kind", "ERROR");
-        LDNodeAddString(&details->reason, "errorKind", "FLAG_NOT_FOUND");
+
+        LDObjectSetKey(details->reason, "kind",
+            LDNewText("ERROR"));
+        LDObjectSetKey(details->reason, "errorKind",
+            LDNewText("FLAG_NOT_FOUND"));
+    }
+}
+
+static void
+LDi_castJSONToValue(
+    void **const         destination,
+    struct LDJSON *const source
+) {
+    LD_ASSERT(destination);
+    LD_ASSERT(source);
+
+    switch (LDJSONGetType(source)) {
+        case LDNull:
+            LD_ASSERT(false);
+            break;
+
+        case LDBool:
+            **((bool **const)destination) = LDGetBool(source);
+            break;
+
+        case LDText:
+            *((const char **const)destination) = LDGetText(source);
+            break;
+
+        case LDNumber:
+            **((double **const)destination) = LDGetNumber(source);
+            break;
+
+        case LDObject:
+            LD_ASSERT(false);
+            break;
+
+        case LDArray:
+            LD_ASSERT(false);
+            break;
     }
 }
 
 static bool
-LDi_BoolNode(LDClient *const client, const char *const key, const bool fallback, LDNode **const selected)
-{
-    bool result;
+LDi_evalInternal(
+    LDClient *const            client,
+    const char *const          flagKey,
+    const LDJSONType           variationKind,
+    void *const                fallbackValue,
+    void **const               resultValue,
+    struct LDStoreNode **const selected
+) {
+    struct LDStoreNode *node;
 
-    LDNode *const node = LDNodeLookup(client->allFlags, key);
+    LD_ASSERT(client);
+    LD_ASSERT(flagKey);
+    LD_ASSERT(fallbackValue);
+    LD_ASSERT(resultValue);
 
-    if (node && node->type == LDNodeBool) {
-        result = node->b;
+    node = LDi_storeGet(&client->store, flagKey);
+
+    if (node && (variationKind == LDNull
+        || LDJSONGetType(node->flag.value) == variationKind))
+    {
+        if (variationKind == LDNull) {
+            *((struct LDJSON **const)resultValue) = node->flag.value;
+        } else {
+            LDi_castJSONToValue(resultValue, node->flag.value);
+        }
     } else {
-        result = fallback;
+        *resultValue = fallbackValue;
     }
 
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    LDi_recordfeature(client, client->shared->sharedUser, node, key, LDNodeBool,
-        (double)result, NULL, NULL, (double)fallback, NULL, NULL, (bool)selected);
+
+    LDi_processEvalEvent(
+        client->eventProcessor,
+        client->shared->sharedUser,
+        flagKey,
+        variationKind,
+        node,
+        *(const void **)resultValue,
+        fallbackValue,
+        (bool)selected
+    );
+
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
-    if (selected) { *selected = node; }
+    if (selected) {
+        *selected = node;
+    } else if (node) {
+        LDi_rc_decrement(&node->rc);
+    }
 
-    return result;
+    return true;
 }
 
 bool
 LDBoolVariationDetail(LDClient *const client, const char *const key,
-    const bool fallback, LDVariationDetails *const details)
+    bool fallback, LDVariationDetails *const details)
 {
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+    bool value, *valueRef;
+    struct LDStoreNode *selected;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+
+    valueRef = &value;
 
     LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *selected = NULL;
-    const bool value = LDi_BoolNode(client, key, fallback, &selected);
-    fillDetails(selected, details, LDNodeBool);
+    LDi_evalInternal(
+        client, key, LDBool, &fallback, (void **)&valueRef, &selected
+    );
+    fillDetails(selected, details, LDBool);
+    if (selected) {
+        LDi_rc_decrement(&selected->rc);
+    }
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return *valueRef;
 }
 
 bool
-LDBoolVariation(LDClient *const client, const char *const key, const bool fallback)
+LDBoolVariation(LDClient *const client, const char *const key,
+    bool fallback)
 {
-    LD_ASSERT(client); LD_ASSERT(key);
+    bool value, *valueRef;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+
+    valueRef = &value;
 
     LDi_rwlock_rdlock(&client->clientLock);
-    const bool value = LDi_BoolNode(client, key, fallback, NULL);
+    LDi_evalInternal(
+        client, key, LDBool, &fallback, (void **)&valueRef, NULL
+    );
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
-}
-
-static int
-LDi_IntNode(LDClient *const client, const char *const key,
-    const int fallback, LDNode **const selected)
-{
-    int result;
-
-    LDNode *const node = LDNodeLookup(client->allFlags, key);
-
-    if (node && node->type == LDNodeNumber) {
-        result = (int)node->n;
-    } else {
-        result = fallback;
-    }
-
-    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    LDi_recordfeature(client, client->shared->sharedUser, node, key,
-        LDNodeNumber, (double)result, NULL, NULL, (double)fallback, NULL, NULL,
-        (bool)selected);
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-
-    if (selected) { *selected = node; }
-
-    return result;
+    return *valueRef;
 }
 
 int
 LDIntVariationDetail(LDClient *const client, const char *const key,
     const int fallback, LDVariationDetails *const details)
 {
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+    double value, *valueRef, fallbackCast;
+    struct LDStoreNode *selected;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+
+    valueRef     = &value;
+    fallbackCast = fallback;
 
     LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *selected = NULL;
-    const int value = LDi_IntNode(client, key, fallback, &selected);
-    fillDetails(selected, details, LDNodeNumber);
+    LDi_evalInternal(
+        client, key, LDNumber, &fallbackCast, (void **)&valueRef, &selected
+    );
+    fillDetails(selected, details, LDNumber);
+    if (selected) {
+        LDi_rc_decrement(&selected->rc);
+    }
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return *valueRef;
 }
 
 int
-LDIntVariation(LDClient *const client, const char *const key, const int fallback)
+LDIntVariation(LDClient *const client, const char *const key,
+    const int fallback)
 {
-    LD_ASSERT(client); LD_ASSERT(key);
+    double value, *valueRef, fallbackCast;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+
+    valueRef     = &value;
+    fallbackCast = fallback;
 
     LDi_rwlock_rdlock(&client->clientLock);
-    const int value = LDi_IntNode(client, key, fallback, NULL);
+    LDi_evalInternal(
+        client, key, LDNumber, &fallbackCast, (void **)&valueRef, NULL
+    );
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
-}
-
-double
-LDi_DoubleNode(LDClient *const client, const char *const key,
-    const double fallback, LDNode **const selected)
-{
-    double result;
-
-    LDNode *const node = LDNodeLookup(client->allFlags, key);
-
-    if (node && node->type == LDNodeNumber) {
-        result = node->n;
-    } else {
-        result = fallback;
-    }
-
-    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    LDi_recordfeature(client, client->shared->sharedUser, node, key,
-        LDNodeNumber, result, NULL, NULL, fallback, NULL, NULL, (bool)selected);
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-
-    if (selected) { *selected = node; }
-
-    return result;
+    return *valueRef;
 }
 
 double
 LDDoubleVariationDetail(LDClient *const client, const char *const key,
     const double fallback, LDVariationDetails *const details)
 {
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+    double value, *valueRef, fallbackCast;
+    struct LDStoreNode *selected;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+
+    valueRef     = &value;
+    fallbackCast = fallback;
 
     LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *selected = NULL;
-    const double value = LDi_DoubleNode(client, key, fallback, &selected);
-    fillDetails(selected, details, LDNodeNumber);
+    LDi_evalInternal(
+        client, key, LDNumber, &fallbackCast, (void **)&valueRef, &selected
+    );
+    fillDetails(selected, details, LDNumber);
+    if (selected) {
+        LDi_rc_decrement(&selected->rc);
+    }
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return *valueRef;
 }
 
 double
-LDDoubleVariation(LDClient *const client, const char *const key, const double fallback)
+LDDoubleVariation(LDClient *const client, const char *const key,
+    const double fallback)
 {
-    LD_ASSERT(client); LD_ASSERT(key);
+    double value, *valueRef, fallbackCast;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+
+    valueRef     = &value;
+    fallbackCast = fallback;
 
     LDi_rwlock_rdlock(&client->clientLock);
-    const double value = LDi_DoubleNode(client, key, fallback, NULL);
+    LDi_evalInternal(
+        client, key, LDNumber, &fallbackCast, (void **)&valueRef, NULL
+    );
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return *valueRef;
 }
 
-static char *
-LDi_StringNode(LDClient *const client, const char *const key,
-    const char *const fallback, char *const buffer, const size_t space, LDNode **const selected)
+char *
+LDStringVariationDetail(LDClient *const client, const char *const key,
+    const char *const fallback, char *const buffer, const size_t bufferSize,
+    LDVariationDetails *const details)
 {
-    const char *result;
+    size_t resultLength;
+    char *value;
+    struct LDStoreNode *selected;
 
-    LDNode *const node = LDNodeLookup(client->allFlags, key);
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+    LD_ASSERT(!(!buffer && bufferSize));
 
-    if (node && node->type == LDNodeString) {
-        result = node->s;
-    } else {
-        result = fallback;
+    LDi_rwlock_rdlock(&client->clientLock);
+    LDi_evalInternal(
+        client, key, LDText, (void *)fallback, (void **)&value, &selected
+    );
+    fillDetails(selected, details, LDText);
+    if (selected) {
+        LDi_rc_decrement(&selected->rc);
     }
+    LDi_rwlock_rdunlock(&client->clientLock);
 
-    size_t len = strlen(result);
-    if (len > space - 1) {
-        len = space - 1;
-    }
-    memcpy(buffer, result, len);
-    buffer[len] = 0;
-
-    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    LDi_recordfeature(client, client->shared->sharedUser, node, key,
-        LDNodeString, 0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-
-    if (selected) { *selected = node; }
+    resultLength = strlen(value);
+    memcpy(buffer, value, resultLength);
+    buffer[resultLength] = '\0';
 
     return buffer;
 }
 
 char *
-LDStringVariationDetail(LDClient *const client, const char *const key,
-    const char *const fallback, char *const buffer, const size_t space, LDVariationDetails *const details)
-{
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));  LD_ASSERT(details);
-
-    LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *selected = NULL;
-    char* const value = LDi_StringNode(client, key, fallback, buffer, space, &selected);
-    fillDetails(selected, details, LDNodeString);
-    LDi_rwlock_rdunlock(&client->clientLock);
-
-    return value;
-}
-
-char *
 LDStringVariation(LDClient *const client, const char *const key,
-    const char *const fallback, char *const buffer, const size_t space)
+    const char *const fallback, char *const buffer, const size_t bufferSize)
 {
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(!(!buffer && space));
+    size_t resultLength;
+    char *value;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+    LD_ASSERT(!(!buffer && bufferSize));
 
     LDi_rwlock_rdlock(&client->clientLock);
-    char* const value = LDi_StringNode(client, key, fallback, buffer, space, NULL);
+    LDi_evalInternal(
+        client, key, LDText, (void *)fallback, (void **)&value, NULL
+    );
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
-}
+    resultLength = strlen(value);
+    memcpy(buffer, value, resultLength);
+    buffer[resultLength] = '\0';
 
-static char *
-LDi_StringAllocNode(LDClient *const client, const char *const key,
-    const char *const fallback, LDNode **const selected)
-{
-    const char *value;
-
-    LDNode *const node = LDNodeLookup(client->allFlags, key);
-
-    if (node && node->type == LDNodeString) {
-        value = node->s;
-    } else {
-        value = fallback;
-    }
-
-    char *const result = LDStrDup(value);
-
-    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    LDi_recordfeature(client, client->shared->sharedUser, node, key,
-        LDNodeString, 0.0, result, NULL, 0.0, fallback, NULL, (bool)selected);
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-
-    if (selected) { *selected = node; }
-
-    return result;
+    return buffer;
 }
 
 char *
 LDStringVariationAllocDetail(LDClient *const client, const char *const key,
     const char* fallback, LDVariationDetails *const details)
 {
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+    char *value;
+    struct LDStoreNode *selected;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+    LD_ASSERT(fallback);
 
     LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *selected = NULL;
-    char *const value = LDi_StringAllocNode(client, key, fallback, &selected);
-    fillDetails(selected, details, LDNodeString);
+    LDi_evalInternal(
+        client, key, LDText, (void *)fallback, (void **)&value, &selected
+    );
+    fillDetails(selected, details, LDText);
+    if (selected) {
+        LDi_rc_decrement(&selected->rc);
+    }
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return LDStrDup(value);
 }
 
 char *
-LDStringVariationAlloc(LDClient *const client, const char *const key, const char* fallback)
+LDStringVariationAlloc(LDClient *const client, const char *const key,
+    const char* fallback)
 {
-    LD_ASSERT(client); LD_ASSERT(key);
+    char *value;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+    LD_ASSERT(fallback);
 
     LDi_rwlock_rdlock(&client->clientLock);
-    char *const value = LDi_StringAllocNode(client, key, fallback, NULL);
+    LDi_evalInternal(
+        client, key, LDText, (void *)fallback, (void **)&value, NULL
+    );
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return LDStrDup(value);
 }
 
-static LDNode *
-LDi_JSONNode(LDClient *const client, const char *const key,
-    const LDNode *const fallback, LDNode **const selected)
-{
-    LDNode *result;
-
-    LDNode *const node = LDNodeLookup(client->allFlags, key);
-
-    if (node && node->type == LDNodeHash) {
-        result = LDCloneHash(node->h);
-    } else {
-        result = LDCloneHash(fallback);
-    }
-
-    LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    LDi_recordfeature(client, client->shared->sharedUser, node, key,
-        LDNodeHash, 0.0, NULL, result, 0.0, NULL, fallback, (bool)selected);
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-
-    if (selected) { *selected = node; }
-
-    return result;
-}
-
-LDNode *
+struct LDJSON *
 LDJSONVariationDetail(LDClient *const client, const char *const key,
-    const LDNode* const fallback, LDVariationDetails *const details)
+    struct LDJSON *const fallback, LDVariationDetails *const details)
 {
-    LD_ASSERT(client); LD_ASSERT(key); LD_ASSERT(details);
+    struct LDJSON *value;
+    struct LDStoreNode *selected;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+    LD_ASSERT(fallback);
 
     LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *selected = NULL;
-    LDNode *const value = LDi_JSONNode(client, key, fallback, &selected);
-    fillDetails(selected, details, LDNodeHash);
+    LDi_evalInternal(
+        client, key, LDNull, (void *)fallback, (void **)&value, &selected
+    );
+    fillDetails(selected, details, LDNull);
+    if (selected) {
+        LDi_rc_decrement(&selected->rc);
+    }
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return LDJSONDuplicate(value);
 }
 
-LDNode *
-LDJSONVariation(LDClient *const client, const char *const key, const LDNode *const fallback)
+struct LDJSON *
+LDJSONVariation(LDClient *const client, const char *const key,
+    struct LDJSON *const fallback)
 {
-    LD_ASSERT(client); LD_ASSERT(key);
+    struct LDJSON *value;
+
+    LD_ASSERT(client);
+    LD_ASSERT(key);
+    LD_ASSERT(fallback);
 
     LDi_rwlock_rdlock(&client->clientLock);
-    LDNode *const value = LDi_JSONNode(client, key, fallback, NULL);
+    LDi_evalInternal(
+        client, key, LDNull, (void *)fallback, (void **)&value, NULL
+    );
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    return value;
+    return LDJSONDuplicate(value);
 }
 
 void
@@ -1027,7 +1004,7 @@ LDClientTrackMetric(LDClient *const client, const char *const name,
 
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_track(client->eventProcessor, client->shared->sharedUser, name,
-        data, 0, false);
+        data, metric, true);
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 }
 
@@ -1084,60 +1061,67 @@ LDClientUnregisterFeatureFlagListener(LDClient *const client, const char *const 
 }
 
 void
-LDConfigAddPrivateAttribute(LDConfig *const config, const char *const key)
+LDConfigSetPrivateAttributes(LDConfig *const config,
+    struct LDJSON *attributes)
 {
-    const LDNode *lookup;
+    LD_ASSERT(config);
 
-    LD_ASSERT(config); LD_ASSERT(key);
+    if (attributes) {
+        LD_ASSERT(LDJSONGetType(attributes) == LDArray);
 
-    HASH_FIND_STR(config->privateAttributeNames, key, lookup);
-
-    if (lookup) {
-        LD_LOG(LD_LOG_WARNING, "Attempted to add duplicate private Attribute");
-
-        return;
+        LDJSONFree(config->privateAttributeNames);
     }
 
-    LDNode *const node = LDAlloc(sizeof(*node)); LD_ASSERT(node);
-    memset(node, 0, sizeof(*node));
-
-    node->key = LDStrDup(key);
-    LD_ASSERT(node->key);
-
-    node->type = LDNodeNone;
-
-    HASH_ADD_KEYPTR(hh, config->privateAttributeNames, node->key, strlen(node->key), node);
+    config->privateAttributeNames = attributes;
 }
 
 bool
 LDConfigAddSecondaryMobileKey(LDConfig *const config, const char *const name,
     const char *const key)
 {
-    const LDNode *iter, *tmp;
+    struct LDJSON *tmp;
 
-    LD_ASSERT(config); LD_ASSERT(name); LD_ASSERT(key);
+    LD_ASSERT(config);
+    LD_ASSERT(name);
+    LD_ASSERT(key);
 
     if (strcmp(name, LDPrimaryEnvironmentName) == 0) {
-        LD_LOG(LD_LOG_ERROR, "Attempted use the primary environment name as secondary");
+        LD_LOG(LD_LOG_ERROR,
+            "Attempted use the primary environment name as secondary");
 
         return false;
     }
 
     if (strcmp(key, config->mobileKey) == 0) {
-        LD_LOG(LD_LOG_ERROR, "Attempted to add primary key as secondary key");
+        LD_LOG(LD_LOG_ERROR,
+            "Attempted to add primary key as secondary key");
 
         return false;
     }
 
-    HASH_ITER(hh, config->secondaryMobileKeys, iter, tmp) {
-        if (strcmp(iter->key, name) == 0 || strcmp(iter->s, key) == 0) {
-            LD_LOG(LD_LOG_ERROR, "Attempted to add secondary key twice");
+    tmp = LDObjectLookup(config->secondaryMobileKeys, name);
 
-            return false;
-        }
+    if (tmp && strcmp(LDGetText(tmp), name) == 0) {
+        LD_LOG(LD_LOG_ERROR, "Attempted to add secondary key twice");
+
+        return false;
     }
 
-    LDNodeAddString(&config->secondaryMobileKeys, name, key);
+    if (!(tmp = LDNewText(key))) {
+        LD_LOG(LD_LOG_ERROR,
+            "LDConfigAddSecondaryMobileKey failed to duplicate key");
+
+        return false;
+    }
+
+    if (!LDObjectSetKey(config->secondaryMobileKeys, name, tmp)) {
+        LDJSONFree(tmp);
+
+        LD_LOG(LD_LOG_ERROR,
+            "LDConfigAddSecondaryMobileKey failed to add environment");
+
+        return false;
+    }
 
     return true;
 }
@@ -1156,7 +1140,8 @@ LDi_updatestatus(struct LDClient_i *const client, const LDStatus status)
    LDi_cond_signal(&client->initCond);
 }
 
-void LDFreeDetailContents(LDVariationDetails details)
+void
+LDFreeDetailContents(LDVariationDetails details)
 {
-    LDi_freehash(details.reason);
+    LDJSONFree(details.reason);
 }

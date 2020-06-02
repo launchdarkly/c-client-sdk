@@ -3,6 +3,7 @@
 #include <launchdarkly/json.h>
 
 #include "ldapi.h"
+#include "store.h"
 
 struct EventProcessor;
 
@@ -36,4 +37,16 @@ bool
 LDi_bundleEventPayload(
     struct EventProcessor *const context,
     struct LDJSON **const        result
+);
+
+bool
+LDi_processEvalEvent(
+    struct EventProcessor *const    context,
+    const LDUser *const             user,
+    const char *const               flagKey,
+    const LDJSONType                valueType,
+    const struct LDStoreNode *const node,
+    const void *const               actualValue,
+    const void *const               fallback,
+    const bool                      detailed
 );
