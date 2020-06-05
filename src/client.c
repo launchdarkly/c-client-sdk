@@ -196,7 +196,7 @@ LDClientSetOnline(struct LDClient *const client)
     }
 }
 
-bool
+LDBoolean
 LDClientIsOffline(struct LDClient *const client)
 {
     LD_ASSERT(client);
@@ -207,7 +207,7 @@ LDClientIsOffline(struct LDClient *const client)
 }
 
 void
-LDClientSetBackground(struct LDClient *const client, const bool background)
+LDClientSetBackground(struct LDClient *const client, const LDBoolean background)
 {
     LD_ASSERT(client);
     LDi_rwlock_wrlock(&client->clientLock);
@@ -309,7 +309,7 @@ LDClientClose(struct LDClient *const client)
     globalContext.clientTable   = NULL;
 }
 
-bool
+LDBoolean
 LDClientIsInitialized(struct LDClient *const client)
 {
     LD_ASSERT(client);
@@ -319,7 +319,7 @@ LDClientIsInitialized(struct LDClient *const client)
     return isinit;
 }
 
-bool
+LDBoolean
 LDClientAwaitInitialized(struct LDClient *const client,
     const unsigned int timeoutmilli)
 {
@@ -513,21 +513,22 @@ LDi_evalInternal(
     return true;
 }
 
-bool
+LDBoolean
 LDBoolVariationDetail(struct LDClient *const client, const char *const key,
-    bool fallback, LDVariationDetails *const details)
+    LDBoolean fallback, LDVariationDetails *const details)
 {
-    bool value, *valueRef;
+    bool value, *valueRef, fallbackCast;
     struct LDStoreNode *selected;
 
     LD_ASSERT(client);
     LD_ASSERT(key);
 
-    valueRef = &value;
+    fallbackCast = fallback;
+    valueRef     = &value;
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
-        client, key, LDBool, &fallback, (void **)&valueRef, &selected
+        client, key, LDBool, &fallbackCast, (void **)&valueRef, &selected
     );
     fillDetails(selected, details, LDBool);
     if (selected) {
@@ -538,20 +539,21 @@ LDBoolVariationDetail(struct LDClient *const client, const char *const key,
     return *valueRef;
 }
 
-bool
+LDBoolean
 LDBoolVariation(struct LDClient *const client, const char *const key,
-    bool fallback)
+    LDBoolean fallback)
 {
-    bool value, *valueRef;
+    bool value, *valueRef, fallbackCast;
 
     LD_ASSERT(client);
     LD_ASSERT(key);
 
-    valueRef = &value;
+    fallbackCast = fallback;
+    valueRef     = &value;
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
-        client, key, LDBool, &fallback, (void **)&valueRef, NULL
+        client, key, LDBool, &fallbackCast, (void **)&valueRef, NULL
     );
     LDi_rwlock_rdunlock(&client->clientLock);
 
@@ -841,7 +843,7 @@ LDClientFlush(struct LDClient *const client)
     }
 }
 
-bool
+LDBoolean
 LDClientRegisterFeatureFlagListener(struct LDClient *const client,
     const char *const key, LDlistenerfn fn)
 {

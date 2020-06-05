@@ -284,7 +284,7 @@ LDUserSetPrivateAttributes(struct LDUser *const user,
 }
 
 void
-LDUserSetAnonymous(struct LDUser *const user, const bool anon)
+LDUserSetAnonymous(struct LDUser *const user, const LDBoolean anon)
 {
     LD_ASSERT(user);
 

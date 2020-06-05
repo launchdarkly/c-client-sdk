@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include <launchdarkly/json.h>
+#include <launchdarkly/boolean.h>
 #include <launchdarkly/export.h>
 
 /** @brief Opaque user object **/
@@ -20,7 +19,8 @@ LD_EXPORT(struct LDUser *) LDUserNew(const char *const key);
 LD_EXPORT(void) LDUserFree(struct LDUser *const user);
 
 /** @brief Mark the user as anonymous. */
-LD_EXPORT(void) LDUserSetAnonymous(struct LDUser *const user, const bool anon);
+LD_EXPORT(void) LDUserSetAnonymous(struct LDUser *const user,
+    const LDBoolean anon);
 
 /** @brief Set the user's IP. */
 LD_EXPORT(void) LDUserSetIP(struct LDUser *const user, const char *const str);

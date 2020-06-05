@@ -28,8 +28,6 @@ extern "C" {
 #include "concurrency.h"
 #include "logging.h"
 
-#include <stdbool.h>
-
 #include "uthash.h"
 
 /** @brief Should write the `data` using the associated `context` to `name`.
@@ -52,8 +50,8 @@ LD_EXPORT(void) LD_store_setfns(void *const context, LD_store_stringwriter,
     LD_store_stringreader);
 
 /** @brief Predefined `ld_store_stringwriter` for files. */
-LD_EXPORT(bool) LD_store_filewrite(void *const context, const char *const name,
-    const char *const data);
+LD_EXPORT(LDBoolean) LD_store_filewrite(void *const context,
+    const char *const name, const char *const data);
 
 /** @brief Predefined `ld_store_stringreader` for files */
 LD_EXPORT(char *) LD_store_fileread(void *const context,

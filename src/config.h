@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include <launchdarkly/json.h>
 
 struct LDConfig {

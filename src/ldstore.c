@@ -76,7 +76,7 @@ fileopen(const char *const name, const char *const mode)
     return handle;
 }
 
-bool
+LDBoolean
 LD_store_filewrite(void *const context, const char *const name, const char *const data)
 {
     FILE *const handle = fileopen(name, "w");

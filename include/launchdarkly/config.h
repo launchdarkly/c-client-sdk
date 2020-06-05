@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
-
+#include <launchdarkly/boolean.h>
 #include <launchdarkly/json.h>
 #include <launchdarkly/export.h>
 
@@ -16,7 +15,7 @@ LD_EXPORT(struct LDConfig *) LDConfigNew(const char *const mobileKey);
 
 /** @brief Marks all user attributes private. */
 LD_EXPORT(void) LDConfigSetAllAttributesPrivate(struct LDConfig *const config,
-    const bool allprivate);
+    const LDBoolean allPrivate);
 
 /** @brief Sets the interval in milliseconds between polls for flag updates
  * when your app is in the background. */
@@ -34,7 +33,7 @@ LD_EXPORT(void) LDConfigSetConnectionTimeoutMillies(
 
 /** @brief Enable or disable background updating */
 LD_EXPORT(void) LDConfigSetDisableBackgroundUpdating(
-    struct LDConfig *const config, const bool disable);
+    struct LDConfig *const config, const LDBoolean disable);
 
 /** @brief Sets the max number of events to queue before sending them to
  * LaunchDarkly. */
@@ -59,7 +58,7 @@ LD_EXPORT(void) LDConfigSetMobileKey(struct LDConfig *const config,
 /** @brief Configures the client for offline mode. In offline mode, no
  * external network connections are made. */
 LD_EXPORT(void) LDConfigSetOffline(struct LDConfig *const config,
-    const bool offline);
+    const LDBoolean offline);
 
 /** @brief Enables or disables real-time streaming flag updates.
  *
@@ -67,7 +66,7 @@ LD_EXPORT(void) LDConfigSetOffline(struct LDConfig *const config,
  * mechanism is used. We do not recommend disabling `streaming` unless you
  * have been instructed to do so by LaunchDarkly support. */
 LD_EXPORT(void) LDConfigSetStreaming(struct LDConfig *const config,
-    const bool streaming);
+    const LDBoolean streaming);
 
 /** @brief Only relevant when `streaming` is disabled (set to `false`). Sets
  * the interval between feature flag updates. */
@@ -96,17 +95,17 @@ LD_EXPORT(void) LDConfigSetProxyURI(struct LDConfig *const config,
  * subject [here](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html).
  */
 LD_EXPORT(void) LDConfigSetVerifyPeer(struct LDConfig *const config,
-    const bool enabled);
+    const LDBoolean enabled);
 
 /** @brief Determines whether the `REPORT` or `GET` verb is used for calls to
  * LaunchDarkly. Do not use unless advised by LaunchDarkly. */
 LD_EXPORT(void) LDConfigSetUseReport(struct LDConfig *const config,
-    const bool report);
+    const LDBoolean report);
 
 /** @brief Decide whether the client should fetch feature flag evaluation
  * explanations from LaunchDarkly. */
 LD_EXPORT(void) LDConfigSetUseEvaluationReasons(struct LDConfig *const config,
-    const bool reasons);
+    const LDBoolean reasons);
 
 /** @brief Private attribute list which will not be recorded for all users. */
 LD_EXPORT(void) LDConfigSetPrivateAttributes(struct LDConfig *const config,
@@ -118,8 +117,9 @@ LD_EXPORT(void) LDConfigSetPrivateAttributes(struct LDConfig *const config,
  * environment (the one you used to initialize `LDConfig`). The `name` of the
  * key can later be used in conjunction with `LDClientGetForMobileKey`. This
  * function returns false on failure. */
-LD_EXPORT(bool) LDConfigAddSecondaryMobileKey(struct LDConfig *const config,
-    const char *const name, const char *const key);
+LD_EXPORT(LDBoolean) LDConfigAddSecondaryMobileKey(
+    struct LDConfig *const config, const char *const name,
+    const char *const key);
 
 /** @brief Set the path to the SSL certificate bundle used for peer
  * authentication.
@@ -133,7 +133,7 @@ LD_EXPORT(void) LDConfigSetSSLCertificateAuthority(struct LDConfig *config,
 /** @brief Determines if an entire user object, or only the user key should be
  * included in events. Defaults to false. */
 LD_EXPORT(void) LDConfigSetInlineUsersInEvents(struct LDConfig *const config,
-    const bool inlineUsers);
+    const LDBoolean inlineUsers);
 
 /** @brief Free an existing `LDConfig` instance.
  *

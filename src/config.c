@@ -48,11 +48,11 @@ LDConfigNew(const char *const mobileKey)
 
 void
 LDConfigSetAllAttributesPrivate(struct LDConfig *const config,
-    const bool private)
+    const LDBoolean allPrivate)
 {
     LD_ASSERT(config);
 
-    config->allAttributesPrivate = private;
+    config->allAttributesPrivate = allPrivate;
 }
 
 void
@@ -92,7 +92,7 @@ LDConfigSetConnectionTimeoutMillies(struct LDConfig *const config,
 
 void
 LDConfigSetDisableBackgroundUpdating(struct LDConfig *const config,
-    const bool disable)
+    const LDBoolean disable)
 {
     LD_ASSERT(config);
 
@@ -135,7 +135,7 @@ LDConfigSetMobileKey(struct LDConfig *const config, const char *const key)
 }
 
 void
-LDConfigSetOffline(struct LDConfig *const config, const bool offline)
+LDConfigSetOffline(struct LDConfig *const config, const LDBoolean offline)
 {
     LD_ASSERT(config);
 
@@ -143,7 +143,7 @@ LDConfigSetOffline(struct LDConfig *const config, const bool offline)
 }
 
 void
-LDConfigSetStreaming(struct LDConfig *const config, const bool streaming)
+LDConfigSetStreaming(struct LDConfig *const config, const LDBoolean streaming)
 {
     LD_ASSERT(config);
 
@@ -177,7 +177,7 @@ LDConfigSetStreamURI(struct LDConfig *const config, const char *const uri)
 }
 
 void
-LDConfigSetUseReport(struct LDConfig *const config, const bool report)
+LDConfigSetUseReport(struct LDConfig *const config, const LDBoolean report)
 {
     LD_ASSERT(config);
 
@@ -186,7 +186,7 @@ LDConfigSetUseReport(struct LDConfig *const config, const bool report)
 
 void
 LDConfigSetUseEvaluationReasons(struct LDConfig *const config,
-    const bool reasons)
+    const LDBoolean reasons)
 {
     LD_ASSERT(config);
 
@@ -203,7 +203,7 @@ LDConfigSetProxyURI(struct LDConfig *const config, const char *const uri)
 }
 
 void
-LDConfigSetVerifyPeer(struct LDConfig *const config, const bool enabled)
+LDConfigSetVerifyPeer(struct LDConfig *const config, const LDBoolean enabled)
 {
     LD_ASSERT(config);
 
@@ -234,7 +234,7 @@ LDConfigSetPrivateAttributes(struct LDConfig *const config,
     config->privateAttributeNames = attributes;
 }
 
-bool
+LDBoolean
 LDConfigAddSecondaryMobileKey(struct LDConfig *const config,
     const char *const name, const char *const key)
 {
@@ -287,7 +287,7 @@ LDConfigAddSecondaryMobileKey(struct LDConfig *const config,
 
 void
 LDConfigSetInlineUsersInEvents(struct LDConfig *const config,
-    const bool inlineUsers)
+    const LDBoolean inlineUsers)
 {
     LD_ASSERT(config);
 

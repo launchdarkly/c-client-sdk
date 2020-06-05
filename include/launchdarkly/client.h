@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include <launchdarkly/json.h>
+#include <launchdarkly/boolean.h>
 #include <launchdarkly/config.h>
 #include <launchdarkly/user.h>
 #include <launchdarkly/export.h>
@@ -84,14 +83,14 @@ LD_EXPORT(void) LDClientIdentify(struct LDClient *const client,
 LD_EXPORT(void) LDClientFlush(struct LDClient *const client);
 
 /** @brief Returns true if the client has been initialized. */
-LD_EXPORT(bool) LDClientIsInitialized(struct LDClient *const client);
+LD_EXPORT(LDBoolean) LDClientIsInitialized(struct LDClient *const client);
 
 /** @brief Block until initialized up to timeout, returns true if initialized */
-LD_EXPORT(bool) LDClientAwaitInitialized(struct LDClient *const client,
+LD_EXPORT(LDBoolean) LDClientAwaitInitialized(struct LDClient *const client,
     const unsigned int timeoutmilli);
 
 /** @brief Returns the offline status of the client. */
-LD_EXPORT(bool) LDClientIsOffline(struct LDClient *const client);
+LD_EXPORT(LDBoolean) LDClientIsOffline(struct LDClient *const client);
 
 /** @brief Make the client operate in offline mode. No network traffic. */
 LD_EXPORT(void) LDClientSetOffline(struct LDClient *const client);
@@ -101,7 +100,7 @@ LD_EXPORT(void) LDClientSetOnline(struct LDClient *const client);
 
 /** @brief Enable or disable polling mode */
 LD_EXPORT(void) LDClientSetBackground(struct LDClient *const client,
-    const bool background);
+    const LDBoolean background);
 
 /** @brief Close the client, free resources, and generally shut down.
  *
@@ -129,8 +128,8 @@ LD_EXPORT(void) LDClientTrackMetric(struct LDClient *const client,
 LD_EXPORT(struct LDJSON *) LDAllFlags(struct LDClient *const client);
 
 /** @brief Evaluate Bool flag */
-LD_EXPORT(bool) LDBoolVariation(struct LDClient *const client,
-    const char *const featureKey, const bool fallback);
+LD_EXPORT(LDBoolean) LDBoolVariation(struct LDClient *const client,
+    const char *const featureKey, const LDBoolean fallback);
 
 /** @brief Evaluate Int flag
  *
@@ -156,8 +155,8 @@ LD_EXPORT(struct LDJSON *) LDJSONVariation(struct LDClient *const client,
     const char *const featureKey, struct LDJSON *const fallback);
 
 /** @brief Evaluate Bool flag with details */
-LD_EXPORT(bool) LDBoolVariationDetail(struct LDClient *const client,
-    const char *const featureKey, const bool fallback,
+LD_EXPORT(LDBoolean) LDBoolVariationDetail(struct LDClient *const client,
+    const char *const featureKey, const LDBoolean fallback,
     LDVariationDetails *const details);
 
 /** @brief Evaluate Int flag with details
@@ -198,7 +197,7 @@ LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);
 typedef void (*LDlistenerfn)(const char *const flagKey, const int status);
 
 /** @brief Register a callback for when a flag is updated. */
-LD_EXPORT(bool) LDClientRegisterFeatureFlagListener(
+LD_EXPORT(LDBoolean) LDClientRegisterFeatureFlagListener(
   struct LDClient *const client, const char *const flagKey,
   LDlistenerfn listener);
 
