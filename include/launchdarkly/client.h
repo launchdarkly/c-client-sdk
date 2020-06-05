@@ -191,18 +191,19 @@ LD_EXPORT(struct LDJSON *) LDJSONVariationDetail(
 /** @brief Clear any memory associated with `LDVariationDetails`  */
 LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);
 
-/** @brief Feature flag listener callback type.
+/** @brief Feature flag listener callback type. Callbacks are not reentrant
+ * safe.
  *
  * Status 0 for new or updated, 1 for deleted. */
 typedef void (*LDlistenerfn)(const char *const flagKey, const int status);
 
 /** @brief Register a callback for when a flag is updated. */
-LD_EXPORT(void) LDClientRegisterFeatureFlagListener(
+LD_EXPORT(bool) LDClientRegisterFeatureFlagListener(
   struct LDClient *const client, const char *const flagKey,
   LDlistenerfn listener);
 
 /** @brief Unregister a callback registered with
 * `LDClientRegisterFeatureFlagListener` */
-LD_EXPORT(bool) LDClientUnregisterFeatureFlagListener(
+LD_EXPORT(void) LDClientUnregisterFeatureFlagListener(
     struct LDClient *const client, const char *const flagKey,
     LDlistenerfn listener);

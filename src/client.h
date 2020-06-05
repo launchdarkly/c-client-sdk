@@ -6,12 +6,6 @@
 #include "user.h"
 #include "store.h"
 
-struct listener {
-    LDlistenerfn fn;
-    char *key;
-    struct listener *next;
-};
-
 struct LDGlobal_i {
     struct LDClient *clientTable;
     struct LDClient *primaryClient;
@@ -27,7 +21,6 @@ struct LDClient {
     bool offline;
     bool background;
     LDStatus status;
-    struct listener *listeners;
     /* thread management */
     ld_thread_t eventThread;
     ld_thread_t pollingThread;

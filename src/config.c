@@ -67,7 +67,7 @@ LDConfigSetBackgroundPollingIntervalMillis(struct LDConfig *const config,
 
     if (millis >= minimum) {
         config->backgroundPollingIntervalMillis = millis;
-    }else {
+    } else {
         config->backgroundPollingIntervalMillis = minimum;
     }
 }

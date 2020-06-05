@@ -288,13 +288,6 @@ clientCloseIsolated(struct LDClient *const client)
     LDi_cond_destroy(&client->pollCond);
     LDFree(client->mobileKey);
 
-    for (struct listener *item = client->listeners; item;) {
-        /* must record next to make delete safe */
-        struct listener *const next = item->next;
-        LDFree(item->key); LDFree(item);
-        item = next;
-    }
-
     LDFree(client);
 }
 
@@ -848,50 +841,26 @@ LDClientFlush(struct LDClient *const client)
     }
 }
 
-void
+bool
 LDClientRegisterFeatureFlagListener(struct LDClient *const client,
     const char *const key, LDlistenerfn fn)
 {
     LD_ASSERT(client);
     LD_ASSERT(key);
+    LD_ASSERT(fn);
 
-    struct listener *const list = LDAlloc(sizeof(*list)); LD_ASSERT(list);
-
-    list->fn = fn;
-    list->key = LDStrDup(key);
-    LD_ASSERT(list->key);
-
-    LDi_rwlock_wrlock(&client->clientLock);
-    list->next = client->listeners;
-    client->listeners = list;
-    LDi_rwlock_wrunlock(&client->clientLock);
+    return LDi_storeRegisterListener(&client->store, key, fn);
 }
 
-bool
+void
 LDClientUnregisterFeatureFlagListener(struct LDClient *const client,
     const char *const key, LDlistenerfn fn)
 {
     LD_ASSERT(client);
     LD_ASSERT(key);
+    LD_ASSERT(fn);
 
-    struct listener *list = NULL, *prev = NULL;
-
-    LDi_rwlock_wrlock(&client->clientLock);
-    for (list = client->listeners; list; prev = list, list = list->next) {
-        if (list->fn == fn && strcmp(key, list->key)) {
-            if (prev) {
-                prev->next = list->next;
-            } else {
-                client->listeners = list->next;
-            }
-            LDFree(list->key);
-            LDFree(list);
-            break;
-        }
-    }
-    LDi_rwlock_wrunlock(&client->clientLock);
-
-    return list != NULL;
+    LDi_storeUnregisterListener(&client->store, key, fn);
 }
 
 void

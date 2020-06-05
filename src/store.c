@@ -40,6 +40,7 @@ LDi_storeInitialize(struct LDStore *const store)
     }
 
     store->flags       = NULL;
+    store->listeners   = NULL;
     store->initialized = false;
 
     return true;
@@ -49,8 +50,20 @@ void
 LDi_storeDestroy(struct LDStore *const store)
 {
     if (store) {
+        struct LDStoreListener *iter;
+
         LDi_storeFreeHash(store->flags);
         LDi_rwlock_destroy(&store->lock);
+
+        iter = store->listeners;
+
+        while (iter) {
+            /* must record next to make delete safe */
+            struct LDStoreListener *const next = iter->next;
+            LDFree(iter->key);
+            LDFree(iter);
+            iter = next;
+        }
     }
 }
 
@@ -74,13 +87,29 @@ LDi_allocateStoreNode(struct LDFlag flag)
     return node;
 }
 
+static void
+LDi_fireListenersFor(struct LDStore *const store, const char *const key,
+    const bool deleted)
+{
+    struct LDStoreListener *iter;
+
+    LD_ASSERT(store);
+    LD_ASSERT(key);
+
+    for (iter = store->listeners; iter; iter = iter->next) {
+        if (strcmp(key, iter->key) == 0) {
+            iter->fn(key, deleted);
+        }
+    }
+}
+
 bool
 LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
 {
     struct LDStoreNode *existing, *replacement;
 
     LD_ASSERT(store);
-    LD_ASSERT(flag->key);
+    LD_ASSERT(flag.key);
 
     /* Allocate before lock even though it may be throw away to reduce lock
     contention as old flags should be rare */
@@ -102,6 +131,8 @@ LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
 
         HASH_ADD_KEYPTR(hh, store->flags, flag.key, strlen(flag.key),
             replacement);
+
+        LDi_fireListenersFor(store, flag.key, flag.deleted);
     } else {
         LDi_rc_destroy(&replacement->rc);
     }
@@ -192,10 +223,18 @@ LDi_storePut(struct LDStore *const store, struct LDFlag *flags,
     if (failed) {
         LDi_storeFreeHash(flagsHash);
     } else {
+        struct LDStoreNode *node, *tmp;
+
         LDi_rwlock_wrlock(&store->lock);
+
         oldHash = store->flags;
         store->flags = flagsHash;
         store->initialized = true;
+
+        HASH_ITER(hh, store->flags, node, tmp) {
+            LDi_fireListenersFor(store, node->flag.key, false);
+        }
+
         LDi_rwlock_wrunlock(&store->lock);
 
         LDi_storeFreeHash(oldHash);
@@ -239,4 +278,70 @@ LDi_storeGetAll(struct LDStore *const store,
     *flagCount = count;
 
     return true;
+}
+
+bool
+LDi_storeRegisterListener(struct LDStore *const store,
+    const char *const flagKey, LDlistenerfn op)
+{
+    struct LDStoreListener *listener;
+
+    LD_ASSERT(store);
+    LD_ASSERT(flagKey);
+    LD_ASSERT(op);
+
+    if (!(listener = LDAlloc(sizeof(*listener)))) {
+        return false;
+    }
+
+    listener->key = LDStrDup(flagKey);
+
+    if (!listener->key) {
+        LDFree(listener);
+
+        return false;
+    }
+
+    listener->fn = op;
+
+    LDi_rwlock_wrlock(&store->lock);
+
+    listener->next   = store->listeners;
+    store->listeners = listener;
+
+    LDi_rwlock_wrunlock(&store->lock);
+
+    return true;
+}
+
+void
+LDi_storeUnregisterListener(struct LDStore *const store,
+    const char *const flagKey, LDlistenerfn op)
+{
+    struct LDStoreListener *listener, *previous;
+
+    LD_ASSERT(store);
+    LD_ASSERT(flagKey);
+    LD_ASSERT(op);
+
+    previous = NULL;
+
+    LDi_rwlock_wrlock(&store->lock);
+
+    for (listener = store->listeners; listener; listener = listener->next) {
+        if (listener->fn == op && strcmp(flagKey, listener->key) == 0) {
+            if (previous) {
+                previous->next = listener->next;
+            } else {
+                store->listeners = listener->next;
+            }
+
+            LDFree(listener->key);
+            LDFree(listener);
+        } else {
+            previous = listener;
+        }
+    }
+
+    LDi_rwlock_wrunlock(&store->lock);
 }

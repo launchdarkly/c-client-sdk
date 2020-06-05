@@ -2,10 +2,17 @@
 
 #include <stdbool.h>
 
+#include "ldapi.h"
 #include "concurrency.h"
 #include "flag.h"
 #include "uthash.h"
 #include "reference_count.h"
+
+struct LDStoreListener {
+    LDlistenerfn fn;
+    char *key;
+    struct LDStoreListener *next;
+};
 
 struct LDStoreNode {
     struct LDFlag flag;
@@ -15,6 +22,7 @@ struct LDStoreNode {
 
 struct LDStore {
     struct LDStoreNode *flags;
+    struct LDStoreListener *listeners;
     bool initialized;
     ld_rwlock_t lock;
 };
@@ -36,3 +44,9 @@ struct LDStoreNode *LDi_storeGet(struct LDStore *const store,
 
 bool LDi_storeGetAll(struct LDStore *const store,
     struct LDStoreNode ***const flags, unsigned int *const flagCount);
+
+bool LDi_storeRegisterListener(struct LDStore *const store,
+    const char *const flagKey, LDlistenerfn op);
+
+void LDi_storeUnregisterListener(struct LDStore *const store,
+    const char *const flagKey, LDlistenerfn op);

@@ -3,52 +3,83 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-bool fixed = false;
+bool callCount;
 
 void
 hook(const char *const name, const int change)
 {
-    fixed = true;
+    callCount++;
 }
 
-/*
- * Verify that the hook is run when a patch is received.
- * fixed should be set to true.
- */
 void
-test1(void)
+testBasicHookUpsert(void)
 {
-    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+    struct LDFlag flag;
+    struct LDStore store;
 
-    struct LDConfig *const config = LDConfigNew("abc");
-    LDConfigSetOffline(config, true);
+    callCount = 0;
 
-    struct LDUser *const user = LDUserNew("userX");
+    LD_ASSERT(LDi_storeInitialize(&store));
+    LD_ASSERT(LDi_storeRegisterListener(&store, "test", hook));
 
-    struct LDClient *const client = LDClientInit(config, user, 0);
-    LDClientRegisterFeatureFlagListener(client, "bugcount", hook);
+    flag.key                  = LDStrDup("test");
+    flag.value                = LDNewBool(true);
+    flag.version              = 2;
+    flag.variation            = 3;
+    flag.trackEvents          = false;
+    flag.reason               = NULL;
+    flag.debugEventsUntilDate = 0;
+    flag.deleted              = false;
 
-    const char *const testflags = "{ \"bugcount\": 1 }";
+    LD_ASSERT(flag.key);
+    LD_ASSERT(flag.value);
 
-    LDClientRestoreFlags(client, testflags);
+    LD_ASSERT(LDi_storeUpsert(&store, flag));
 
-    fixed = false;
+    LD_ASSERT(callCount == 1);
 
-    const char *const patch = "{ \"key\": \"bugcount\", \"value\": 0 } }";
+    LDi_storeDestroy(&store);
+}
 
-    LDi_onstreameventpatch(client, patch);
+void
+testBasicHookPut(void)
+{
+    struct LDFlag *flag;
+    struct LDStore store;
 
-    if (!fixed) {
-        printf("ERROR: bugcount wasn't fixed\n");
-    }
+    callCount = 0;
 
-    LDClientClose(client);
+    LD_ASSERT(flag = LDAlloc(sizeof(struct LDFlag)));
+
+    LD_ASSERT(LDi_storeInitialize(&store));
+    LD_ASSERT(LDi_storeRegisterListener(&store, "test", hook));
+
+    flag->key                  = LDStrDup("test");
+    flag->value                = LDNewBool(true);
+    flag->version              = 2;
+    flag->variation            = 3;
+    flag->trackEvents          = false;
+    flag->reason               = NULL;
+    flag->debugEventsUntilDate = 0;
+    flag->deleted              = false;
+
+    LD_ASSERT(flag->key);
+    LD_ASSERT(flag->value);
+
+    LD_ASSERT(LDi_storePut(&store, flag, 1));
+
+    LD_ASSERT(callCount == 1);
+
+    LDi_storeDestroy(&store);
 }
 
 int
 main(int argc, char **argv)
 {
-    test1();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+
+    testBasicHookUpsert();
+    testBasicHookPut();
 
     return 0;
 }
