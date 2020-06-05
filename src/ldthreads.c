@@ -20,7 +20,8 @@
 THREAD_RETURN
 LDi_bgeventsender(void *const v)
 {
-    LDClient *const client = v; bool finalflush = false;
+    struct LDClient *const client = v;
+    bool finalflush = false;
 
     while (true) {
         struct LDJSON *payloadJSON;
@@ -127,7 +128,7 @@ LDi_bgeventsender(void *const v)
 THREAD_RETURN
 LDi_bgfeaturepoller(void *const v)
 {
-    LDClient *const client = v;
+    struct LDClient *const client = v;
 
     while (true) {
         LDi_rwlock_wrlock(&client->clientLock);
@@ -191,7 +192,7 @@ LDi_bgfeaturepoller(void *const v)
 
 /* exposed for testing */
 void
-LDi_onstreameventput(LDClient *const client, const char *const data)
+LDi_onstreameventput(struct LDClient *const client, const char *const data)
 {
     struct LDJSON *payload, *payloadIter;
     struct LDFlag *flags, *flagsIter;
@@ -243,7 +244,7 @@ LDi_onstreameventput(LDClient *const client, const char *const data)
 }
 
 void
-LDi_onstreameventpatch(LDClient *const client, const char *const data)
+LDi_onstreameventpatch(struct LDClient *const client, const char *const data)
 {
     struct LDJSON *payload;
     struct LDFlag flag;
@@ -276,7 +277,7 @@ LDi_onstreameventpatch(LDClient *const client, const char *const data)
 }
 
 void
-LDi_onstreameventdelete(LDClient *const client, const char *const data)
+LDi_onstreameventdelete(struct LDClient *const client, const char *const data)
 {
     struct LDJSON *payload, *tmp;
     const char *key;
@@ -328,7 +329,7 @@ LDi_onstreameventdelete(LDClient *const client, const char *const data)
 }
 
 static void
-onstreameventping(LDClient *const client)
+onstreameventping(struct LDClient *const client)
 {
     /*
     LDi_rwlock_rdlock(&client->clientLock);
@@ -364,7 +365,7 @@ onstreameventping(LDClient *const client)
 }
 
 void
-LDi_startstopstreaming(LDClient *const client, bool stopstreaming)
+LDi_startstopstreaming(struct LDClient *const client, bool stopstreaming)
 {
     client->shouldstopstreaming = stopstreaming;
     LDi_cond_signal(&client->pollCond);
@@ -372,7 +373,7 @@ LDi_startstopstreaming(LDClient *const client, bool stopstreaming)
 }
 
 static void
-LDi_updatehandle(LDClient *const client, const int handle)
+LDi_updatehandle(struct LDClient *const client, const int handle)
 {
     LDi_rwlock_wrlock(&client->clientLock);
     client->streamhandle = handle;
@@ -380,7 +381,7 @@ LDi_updatehandle(LDClient *const client, const int handle)
 }
 
 void
-LDi_reinitializeconnection(LDClient *const client)
+LDi_reinitializeconnection(struct LDClient *const client)
 {
     if (client->streamhandle) {
         LDi_cancelread(client->streamhandle);
@@ -394,13 +395,13 @@ static bool
 LDi_onEvent(const char *const eventName, const char *const eventBuffer,
     void *const rawContext)
 {
-    LDClient *client;
+    struct LDClient *client;
 
     LD_ASSERT(eventName);
     LD_ASSERT(eventBuffer);
     LD_ASSERT(rawContext);
 
-    client = (LDClient *)rawContext;
+    client = (struct LDClient *)rawContext;
 
     if (strcmp(eventName, "put") == 0) {
         LDi_onstreameventput(client, eventBuffer);
@@ -420,7 +421,7 @@ LDi_onEvent(const char *const eventName, const char *const eventBuffer,
 THREAD_RETURN
 LDi_bgfeaturestreamer(void *const v)
 {
-    LDClient *const client = v;
+    struct LDClient *const client = v;
 
     int retries = 0;
 

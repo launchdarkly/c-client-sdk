@@ -1,12 +1,12 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-static LDClient *
+static struct LDClient *
 makeTestClient()
 {
-    LDConfig *config;
-    LDUser *user;
-    LDClient *client;
+    struct LDConfig *config;
+    struct LDUser *user;
+    struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
     LDConfigSetOffline(config, true);
@@ -19,13 +19,13 @@ makeTestClient()
 }
 
 static void
-testBoolVariationDefault(LDClient *const client)
+testBoolVariationDefault(struct LDClient *const client)
 {
     LD_ASSERT(LDBoolVariation(client, "test", false) == false);
 }
 
 static void
-testStringVariationDefault(LDClient *const client)
+testStringVariationDefault(struct LDClient *const client)
 {
     char buffer[128];
 
@@ -35,7 +35,7 @@ testStringVariationDefault(LDClient *const client)
 }
 
 static void
-testStringVariationAllocDefault(LDClient *const client)
+testStringVariationAllocDefault(struct LDClient *const client)
 {
     char *result;
 
@@ -47,19 +47,19 @@ testStringVariationAllocDefault(LDClient *const client)
 }
 
 static void
-testIntVariationDefault(LDClient *const client)
+testIntVariationDefault(struct LDClient *const client)
 {
     LD_ASSERT(LDIntVariation(client, "test", 3) == 3);
 }
 
 static void
-testDoubleVariationDefault(LDClient *const client)
+testDoubleVariationDefault(struct LDClient *const client)
 {
     LD_ASSERT(LDDoubleVariation(client, "test", 5.3) == 5.3);
 }
 
 static void
-testJSONVariationDefault(LDClient *const client)
+testJSONVariationDefault(struct LDClient *const client)
 {
     struct LDJSON *fallback, *result;
 
@@ -74,9 +74,9 @@ testJSONVariationDefault(LDClient *const client)
 }
 
 static void
-testWithClient(void (*const op)(LDClient *))
+testWithClient(void (*const op)(struct LDClient *))
 {
-    LDClient *client;
+    struct LDClient *client;
 
     LD_ASSERT(op);
 
@@ -88,11 +88,11 @@ testWithClient(void (*const op)(LDClient *))
 }
 
 static void
-testWithClientAndFlagValue(void (*const op)(LDClient *),
+testWithClientAndFlagValue(void (*const op)(struct LDClient *),
     struct LDJSON *const value)
 {
     struct LDFlag flag;
-    LDClient *client;
+    struct LDClient *client;
 
     LD_ASSERT(op);
     LD_ASSERT(value);
@@ -115,25 +115,25 @@ testWithClientAndFlagValue(void (*const op)(LDClient *),
 }
 
 static void
-testBoolVariation(LDClient *const client)
+testBoolVariation(struct LDClient *const client)
 {
     LD_ASSERT(LDBoolVariation(client, "test", false) == true);
 }
 
 static void
-testIntVariation(LDClient *const client)
+testIntVariation(struct LDClient *const client)
 {
     LD_ASSERT(LDIntVariation(client, "test", 2) == 3);
 }
 
 static void
-testDoubleVariation(LDClient *const client)
+testDoubleVariation(struct LDClient *const client)
 {
     LD_ASSERT(LDDoubleVariation(client, "test", 2.2) == 3.3);
 }
 
 static void
-testStringVariation(LDClient *const client)
+testStringVariation(struct LDClient *const client)
 {
     char buffer[128];
 
@@ -143,7 +143,7 @@ testStringVariation(LDClient *const client)
 }
 
 static void
-testStringVariationAlloc(LDClient *const client)
+testStringVariationAlloc(struct LDClient *const client)
 {
     char *result;
 
@@ -155,7 +155,7 @@ testStringVariationAlloc(LDClient *const client)
 }
 
 static void
-testJSONVariation(LDClient *const client)
+testJSONVariation(struct LDClient *const client)
 {
     struct LDJSON *fallback, *result, *expected;
 
@@ -172,28 +172,28 @@ testJSONVariation(LDClient *const client)
 }
 
 static void
-testBoolVariationDetailDefault(LDClient *const client,
+testBoolVariationDetailDefault(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     LD_ASSERT(LDBoolVariationDetail(client, "test", false, details) == false);
 }
 
 static void
-testIntVariationDetailDefault(LDClient *const client,
+testIntVariationDetailDefault(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     LD_ASSERT(LDIntVariationDetail(client, "test", 9, details) == 9);
 }
 
 static void
-testDoubleVariationDetailDefault(LDClient *const client,
+testDoubleVariationDetailDefault(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     LD_ASSERT(LDDoubleVariationDetail(client, "test", 5.4, details) == 5.4);
 }
 
 static void
-testStringVariationDetailDefault(LDClient *const client,
+testStringVariationDetailDefault(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     char buffer[128];
@@ -204,7 +204,7 @@ testStringVariationDetailDefault(LDClient *const client,
 }
 
 static void
-testStringVariationAllocDetailDefault(LDClient *const client,
+testStringVariationAllocDetailDefault(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     char *result;
@@ -219,7 +219,7 @@ testStringVariationAllocDetailDefault(LDClient *const client,
 }
 
 static void
-testJSONVariationDetailDefault(LDClient *const client,
+testJSONVariationDetailDefault(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     struct LDJSON *result, *fallback;
@@ -237,9 +237,10 @@ testJSONVariationDetailDefault(LDClient *const client,
 }
 
 static void
-testWithClientAndDetails(void (*const op)(LDClient *, LDVariationDetails *))
+testWithClientAndDetails(
+    void (*const op)(struct LDClient *, LDVariationDetails *))
 {
-    LDClient *client;
+    struct LDClient *client;
     LDVariationDetails details;
 
     LD_ASSERT(op);
@@ -253,28 +254,28 @@ testWithClientAndDetails(void (*const op)(LDClient *, LDVariationDetails *))
 }
 
 static void
-testBoolVariationDetail(LDClient *const client,
+testBoolVariationDetail(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     LD_ASSERT(LDBoolVariationDetail(client, "test", false, details) == true);
 }
 
 static void
-testIntVariationDetail(LDClient *const client,
+testIntVariationDetail(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     LD_ASSERT(LDIntVariationDetail(client, "test", 5, details) == 6);
 }
 
 static void
-testDoubleVariationDetail(LDClient *const client,
+testDoubleVariationDetail(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     LD_ASSERT(LDDoubleVariationDetail(client, "test", 5.3, details) == 9.1);
 }
 
 static void
-testStringVariationDetail(LDClient *const client,
+testStringVariationDetail(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     char buffer[128];
@@ -285,7 +286,7 @@ testStringVariationDetail(LDClient *const client,
 }
 
 static void
-testStringVariationAllocDetail(LDClient *const client,
+testStringVariationAllocDetail(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     char *result;
@@ -300,7 +301,7 @@ testStringVariationAllocDetail(LDClient *const client,
 }
 
 static void
-testJSONVariationDetail(LDClient *const client,
+testJSONVariationDetail(struct LDClient *const client,
     LDVariationDetails *const details)
 {
     struct LDJSON *result, *expected, *fallback;
@@ -322,10 +323,10 @@ testJSONVariationDetail(LDClient *const client,
 
 static void
 testWithClientAndDetailsAndValue(
-    void (*const op)(LDClient *, LDVariationDetails *),
+    void (*const op)(struct LDClient *, LDVariationDetails *),
     struct LDJSON *const value
 ) {
-    LDClient *client;
+    struct LDClient *client;
     LDVariationDetails details;
     struct LDFlag flag;
 

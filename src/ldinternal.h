@@ -8,11 +8,14 @@
 #include <windows.h>
 #endif
 
+#include "client.h"
 #include "concurrency.h"
+#include "config.h"
 #include "utility.h"
 #include "sse.h"
 #include "event_processor.h"
 #include "store.h"
+#include "user.h"
 
 #ifndef _WINDOWS
 
@@ -27,118 +30,24 @@
 void LDi_once(ld_once_t *once, void (*fn)(void));
 #endif
 
-struct listener {
-    LDlistenerfn fn;
-    char *key;
-    struct listener *next;
-};
-
-struct LDClient_i {
-    struct LDGlobal_i *shared;
-    char *mobileKey;
-    ld_rwlock_t clientLock;
-    bool offline;
-    bool background;
-    LDStatus status;
-    struct listener *listeners;
-    /* thread management */
-    ld_thread_t eventThread;
-    ld_thread_t pollingThread;
-    ld_thread_t streamingThread;
-    ld_cond_t eventCond;
-    ld_cond_t pollCond;
-    ld_cond_t streamCond;
-    ld_mutex_t condMtx;
-    /* streaming state */
-    bool shouldstopstreaming;
-    int streamhandle;
-    struct EventProcessor *eventProcessor;
-    struct LDStore store;
-    /* init cond */
-    ld_cond_t initCond;
-    ld_mutex_t initCondMtx;
-    UT_hash_handle hh;
-};
-
-struct LDConfig_i {
-    bool allAttributesPrivate;
-    int backgroundPollingIntervalMillis;
-    char *appURI;
-    int connectionTimeoutMillis;
-    bool disableBackgroundUpdating;
-    unsigned int eventsCapacity;
-    int eventsFlushIntervalMillis;
-    char *eventsURI;
-    char *mobileKey;
-    bool offline;
-    int pollingIntervalMillis;
-    bool streaming;
-    char *streamURI;
-    bool useReport;
-    char *proxyURI;
-    bool verifyPeer;
-    bool useReasons;
-    char *certFile;
-    bool inlineUsersInEvents;
-    /* map of name -> key */
-    struct LDJSON *secondaryMobileKeys;
-    /* array of strings */
-    struct LDJSON *privateAttributeNames;
-};
-
-struct LDUser_i {
-    char *key;
-    bool anonymous;
-    char *secondary;
-    char *ip;
-    char *firstName;
-    char *lastName;
-    char *email;
-    char *name;
-    char *avatar;
-    struct LDJSON *privateAttributeNames;
-    struct LDJSON *custom;
-};
-
-struct LDGlobal_i {
-    LDClient *clientTable;
-    LDClient *primaryClient;
-    LDConfig *sharedConfig;
-    LDUser *sharedUser;
-    ld_rwlock_t sharedUserLock;
-};
-
-LDClient *LDi_clientinitisolated(struct LDGlobal_i *shared,
-    const char *mobileKey);
-
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
 
 void LDi_cancelread(int handle);
-char *LDi_fetchfeaturemap(LDClient *client, int *response);
+char *LDi_fetchfeaturemap(struct LDClient *client, int *response);
 
-void LDi_readstream(LDClient *const client, int *response,
+void LDi_readstream(struct LDClient *const client, int *response,
     struct LDSSEParser *const parser,
-    void cbhandle(LDClient *client, int handle));
+    void cbhandle(struct LDClient *client, int handle));
 
-void LDi_sendevents(LDClient *client, const char *eventdata,
+void LDi_sendevents(struct LDClient *client, const char *eventdata,
     const char *const payloadUUID, int *response);
 
-void LDi_reinitializeconnection(LDClient *client);
-void LDi_startstopstreaming(LDClient *client, bool stopstreaming);
-void LDi_onstreameventput(LDClient *client, const char *data);
-void LDi_onstreameventpatch(LDClient *client, const char *data);
-void LDi_onstreameventdelete(LDClient *client, const char *data);
-
-char *LDi_usertojsontext(const LDClient *const client,
-    const LDUser *const lduser, bool redact);
-
-struct LDJSON *
-LDi_userToJSON(
-    const LDConfig *const config,
-    const LDUser *const   lduser,
-    const bool            redact
-);
+void LDi_reinitializeconnection(struct LDClient *client);
+void LDi_startstopstreaming(struct LDClient *client, bool stopstreaming);
+void LDi_onstreameventput(struct LDClient *client, const char *data);
+void LDi_onstreameventpatch(struct LDClient *client, const char *data);
+void LDi_onstreameventdelete(struct LDClient *client, const char *data);
 
 void (*LDi_statuscallback)(int);
 
@@ -165,7 +74,7 @@ extern ld_once_t LDi_earlyonce;
 void LDi_earlyinit(void);
 
 /* expects caller to own LDi_clientlock */
-void LDi_updatestatus(struct LDClient_i *client, const LDStatus status);
+void LDi_updatestatus(struct LDClient *client, const LDStatus status);
 
 THREAD_RETURN LDi_bgeventsender(void *const v);
 THREAD_RETURN LDi_bgfeaturepoller(void *const v);

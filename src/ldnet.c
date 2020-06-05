@@ -19,13 +19,13 @@ struct streamdata {
     struct MemoryStruct mem;
     time_t lastdatatime;
     double lastdataamt;
-    LDClient *client;
+    struct LDClient *client;
     struct LDSSEParser *parser;
 };
 
 struct cbhandlecontext {
-    LDClient *client;
-    void (*cb)(LDClient *, int);
+    struct LDClient *client;
+    void (*cb)(struct LDClient *, int);
 };
 
 typedef size_t (*WriteCB)(void*, size_t, size_t, void*);
@@ -84,10 +84,10 @@ SocketCallback(void *const c, curlsocktype type, struct curl_sockaddr *const add
 
 /* returns false on failure, results left in clean state */
 static bool
-prepareShared(const char *const url, const LDConfig *const config,
+prepareShared(const char *const url, const struct LDConfig *const config,
     CURL **r_curl, struct curl_slist **r_headers, WriteCB headercb,
     void *const headerdata, WriteCB datacb, void *const data,
-    const LDClient *const client)
+    const struct LDClient *const client)
 {
     struct curl_slist *headers = NULL, *headerstmp = NULL;
     CURL *const curl = curl_easy_init();
@@ -207,8 +207,8 @@ LDi_cancelread(const int handle)
  * it doesn't return except after a disconnect. (or some other failure.)
  */
 void
-LDi_readstream(LDClient *const client, int *response,
-    struct LDSSEParser *const parser, void cbhandle(LDClient *, int))
+LDi_readstream(struct LDClient *const client, int *response,
+    struct LDSSEParser *const parser, void cbhandle(struct LDClient *, int))
 {
     struct MemoryStruct headers;
     struct streamdata streamdata;
@@ -359,7 +359,7 @@ LDi_readstream(LDClient *const client, int *response,
 }
 
 char *
-LDi_fetchfeaturemap(LDClient *const client, int *response)
+LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 {
     struct MemoryStruct headers, data;
     CURL *curl = NULL;
@@ -473,7 +473,7 @@ LDi_fetchfeaturemap(LDClient *const client, int *response)
 }
 
 void
-LDi_sendevents(LDClient *const client, const char *eventdata,
+LDi_sendevents(struct LDClient *const client, const char *eventdata,
     const char *const payloadUUID, int *response)
 {
     struct MemoryStruct headers, data;

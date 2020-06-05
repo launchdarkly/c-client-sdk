@@ -20,12 +20,12 @@ test1(void)
 {
     LD_store_setfns(NULL, NULL /* no writer */, LD_store_fileread);
 
-    LDConfig *const config = LDConfigNew("abc");
+    struct LDConfig *const config = LDConfigNew("abc");
     LDConfigSetOffline(config, true);
 
-    LDUser *const user = LDUserNew("fileuser");
+    struct LDUser *const user = LDUserNew("fileuser");
 
-    LDClient *const client = LDClientInit(config, user, 0);
+    struct LDClient *const client = LDClientInit(config, user, 0);
 
     char buffer[256];
     LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
@@ -58,12 +58,12 @@ test2(void)
 {
     LD_store_setfns(NULL, fake_stringwriter, NULL);
 
-    LDConfig *const config = LDConfigNew("abc");
+    struct LDConfig *const config = LDConfigNew("abc");
     LDConfigSetOffline(config, true);
 
-    LDUser *const user = LDUserNew("fakeuser");
+    struct LDUser *const user = LDUserNew("fakeuser");
 
-    LDClient *const client = LDClientInit(config, user, 0);
+    struct LDClient *const client = LDClientInit(config, user, 0);
 
     const char *const putflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 1 } }";
 

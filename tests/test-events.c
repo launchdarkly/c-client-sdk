@@ -3,12 +3,12 @@
 
 #include "event_processor.h"
 
-LDClient *
+static struct LDClient *
 makeTestClient()
 {
-    LDConfig *config;
-    LDUser *user;
-    LDClient *client;
+    struct LDConfig *config;
+    struct LDUser *user;
+    struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
     LDConfigSetOffline(config, true);
@@ -20,10 +20,10 @@ makeTestClient()
     return client;
 }
 
-void
+static void
 testNoPayloadIfNoEvents()
 {
-    LDConfig *config;
+    struct LDConfig *config;
     struct EventProcessor *processor;
     struct LDJSON *payload;
 
@@ -37,10 +37,10 @@ testNoPayloadIfNoEvents()
     LDConfigFree(config);
 }
 
-void
+static void
 testTrackMetricQueued()
 {
-    LDClient *client;
+    struct LDClient *client;
     double metricValue;
     const char *metricName;
     struct LDJSON *payload, *event;
@@ -65,10 +65,10 @@ testTrackMetricQueued()
     LDClientClose(client);
 }
 
-void
+static void
 testBasicSummary()
 {
-    LDClient *client;
+    struct LDClient *client;
     struct LDFlag flag;
     struct LDJSON *payload, *event, *expected, *startDate, *endDate;
     char *expectedString;
@@ -116,12 +116,11 @@ testBasicSummary()
     LDClientClose(client);
 }
 
-void
+static void
 testBasicSummaryUnknown()
 {
-    LDClient *client;
+    struct LDClient *client;
     struct LDJSON *payload, *event, *expected, *startDate, *endDate;
-    char *expectedString;
 
     LD_ASSERT(client = makeTestClient());
 
@@ -152,6 +151,71 @@ testBasicSummaryUnknown()
     LDClientClose(client);
 }
 
+static void
+testInlineUser()
+{
+    struct LDConfig *config;
+    struct LDUser *user;
+    struct LDClient *client;
+    struct LDJSON *payload, *event, *expected;
+
+    LD_ASSERT(config = LDConfigNew("abc"));
+    LDConfigSetOffline(config, true);
+    LDConfigSetInlineUsersInEvents(config, true);
+
+    LD_ASSERT(user = LDUserNew("my-user"));
+
+    LD_ASSERT(client = LDClientInit(config, user, 0));
+
+    LDClientTrack(client, "my-metric");
+
+    LD_ASSERT(LDi_bundleEventPayload(client->eventProcessor, &payload));
+    LD_ASSERT(LDCollectionGetSize(payload) == 2);
+    LD_ASSERT(event = LDArrayLookup(payload, 1))
+
+    LD_ASSERT(expected = LDJSONDeserialize(
+        "{\"key\":\"my-user\"}"
+    ));
+
+    LD_ASSERT(LDJSONCompare(LDObjectLookup(event, "user"), expected));
+    LD_ASSERT(!LDObjectLookup(event, "userKey"));
+
+    LDJSONFree(payload);
+    LDJSONFree(expected);
+    LDClientClose(client);
+}
+
+static void
+testOnlyUserKey()
+{
+    struct LDConfig *config;
+    struct LDUser *user;
+    struct LDClient *client;
+    struct LDJSON *payload, *event, *expected;
+
+    LD_ASSERT(config = LDConfigNew("abc"));
+    LDConfigSetOffline(config, true);
+
+    LD_ASSERT(user = LDUserNew("my-user"));
+
+    LD_ASSERT(client = LDClientInit(config, user, 0));
+
+    LDClientTrack(client, "my-metric");
+
+    LD_ASSERT(LDi_bundleEventPayload(client->eventProcessor, &payload));
+    LD_ASSERT(LDCollectionGetSize(payload) == 2);
+    LD_ASSERT(event = LDArrayLookup(payload, 1))
+
+    LD_ASSERT(expected = LDNewText("my-user"));
+
+    LD_ASSERT(LDJSONCompare(LDObjectLookup(event, "userKey"), expected));
+    LD_ASSERT(!LDObjectLookup(event, "user"));
+
+    LDJSONFree(payload);
+    LDJSONFree(expected);
+    LDClientClose(client);
+}
+
 int
 main()
 {
@@ -159,6 +223,8 @@ main()
     testTrackMetricQueued();
     testBasicSummary();
     testBasicSummaryUnknown();
+    testInlineUser();
+    testOnlyUserKey();
 
     return 0;
 }

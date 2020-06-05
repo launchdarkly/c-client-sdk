@@ -20,12 +20,12 @@ test1(void)
 {
     LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
 
-    LDConfig *const config = LDConfigNew("abc");
+    struct LDConfig *const config = LDConfigNew("abc");
     LDConfigSetOffline(config, true);
 
-    LDUser *const user = LDUserNew("userX");
+    struct LDUser *const user = LDUserNew("userX");
 
-    LDClient *const client = LDClientInit(config, user, 0);
+    struct LDClient *const client = LDClientInit(config, user, 0);
     LDClientRegisterFeatureFlagListener(client, "bugcount", hook);
 
     const char *const testflags = "{ \"bugcount\": 1 }";

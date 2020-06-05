@@ -14,7 +14,7 @@ LDi_getFlagVersion(const struct LDFlag *const flag)
 }
 
 struct EventProcessor *
-LDi_newEventProcessor(const LDConfig *const config)
+LDi_newEventProcessor(const struct LDConfig *const config)
 {
     struct EventProcessor *context;
 
@@ -129,7 +129,7 @@ bool
 LDi_addUserInfoToEvent(
     const struct EventProcessor *const context,
     struct LDJSON *const               event,
-    const LDUser *const                user
+    const struct LDUser *const         user
 ) {
     struct LDJSON *tmp;
 
@@ -173,7 +173,7 @@ LDi_addUserInfoToEvent(
 struct LDJSON *
 LDi_newIdentifyEvent(
     const struct EventProcessor *const context,
-    const LDUser *const                user,
+    const struct LDUser *const         user,
     const double                       now
 ) {
     struct LDJSON *event, *tmp;
@@ -230,7 +230,7 @@ LDi_newIdentifyEvent(
 bool
 LDi_identify(
     struct EventProcessor *const context,
-    const LDUser *const          user
+    const struct LDUser *const   user
 ) {
     struct LDJSON *event;
     double now;
@@ -258,7 +258,7 @@ LDi_identify(
 struct LDJSON *
 LDi_newCustomEvent(
     const struct EventProcessor *const context,
-    const LDUser *const                user,
+    const struct LDUser *const         user,
     const char *const                  key,
     struct LDJSON *const               data,
     const double                       metric,
@@ -335,7 +335,7 @@ LDi_newCustomEvent(
 bool
 LDi_track(
     struct EventProcessor *const context,
-    const LDUser *const          user,
+    const struct LDUser *const   user,
     const char *const            key,
     struct LDJSON *const         data,
     const double                 metric,
@@ -612,7 +612,7 @@ struct LDJSON *
 LDi_newFeatureRequestEvent(
     struct EventProcessor *const    context,
     const char *const               flagKey,
-    const LDUser *const             user,
+    const struct LDUser *const      user,
     const LDJSONType                variationType,
     const void *const               fallbackValue,
     const void *const               actualValue,
@@ -933,7 +933,7 @@ shouldGenerateFeatureEvent(const struct LDStoreNode *const node,
 bool
 LDi_processEvalEvent(
     struct EventProcessor *const    context,
-    const LDUser *const             user,
+    const struct LDUser *const      user,
     const char *const               flagKey,
     const LDJSONType                valueType,
     const struct LDStoreNode *const node,

@@ -6,7 +6,7 @@
 void
 testBasicSerialization()
 {
-    LDUser *user;
+    struct LDUser *user;
     struct LDJSON *custom, *tmp, *userJSON;
     char *userSerialized, *expected;
 
@@ -42,7 +42,7 @@ testBasicSerialization()
 void
 testPrivateAttributes()
 {
-    LDUser *user;
+    struct LDUser *user;
     struct LDJSON *userJSON, *privateAttributes, *customAttributes, *tmp, *tmp2;
     char *userSerialized, *expected;
 

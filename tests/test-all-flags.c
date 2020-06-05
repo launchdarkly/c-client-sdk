@@ -1,12 +1,12 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-static LDClient *
+static struct LDClient *
 makeTestClient()
 {
-    LDConfig *config;
-    LDUser *user;
-    LDClient *client;
+    struct LDConfig *config;
+    struct LDUser *user;
+    struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
     LDConfigSetOffline(config, true);
@@ -21,7 +21,7 @@ makeTestClient()
 static void
 testBasicAllFlags()
 {
-    LDClient *client;
+    struct LDClient *client;
     struct LDFlag flag;
     struct LDJSON *expected, *actual;
 
@@ -52,7 +52,7 @@ testBasicAllFlags()
 static void
 testAllFlagsEmpty()
 {
-    LDClient *client;
+    struct LDClient *client;
     struct LDFlag flag;
     struct LDJSON *expected, *actual;
 

@@ -1,12 +1,17 @@
 #include "ldapi.h"
 #include "ldinternal.h"
 
-LDUser *
+struct LDUser *
 LDUserNew(const char *const key)
 {
+    struct LDUser *user;
+
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
-    LDUser *const user = LDAlloc(sizeof(*user)); LD_ASSERT(user != NULL);
+    if (!(user = LDAlloc(sizeof(*user)))) {
+        return NULL;
+    }
+
     memset(user, 0, sizeof(*user));
 
     if (!key || key[0] == '\0') {
@@ -15,7 +20,8 @@ LDUserNew(const char *const key)
             LDSetString(&user->key, deviceid);
             LDFree(deviceid);
         } else {
-            LD_LOG(LD_LOG_WARNING, "Failed to get device ID falling back to random ID");
+            LD_LOG(LD_LOG_WARNING,
+                "Failed to get device ID falling back to random ID");
             char randomkey[32 + 1] = { 0 };
             LDi_randomhex(randomkey, sizeof(randomkey) - 1);
             LDSetString(&user->key, randomkey);
@@ -28,33 +34,34 @@ LDUserNew(const char *const key)
         user->anonymous = false;
     }
 
-    user->secondary = NULL;
-    user->ip = NULL;
-    user->firstName = NULL;
-    user->lastName = NULL;
-    user->email = NULL;
-    user->name = NULL;
-    user->avatar = NULL;
+    user->secondary             = NULL;
+    user->ip                    = NULL;
+    user->firstName             = NULL;
+    user->lastName              = NULL;
+    user->email                 = NULL;
+    user->name                  = NULL;
+    user->avatar                = NULL;
     user->privateAttributeNames = NULL;
-    user->custom = NULL;
+    user->custom                = NULL;
 
     return user;
 }
 
 void
-LDUserFree(LDUser *const user)
+LDUserFree(struct LDUser *const user)
 {
-    if (!user) { return; }
-    LDFree(user->key);
-    LDFree(user->secondary);
-    LDFree(user->firstName);
-    LDFree(user->lastName);
-    LDFree(user->email);
-    LDFree(user->name);
-    LDFree(user->avatar);
-    LDJSONFree(user->custom);
-    LDJSONFree(user->privateAttributeNames);
-    LDFree(user);
+    if (user) {
+        LDFree(user->key);
+        LDFree(user->secondary);
+        LDFree(user->firstName);
+        LDFree(user->lastName);
+        LDFree(user->email);
+        LDFree(user->name);
+        LDFree(user->avatar);
+        LDJSONFree(user->custom);
+        LDJSONFree(user->privateAttributeNames);
+        LDFree(user);
+    }
 }
 
 bool
@@ -79,9 +86,9 @@ LDi_textInArray(const struct LDJSON *const array, const char *const text)
 
 static bool
 isPrivateAttr(
-    const LDConfig *const config,
-    const LDUser *const   user,
-    const char *const     key
+    const struct LDConfig *const config,
+    const struct LDUser *const   user,
+    const char *const            key
 ) {
     bool global = false;
 
@@ -121,9 +128,9 @@ addHidden(struct LDJSON **const ref, const char *const value){
 
 struct LDJSON *
 LDi_userToJSON(
-    const LDConfig *const config,
-    const LDUser *const   lduser,
-    const bool            redact
+    const struct LDConfig *const config,
+    const struct LDUser *const   lduser,
+    const bool                   redact
 ) {
     struct LDJSON *hidden, *json, *temp;
 
@@ -250,7 +257,8 @@ LDi_userToJSON(
 }
 
 void
-LDUserSetCustomAttributesJSON(LDUser *const user, struct LDJSON *const custom)
+LDUserSetCustomAttributesJSON(struct LDUser *const user,
+    struct LDJSON *const custom)
 {
     LD_ASSERT(user);
 
@@ -262,7 +270,7 @@ LDUserSetCustomAttributesJSON(LDUser *const user, struct LDJSON *const custom)
 }
 
 void
-LDUserSetPrivateAttributes(LDUser *const user,
+LDUserSetPrivateAttributes(struct LDUser *const user,
     struct LDJSON *const privateAttributes)
 {
     LD_ASSERT(user);
@@ -276,49 +284,93 @@ LDUserSetPrivateAttributes(LDUser *const user,
 }
 
 void
-LDUserSetAnonymous(LDUser *const user, const bool anon)
+LDUserSetAnonymous(struct LDUser *const user, const bool anon)
 {
-    LD_ASSERT(user); user->anonymous = anon;
+    LD_ASSERT(user);
+
+    user->anonymous = anon;
 }
 
 void
-LDUserSetIP(LDUser *const user, const char *const str)
+LDUserSetIP(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->ip, str));
+    LD_ASSERT(user);
+
+    LD_ASSERT(LDSetString(&user->ip, str));
 }
 
 void
-LDUserSetFirstName(LDUser *const user, const char *const str)
+LDUserSetFirstName(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->firstName, str));
+    LD_ASSERT(user);
+
+    LD_ASSERT(LDSetString(&user->firstName, str));
 }
 
 void
-LDUserSetLastName(LDUser *const user, const char *const str)
+LDUserSetLastName(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->lastName, str));
+    LD_ASSERT(user);
+
+    LD_ASSERT(LDSetString(&user->lastName, str));
 }
 
 void
-LDUserSetEmail(LDUser *const user, const char *const str)
+LDUserSetEmail(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->email, str));
+    LD_ASSERT(user);
+
+    LD_ASSERT(LDSetString(&user->email, str));
 }
 
 void
-LDUserSetName(LDUser *const user, const char *const str)
+LDUserSetName(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user); LDSetString(&user->name, str);
+    LD_ASSERT(user);
+
+    LDSetString(&user->name, str);
 }
 
 void
-LDUserSetAvatar(LDUser *const user, const char *const str)
+LDUserSetAvatar(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->avatar, str));
+    LD_ASSERT(user);
+
+    LD_ASSERT(LDSetString(&user->avatar, str));
 }
 
 void
-LDUserSetSecondary(LDUser *const user, const char *const str)
+LDUserSetSecondary(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user); LD_ASSERT(LDSetString(&user->secondary, str));
+    LD_ASSERT(user);
+
+    LD_ASSERT(LDSetString(&user->secondary, str));
+}
+
+char *
+LDi_usertojsontext(const struct LDClient *const client,
+    const struct LDUser *const user, const bool redact)
+{
+    struct LDJSON *userJSON;
+    char *userText;
+
+    userJSON = LDi_userToJSON(client->shared->sharedConfig, user, redact);
+
+    if (!userJSON) {
+        LD_LOG(LD_LOG_ERROR, "LDi_usertojson failed in LDi_usertojsontext");
+
+        return NULL;
+    }
+
+    userText = LDJSONSerialize(userJSON);
+
+    LDJSONFree(userJSON);
+
+    if (!userText) {
+        LD_LOG(LD_LOG_ERROR, "LDJSONSerialize failed in LDi_usertojsontext");
+
+        return NULL;
+    }
+
+    return userText;
 }

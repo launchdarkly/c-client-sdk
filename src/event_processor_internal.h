@@ -14,7 +14,7 @@ struct EventProcessor {
     double summaryStart;
     double lastUserKeyFlush;
     double lastServerTime;
-    const LDConfig *config;
+    const struct LDConfig *config;
 };
 
 void LDi_addEvent(struct EventProcessor *const context,
@@ -26,20 +26,20 @@ bool
 LDi_addUserInfoToEvent(
     const struct EventProcessor *const context,
     struct LDJSON *const               event,
-    const LDUser *const                user
+    const struct LDUser *const         user
 );
 
 struct LDJSON *
 LDi_newIdentifyEvent(
     const struct EventProcessor *const context,
-    const LDUser *const                user,
+    const struct LDUser *const         user,
     const double                       now
 );
 
 struct LDJSON *
 LDi_newCustomEvent(
     const struct EventProcessor *const context,
-    const LDUser *const                user,
+    const struct LDUser *const         user,
     const char *const                  key,
     struct LDJSON *const               data,
     const double                       metric,

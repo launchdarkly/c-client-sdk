@@ -6,9 +6,9 @@
 int
 main()
 {
-    LDClient *client, *secondary;
-    LDConfig *config;
-    LDUser *user;
+    struct LDClient *client, *secondary;
+    struct LDConfig *config;
+    struct LDUser *user;
 
     LD_ASSERT(config = LDConfigNew("my-primary-key"));
     LDConfigSetOffline(config, true);

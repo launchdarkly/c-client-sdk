@@ -81,34 +81,6 @@ void LDi_once(ld_once_t *once, void (*fn)(void))
 }
 #endif
 
-char *
-LDi_usertojsontext(const LDClient *const client, const LDUser *const user,
-    const bool redact)
-{
-    struct LDJSON *userJSON;
-    char *userText;
-
-    userJSON = LDi_userToJSON(client->shared->sharedConfig, user, redact);
-
-    if (!userJSON) {
-        LD_LOG(LD_LOG_ERROR, "LDi_usertojson failed in LDi_usertojsontext");
-
-        return NULL;
-    }
-
-    userText = LDJSONSerialize(userJSON);
-
-    LDJSONFree(userJSON);
-
-    if (!userText) {
-        LD_LOG(LD_LOG_ERROR, "LDJSONSerialize failed in LDi_usertojsontext");
-
-        return NULL;
-    }
-
-    return userText;
-}
-
 /* -1 on error, otherwise read size */
 static int
 readfile(const char *const path, unsigned char *const buffer, size_t const buffersize)

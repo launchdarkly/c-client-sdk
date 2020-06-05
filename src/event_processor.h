@@ -9,7 +9,7 @@ struct EventProcessor;
 
 struct EventProcessor *
 LDi_newEventProcessor(
-    const LDConfig *const config
+    const struct LDConfig *const config
 );
 
 void
@@ -20,13 +20,13 @@ LDi_freeEventProcessor(
 bool
 LDi_identify(
     struct EventProcessor *const context,
-    const LDUser *const          user
+    const struct LDUser *const   user
 );
 
 bool
 LDi_track(
     struct EventProcessor *const context,
-    const LDUser *const          user,
+    const struct LDUser *const   user,
     const char *const            key,
     struct LDJSON *const         data,
     const double                 metric,
@@ -42,7 +42,7 @@ LDi_bundleEventPayload(
 bool
 LDi_processEvalEvent(
     struct EventProcessor *const    context,
-    const LDUser *const             user,
+    const struct LDUser *const      user,
     const char *const               flagKey,
     const LDJSONType                valueType,
     const struct LDStoreNode *const node,
