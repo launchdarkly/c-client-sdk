@@ -24,7 +24,7 @@ LD_EXPORT(void) LDConfigSetBackgroundPollingIntervalMillis(
 
 /** @brief Sets the interval in milliseconds between polls for flag updates
  * when your app is in the background. */
-LD_EXPORT(void) LDConfigSetAppURI(struct LDConfig *const config,
+LD_EXPORT(LDBoolean) LDConfigSetAppURI(struct LDConfig *const config,
     const char *const uri);
 
 /** @brief Sets the timeout in milliseconds when connecting to LaunchDarkly. */
@@ -47,12 +47,12 @@ LD_EXPORT(void) LDConfigSetEventsFlushIntervalMillis(
 
 /** @brief Set the events uri for sending analytics to LaunchDarkly. You
  * probably don't need to set this unless instructed by LaunchDarkly. */
-LD_EXPORT(void) LDConfigSetEventsURI(struct LDConfig *const config,
+LD_EXPORT(LDBoolean) LDConfigSetEventsURI(struct LDConfig *const config,
     const char *const uri);
 
 /** @brief Sets the key for authenticating with LaunchDarkly. This is required
  * unless you're using the client in offline mode. */
-LD_EXPORT(void) LDConfigSetMobileKey(struct LDConfig *const config,
+LD_EXPORT(LDBoolean) LDConfigSetMobileKey(struct LDConfig *const config,
     const char *const key);
 
 /** @brief Configures the client for offline mode. In offline mode, no
@@ -75,7 +75,7 @@ LD_EXPORT(void) LDConfigSetPollingIntervalMillis(struct LDConfig *const config,
 
 /** @brief Set the stream uri for connecting to the flag update stream. You
  * probably don't need to set this unless instructed by LaunchDarkly. */
-LD_EXPORT(void) LDConfigSetStreamURI(struct LDConfig *const config,
+LD_EXPORT(LDBoolean) LDConfigSetStreamURI(struct LDConfig *const config,
     const char *const uri);
 
 /** @brief Set the proxy server used for connecting to LaunchDarkly.
@@ -84,7 +84,7 @@ LD_EXPORT(void) LDConfigSetStreamURI(struct LDConfig *const config,
  * `socks5://127.0.0.1:9050`. You may read more about how this SDK handles
  * proxy servers by reading the [libcurl](https://curl.haxx.se) documentation
  * on the subject [here](https://ec.haxx.se/libcurl-proxies.html). */
-LD_EXPORT(void) LDConfigSetProxyURI(struct LDConfig *const config,
+LD_EXPORT(LDBoolean) LDConfigSetProxyURI(struct LDConfig *const config,
     const char *const uri);
 
 /** @brief Set whether to verify the authenticity of the peer's certificate on
@@ -127,7 +127,7 @@ LD_EXPORT(LDBoolean) LDConfigAddSecondaryMobileKey(
  * This API is ineffective if LDConfigSetVerifyPeer is set to false. See
  * [CURLOPT_CAINFO](https://curl.haxx.se/libcurl/c/CURLOPT_CAINFO.html) for
  * more information. */
-LD_EXPORT(void) LDConfigSetSSLCertificateAuthority(struct LDConfig *config,
+LD_EXPORT(LDBoolean) LDConfigSetSSLCertificateAuthority(struct LDConfig *config,
     const char *certFile);
 
 /** @brief Determines if an entire user object, or only the user key should be

@@ -70,13 +70,26 @@ LDi_bgeventsender(void *const v)
             continue;
         }
 
-        LD_ASSERT(LDi_bundleEventPayload(client->eventProcessor, &payloadJSON));
+        if (!LDi_bundleEventPayload(client->eventProcessor, &payloadJSON)) {
+            LD_LOG(LD_LOG_ERROR,
+                "LDi_bgeventsender failed to bundle event payload");
+
+            continue;
+        }
 
         if (payloadJSON == NULL) {
             continue;
         }
 
-        LD_ASSERT(payloadSerialized = LDJSONSerialize(payloadJSON));
+        if (!(payloadSerialized = LDJSONSerialize(payloadJSON))) {
+            LD_LOG(LD_LOG_ERROR,
+                "LDi_bgeventsender failed to serialize event payload");
+
+            LDJSONFree(payloadJSON);
+
+            continue;
+        }
+
         LDJSONFree(payloadJSON);
 
         bool sendFailed = false;
@@ -103,7 +116,8 @@ LDi_bgeventsender(void *const v)
                     LDi_updatestatus(client, LDStatusFailed);
                     LDi_rwlock_wrunlock(&client->clientLock);
 
-                    LD_LOG(LD_LOG_ERROR, "mobile key not authorized, event sending failed");
+                    LD_LOG(LD_LOG_ERROR,
+                        "mobile key not authorized, event sending failed");
 
                     break;
                 }
@@ -115,7 +129,8 @@ LDi_bgeventsender(void *const v)
         }
 
         if (sendFailed) {
-            LD_LOG(LD_LOG_WARNING, "sending events failed deleting event batch");
+            LD_LOG(LD_LOG_WARNING,
+                "sending events failed deleting event batch");
         }
 
         LDFree(payloadSerialized);
@@ -133,7 +148,9 @@ LDi_bgfeaturepoller(void *const v)
     while (true) {
         LDi_rwlock_wrlock(&client->clientLock);
 
-        if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
+        if (client->status == LDStatusFailed ||
+            client->status == LDStatusShuttingdown
+        ) {
             LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgfeaturepoller");
             LDi_rwlock_wrunlock(&client->clientLock);
             return THREAD_RETURN_DEFAULT;
@@ -143,12 +160,15 @@ LDi_bgfeaturepoller(void *const v)
         int ms = client->shared->sharedConfig->pollingIntervalMillis;
         if (client->background) {
             ms = client->shared->sharedConfig->backgroundPollingIntervalMillis;
-            skippolling = skippolling || client->shared->sharedConfig->disableBackgroundUpdating;
+            skippolling = skippolling ||
+                client->shared->sharedConfig->disableBackgroundUpdating;
         } else {
-            skippolling = skippolling || client->shared->sharedConfig->streaming;
+            skippolling = skippolling ||
+                client->shared->sharedConfig->streaming;
         }
 
-        /* this triggers the first time the thread runs, so we don't have to wait */
+        /* this triggers the first time the thread runs, so we don't have
+        to wait */
         if (!skippolling && client->status == LDStatusInitializing) { ms = 0; }
 
         if (ms > 0) {
@@ -163,7 +183,9 @@ LDi_bgfeaturepoller(void *const v)
         if (skippolling) { continue; }
 
         LDi_rwlock_rdlock(&client->clientLock);
-        if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
+        if (client->status == LDStatusFailed
+            || client->status == LDStatusShuttingdown)
+        {
             LDi_rwlock_rdunlock(&client->clientLock);
             continue;
         }
@@ -220,8 +242,7 @@ LDi_onstreameventput(struct LDClient *const client, const char *const data)
         goto cleanup;
     }
 
-    LD_ASSERT(flagsIter = flags);
-    LD_ASSERT(payloadIter = LDGetIter(payload));
+    flagsIter = flags;
 
     for (payloadIter = LDGetIter(payload); payloadIter != NULL;
         payloadIter = LDIterNext(payloadIter))
@@ -436,7 +457,7 @@ LDi_bgfeaturestreamer(void *const v)
             } else {
                 unsigned int rng = 0;
 
-                LD_ASSERT(LDi_random(&rng));
+                LDi_random(&rng);
 
                 delay = 1000 * pow(2, retries - 2);
 

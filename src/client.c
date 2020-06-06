@@ -48,46 +48,57 @@ LDClientGetForMobileKey(const char *keyName)
 }
 
 struct LDClient *
-LDi_clientinitisolated(struct LDGlobal_i *const shared,
+LDi_clientInitIsolated(struct LDGlobal_i *const shared,
     const char *const mobileKey)
 {
+    struct LDClient *client;
+
     LD_ASSERT(shared);
     LD_ASSERT(mobileKey);
 
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
-    struct LDClient *const client = LDAlloc(sizeof(*client));
-
-    if (!client) {
+    if (!(client = LDAlloc(sizeof(*client)))) {
         LD_LOG(LD_LOG_CRITICAL, "no memory for the client");
+
         return NULL;
     }
 
     memset(client, 0, sizeof(*client));
 
+    client->shared              = shared;
+    client->offline             = shared->sharedConfig->offline;
+    client->background          = false;
+    client->status              = LDStatusInitializing;
+    client->shouldstopstreaming = false;
+    client->streamhandle        = 0;
+
+    if (!LDSetString(&client->mobileKey, mobileKey)) {
+        clientCloseIsolated(client);
+
+        return NULL;
+    }
+
+    if (!(client->eventProcessor =
+        LDi_newEventProcessor(shared->sharedConfig)))
+    {
+        clientCloseIsolated(client);
+
+        return NULL;
+    }
+
+    if (!LDi_storeInitialize(&client->store)) {
+        clientCloseIsolated(client);
+
+        return NULL;
+    }
+
     LDi_rwlock_init(&client->clientLock);
 
-    LDi_rwlock_wrlock(&client->clientLock);
-
-    client->shared = shared;
-    client->offline = shared->sharedConfig->offline;
-    client->background = false;
-    client->status = LDStatusInitializing;
-
-    client->shouldstopstreaming = false;
-    client->streamhandle = 0;
-
-    LD_ASSERT(LDSetString(&client->mobileKey, mobileKey));
-
-    LD_ASSERT(client->eventProcessor =
-        LDi_newEventProcessor(shared->sharedConfig));
-    LD_ASSERT(LDi_storeInitialize(&client->store));
-
     LDi_mutex_init(&client->initCondMtx);
-    LDi_cond_init(&client->initCond);
-
     LDi_mutex_init(&client->condMtx);
 
+    LDi_cond_init(&client->initCond);
     LDi_cond_init(&client->eventCond);
     LDi_cond_init(&client->pollCond);
     LDi_cond_init(&client->streamCond);
@@ -107,9 +118,17 @@ LDi_clientinitisolated(struct LDGlobal_i *const shared,
     }
 
     LDi_rwlock_rdlock(&shared->sharedUserLock);
-    LD_ASSERT(LDi_identify(client->eventProcessor, shared->sharedUser));
+
+    if (!LDi_identify(client->eventProcessor, shared->sharedUser)) {
+        LDi_rwlock_rdunlock(&shared->sharedUserLock);
+        LDi_rwlock_wrunlock(&client->clientLock);
+
+        clientCloseIsolated(client);
+
+        return NULL;
+    }
+
     LDi_rwlock_rdunlock(&shared->sharedUserLock);
-    LDi_rwlock_wrunlock(&client->clientLock);
 
     return client;
 }
@@ -127,7 +146,7 @@ LDClientInit(struct LDConfig *const config, struct LDUser *const user,
     globalContext.sharedUser   = user;
     globalContext.sharedConfig = config;
 
-    globalContext.primaryClient = LDi_clientinitisolated(&globalContext,
+    globalContext.primaryClient = LDi_clientInitIsolated(&globalContext,
         config->mobileKey);
 
     LD_ASSERT(globalContext.primaryClient);
@@ -141,10 +160,12 @@ LDClientInit(struct LDConfig *const config, struct LDUser *const user,
     {
         const char *name;
 
-        LD_ASSERT(name = LDIterKey(secondaryKey));
+        name = LDIterKey(secondaryKey)
 
-        struct LDClient *const secondaryClient = LDi_clientinitisolated(&globalContext,
-            LDGetText(secondaryKey));
+        LD_ASSERT(name);
+
+        struct LDClient *const secondaryClient = LDi_clientInitIsolated(
+            &globalContext, LDGetText(secondaryKey));
 
         LD_ASSERT(secondaryClient);
 
@@ -155,10 +176,12 @@ LDClientInit(struct LDConfig *const config, struct LDUser *const user,
     if (maxwaitmilli) {
         struct LDClient *clientIter, *clientTmp;
 
-        const unsigned long long future = 1000 * (unsigned long long)time(NULL) + maxwaitmilli;
+        const unsigned long long future = 1000 *
+            (unsigned long long)time(NULL) + maxwaitmilli;
 
         HASH_ITER(hh, globalContext.clientTable, clientIter, clientTmp) {
-            const unsigned long long now = 1000 * (unsigned long long)time(NULL);
+            const unsigned long long now = 1000 *
+                (unsigned long long)time(NULL);
 
             if (now < future) {
                 LDClientAwaitInitialized(clientIter, future - now);
@@ -200,9 +223,11 @@ LDBoolean
 LDClientIsOffline(struct LDClient *const client)
 {
     LD_ASSERT(client);
+
     LDi_rwlock_rdlock(&client->clientLock);
     bool offline = client->offline;
     LDi_rwlock_rdunlock(&client->clientLock);
+
     return offline;
 }
 
@@ -210,6 +235,7 @@ void
 LDClientSetBackground(struct LDClient *const client, const LDBoolean background)
 {
     LD_ASSERT(client);
+
     LDi_rwlock_wrlock(&client->clientLock);
     client->background = background;
     LDi_startstopstreaming(client, background);
@@ -313,9 +339,11 @@ LDBoolean
 LDClientIsInitialized(struct LDClient *const client)
 {
     LD_ASSERT(client);
+
     LDi_rwlock_rdlock(&client->clientLock);
     bool isinit = client->status == LDStatusInitialized;
     LDi_rwlock_rdunlock(&client->clientLock);
+
     return isinit;
 }
 
@@ -324,13 +352,17 @@ LDClientAwaitInitialized(struct LDClient *const client,
     const unsigned int timeoutmilli)
 {
     LD_ASSERT(client);
+
     LDi_mutex_lock(&client->initCondMtx);
     LDi_rwlock_rdlock(&client->clientLock);
+
     if (client->status == LDStatusInitialized) {
         LDi_rwlock_rdunlock(&client->clientLock);
         LDi_mutex_unlock(&client->initCondMtx);
+
         return true;
     }
+
     LDi_rwlock_rdunlock(&client->clientLock);
 
     LDi_cond_wait(&client->initCond, &client->initCondMtx, timeoutmilli);
@@ -339,6 +371,7 @@ LDClientAwaitInitialized(struct LDClient *const client,
     LDi_rwlock_rdlock(&client->clientLock);
     bool isinit = client->status == LDStatusInitialized;
     LDi_rwlock_rdunlock(&client->clientLock);
+
     return isinit;
 }
 
@@ -369,16 +402,28 @@ LDAllFlags(struct LDClient *const client)
 
     LD_ASSERT(client);
 
-    LD_ASSERT(result = LDNewObject());
+    if (!(result = LDNewObject())) {
+        return NULL;
+    }
 
-    LD_ASSERT(LDi_storeGetAll(&client->store, &flags, &flagCount));
+    if (!LDi_storeGetAll(&client->store, &flags, &flagCount)) {
+        LDJSONFree(result);
+
+        return NULL;
+    }
 
     for (i = 0; i < flagCount; i++) {
         struct LDJSON *tmp;
 
-        LD_ASSERT(tmp = LDJSONDuplicate(flags[i]->flag.value));
+        if (!(tmp = LDJSONDuplicate(flags[i]->flag.value))) {
+            goto error;
+        }
 
-        LD_ASSERT(LDObjectSetKey(result, flags[i]->flag.key, tmp));
+        if (!(LDObjectSetKey(result, flags[i]->flag.key, tmp))) {
+            LDJSONFree(tmp);
+
+            goto error;
+        }
 
         LDi_rc_decrement(&flags[i]->rc);
     }
@@ -386,6 +431,16 @@ LDAllFlags(struct LDClient *const client)
     LDFree(flags);
 
     return result;
+
+  error:
+    for (; i < flagCount; i++) {
+        LDi_rc_decrement(&flags[i]->rc);
+    }
+
+    LDFree(flags);
+    LDFree(result);
+
+    return NULL;
 }
 
 /*

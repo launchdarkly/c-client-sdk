@@ -23,29 +23,31 @@ LD_EXPORT(void) LDUserSetAnonymous(struct LDUser *const user,
     const LDBoolean anon);
 
 /** @brief Set the user's IP. */
-LD_EXPORT(void) LDUserSetIP(struct LDUser *const user, const char *const str);
+LD_EXPORT(LDBoolean) LDUserSetIP(struct LDUser *const user,
+    const char *const str);
 
 /** @brief Set the user's first name. */
-LD_EXPORT(void) LDUserSetFirstName(struct LDUser *const user,
+LD_EXPORT(LDBoolean) LDUserSetFirstName(struct LDUser *const user,
     const char *const str);
 
 /** @brief Set the user's last name. */
-LD_EXPORT(void) LDUserSetLastName(struct LDUser *const user,
+LD_EXPORT(LDBoolean) LDUserSetLastName(struct LDUser *const user,
     const char *const str);
 
 /** @brief Set the user's email. */
-LD_EXPORT(void) LDUserSetEmail(struct LDUser *const user,
+LD_EXPORT(LDBoolean) LDUserSetEmail(struct LDUser *const user,
     const char *const str);
 
 /** @brief Set the user's name. */
-LD_EXPORT(void) LDUserSetName(struct LDUser *const user, const char *const str);
+LD_EXPORT(LDBoolean) LDUserSetName(struct LDUser *const user,
+    const char *const str);
 
 /** @brief Set the user's avatar. */
-LD_EXPORT(void) LDUserSetAvatar(struct LDUser *const user,
+LD_EXPORT(LDBoolean) LDUserSetAvatar(struct LDUser *const user,
     const char *const str);
 
 /** @brief Set the user's secondary key. */
-LD_EXPORT(void) LDUserSetSecondary(struct LDUser *const user,
+LD_EXPORT(LDBoolean) LDUserSetSecondary(struct LDUser *const user,
     const char *const str);
 
 /** Set the user's private fields, must be array of strings */

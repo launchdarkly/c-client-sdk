@@ -91,5 +91,9 @@ if(BUILD_TESTING)
         target_link_libraries(${testexe} ldclientapi)
         target_include_directories(${testexe} PRIVATE ${LD_INCLUDE_PATHS})
         add_test(NAME ${testexe} COMMAND ${CMAKE_BINARY_DIR}/${testexe})
+        target_compile_definitions(${testexe}
+            PRIVATE -D LAUNCHDARKLY_USE_ASSERT
+                    -D LAUNCHDARKLY_CONCURRENCY_ABORT
+        )
     endforeach(testsource)
 endif()

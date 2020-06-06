@@ -8,6 +8,7 @@
 #include <windows.h>
 #endif
 
+#include "assertion.h"
 #include "client.h"
 #include "concurrency.h"
 #include "config.h"
@@ -50,12 +51,6 @@ void LDi_onstreameventpatch(struct LDClient *client, const char *data);
 void LDi_onstreameventdelete(struct LDClient *client, const char *data);
 
 void (*LDi_statuscallback)(int);
-
-#define LD_ASSERT(condition) \
-    if (!(condition)) { \
-        LDi_log(0, "LD_ASSERT failed: expected condition '%s' in function '%s' aborting\n", #condition, __func__); \
-        abort(); \
-    } \
 
 void LDi_millisleep(int ms);
 /* must be called exactly once before rng is used */

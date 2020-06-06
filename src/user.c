@@ -34,6 +34,12 @@ LDUserNew(const char *const key)
         user->anonymous = false;
     }
 
+    if (!user->key) {
+        LDFree(user);
+
+        return NULL;
+    }
+
     user->secondary             = NULL;
     user->ip                    = NULL;
     user->firstName             = NULL;
@@ -291,60 +297,60 @@ LDUserSetAnonymous(struct LDUser *const user, const LDBoolean anon)
     user->anonymous = anon;
 }
 
-void
+LDBoolean
 LDUserSetIP(struct LDUser *const user, const char *const str)
 {
     LD_ASSERT(user);
 
-    LD_ASSERT(LDSetString(&user->ip, str));
+    return LDSetString(&user->ip, str);
 }
 
-void
+LDBoolean
 LDUserSetFirstName(struct LDUser *const user, const char *const str)
 {
     LD_ASSERT(user);
 
-    LD_ASSERT(LDSetString(&user->firstName, str));
+    return LDSetString(&user->firstName, str);
 }
 
-void
+LDBoolean
 LDUserSetLastName(struct LDUser *const user, const char *const str)
 {
     LD_ASSERT(user);
 
-    LD_ASSERT(LDSetString(&user->lastName, str));
+    return LDSetString(&user->lastName, str);
 }
 
-void
+LDBoolean
 LDUserSetEmail(struct LDUser *const user, const char *const str)
 {
     LD_ASSERT(user);
 
-    LD_ASSERT(LDSetString(&user->email, str));
+    return LDSetString(&user->email, str);
 }
 
-void
+LDBoolean
 LDUserSetName(struct LDUser *const user, const char *const str)
 {
     LD_ASSERT(user);
 
-    LDSetString(&user->name, str);
+    return LDSetString(&user->name, str);
 }
 
-void
+LDBoolean
 LDUserSetAvatar(struct LDUser *const user, const char *const str)
 {
     LD_ASSERT(user);
 
-    LD_ASSERT(LDSetString(&user->avatar, str));
+    return LDSetString(&user->avatar, str);
 }
 
-void
+LDBoolean
 LDUserSetSecondary(struct LDUser *const user, const char *const str)
 {
     LD_ASSERT(user);
 
-    LD_ASSERT(LDSetString(&user->secondary, str));
+    return LDSetString(&user->secondary, str);
 }
 
 char *

@@ -15,17 +15,6 @@ LDConfigNew(const char *const mobileKey)
         return NULL;
     }
 
-    memset(config, 0, sizeof(*config));
-
-    LD_ASSERT(LDSetString(&config->appURI,
-        "https://app.launchdarkly.com"));
-    LD_ASSERT(LDSetString(&config->eventsURI,
-        "https://mobile.launchdarkly.com"));
-    LD_ASSERT(LDSetString(&config->mobileKey, mobileKey));
-    LD_ASSERT(LDSetString(&config->streamURI,
-        "https://clientstream.launchdarkly.com"));
-    LD_ASSERT(config->secondaryMobileKeys = LDNewObject());
-
     config->allAttributesPrivate            = false;
     config->backgroundPollingIntervalMillis = 15 * 60 * 1000;
     config->connectionTimeoutMillis         = 10000;
@@ -42,8 +31,40 @@ LDConfigNew(const char *const mobileKey)
     config->verifyPeer                      = true;
     config->certFile                        = NULL;
     config->inlineUsersInEvents             = false;
+    config->appURI                          = NULL;
+    config->eventsURI                       = NULL;
+    config->mobileKey                       = NULL;
+    config->streamURI                       = NULL;
+    config->secondaryMobileKeys             = NULL;
+
+    if (!LDSetString(&config->appURI, "https://app.launchdarkly.com")) {
+        goto error;
+    }
+
+    if (!LDSetString(&config->eventsURI, "https://mobile.launchdarkly.com")) {
+        goto error;
+    }
+
+    if (!LDSetString(&config->mobileKey, mobileKey)) {
+        goto error;
+    }
+
+    if (!LDSetString(&config->streamURI,
+        "https://clientstream.launchdarkly.com"))
+    {
+        goto error;
+    }
+
+    if (!(config->secondaryMobileKeys = LDNewObject())) {
+        goto error;
+    }
 
     return config;
+
+  error:
+    LDConfigFree(config);
+
+    return NULL;
 }
 
 void
@@ -72,13 +93,13 @@ LDConfigSetBackgroundPollingIntervalMillis(struct LDConfig *const config,
     }
 }
 
-void
+LDBoolean
 LDConfigSetAppURI(struct LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config);
     LD_ASSERT(uri);
 
-    LD_ASSERT(LDSetString(&config->appURI, uri));
+    return LDSetString(&config->appURI, uri);
 }
 
 void
@@ -116,22 +137,22 @@ LDConfigSetEventsFlushIntervalMillis(struct LDConfig *const config,
     config->eventsFlushIntervalMillis = millis;
 }
 
-void
+LDBoolean
 LDConfigSetEventsURI(struct LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config);
     LD_ASSERT(uri);
 
-    LD_ASSERT(LDSetString(&config->eventsURI, uri));
+    return LDSetString(&config->eventsURI, uri);
 }
 
-void
+LDBoolean
 LDConfigSetMobileKey(struct LDConfig *const config, const char *const key)
 {
     LD_ASSERT(config);
     LD_ASSERT(key);
 
-    LD_ASSERT(LDSetString(&config->mobileKey, key));
+    return LDSetString(&config->mobileKey, key);
 }
 
 void
@@ -167,13 +188,13 @@ LDConfigSetPollingIntervalMillis(struct LDConfig *const config,
     }
 }
 
-void
+LDBoolean
 LDConfigSetStreamURI(struct LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config);
     LD_ASSERT(uri);
 
-    LD_ASSERT(LDSetString(&config->streamURI, uri));
+    return LDSetString(&config->streamURI, uri);
 }
 
 void
@@ -193,13 +214,13 @@ LDConfigSetUseEvaluationReasons(struct LDConfig *const config,
     config->useReasons = reasons;
 }
 
-void
+LDBoolean
 LDConfigSetProxyURI(struct LDConfig *const config, const char *const uri)
 {
     LD_ASSERT(config);
     LD_ASSERT(uri);
 
-    LD_ASSERT(LDSetString(&config->proxyURI, uri));
+    return LDSetString(&config->proxyURI, uri);
 }
 
 void
@@ -210,13 +231,13 @@ LDConfigSetVerifyPeer(struct LDConfig *const config, const LDBoolean enabled)
     config->verifyPeer = enabled;
 }
 
-void
+LDBoolean
 LDConfigSetSSLCertificateAuthority(struct LDConfig *const config,
     const char *const certFile)
 {
     LD_ASSERT(config);
 
-    LD_ASSERT(LDSetString(&config->certFile, certFile));
+    return LDSetString(&config->certFile, certFile);
 }
 
 void

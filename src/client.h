@@ -40,5 +40,7 @@ struct LDClient {
     UT_hash_handle hh;
 };
 
-struct LDClient *LDi_clientinitisolated(struct LDGlobal_i *shared,
+struct LDClient *LDi_clientInitIsolated(struct LDGlobal_i *shared,
     const char *mobileKey);
+
+void clientCloseIsolated(struct LDClient *const client);
