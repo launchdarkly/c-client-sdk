@@ -152,7 +152,7 @@ LD_EXPORT(char *) LDStringVariation(struct LDClient *const client,
 
 /** @brief Evaluate JSON flag */
 LD_EXPORT(struct LDJSON *) LDJSONVariation(struct LDClient *const client,
-    const char *const featureKey, struct LDJSON *const fallback);
+    const char *const featureKey, const struct LDJSON *const fallback);
 
 /** @brief Evaluate Bool flag with details */
 LD_EXPORT(LDBoolean) LDBoolVariationDetail(struct LDClient *const client,
@@ -185,7 +185,7 @@ LD_EXPORT(char *) LDStringVariationDetail(struct LDClient *const client,
 /** @brief Evaluate JSON flag with details */
 LD_EXPORT(struct LDJSON *) LDJSONVariationDetail(
     struct LDClient *const client, const char *const key,
-    struct LDJSON *const fallback, LDVariationDetails *const details);
+    const struct LDJSON *const fallback, LDVariationDetails *const details);
 
 /** @brief Clear any memory associated with `LDVariationDetails`  */
 LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);

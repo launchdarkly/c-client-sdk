@@ -809,9 +809,9 @@ LDStringVariationAlloc(struct LDClient *const client, const char *const key,
 
 struct LDJSON *
 LDJSONVariationDetail(struct LDClient *const client, const char *const key,
-    struct LDJSON *const fallback, LDVariationDetails *const details)
+    const struct LDJSON *const fallback, LDVariationDetails *const details)
 {
-    struct LDJSON *value;
+    const struct LDJSON *value;
     struct LDStoreNode *selected;
 
     LD_ASSERT(client);
@@ -833,9 +833,9 @@ LDJSONVariationDetail(struct LDClient *const client, const char *const key,
 
 struct LDJSON *
 LDJSONVariation(struct LDClient *const client, const char *const key,
-    struct LDJSON *const fallback)
+    const struct LDJSON *const fallback)
 {
-    struct LDJSON *value;
+    const struct LDJSON *value;
 
     LD_ASSERT(client);
     LD_ASSERT(key);

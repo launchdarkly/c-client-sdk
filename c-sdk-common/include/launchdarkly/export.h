@@ -10,7 +10,7 @@
     #define LD_EXPORT(x) x
 #else
     #ifdef _WIN32
-        #define LD_EXPORT(x) __declspec(dllexport) x __stdcall
+        #define LD_EXPORT(x) __declspec(dllexport) x
     #else
         #define LD_EXPORT(x) __attribute__((visibility("default"))) x
     #endif

@@ -80,7 +80,15 @@ if(NOT SKIP_BASE_INSTALL)
     )
 endif()
 
-# test targets ----------------------------------------------------------------
+# ldclientapicpp target --------------------------------------------------------
+
+add_library(ldclientapicpp "cpp/api.cpp")
+
+target_include_directories(ldclientapicpp PUBLIC "cpp/include")
+
+target_link_libraries(ldclientapicpp PUBLIC ldclientapi)
+
+# test targets -----------------------------------------------------------------
 
 if(BUILD_TESTING)
     file(GLOB TESTS "tests/test-*")

@@ -17,6 +17,7 @@
 #include "event_processor.h"
 #include "store.h"
 #include "user.h"
+#include "logging.h"
 
 #ifndef _WINDOWS
 

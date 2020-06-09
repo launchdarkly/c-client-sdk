@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #include <launchdarkly/export.h>
 #include <launchdarkly/logging.h>
 #include <launchdarkly/memory.h>
@@ -23,10 +25,6 @@ extern "C" {
 #include <launchdarkly/config.h>
 #include <launchdarkly/user.h>
 #include <launchdarkly/client.h>
-
-#include "config.h"
-#include "concurrency.h"
-#include "logging.h"
 
 #include "uthash.h"
 
