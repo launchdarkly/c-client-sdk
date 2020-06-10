@@ -18,7 +18,7 @@ LDi_destroyStoreNode(void *const nodeRaw)
     }
 }
 
-static void
+void
 LDi_storeFreeHash(struct LDStoreNode *flags)
 {
     struct LDStoreNode *node, *tmp;
@@ -28,6 +28,16 @@ LDi_storeFreeHash(struct LDStoreNode *flags)
 
         LDi_destroyStoreNode(node);
     }
+}
+
+void
+LDi_storeFreeFlags(struct LDStore *const store)
+{
+    LD_ASSERT(store);
+
+    LDi_storeFreeHash(store->flags);
+
+    store->flags = NULL;
 }
 
 bool
@@ -278,6 +288,49 @@ LDi_storeGetAll(struct LDStore *const store,
     *flagCount = count;
 
     return true;
+}
+
+struct LDJSON *
+LDi_storeGetJSON(struct LDStore *const store)
+{
+    struct LDJSON *result, *flag;
+    struct LDStoreNode *node, *tmp;
+
+    result = NULL;
+    flag   = NULL;
+    node   = NULL;
+    tmp    = NULL;
+
+    LD_ASSERT(store);
+
+    if (!(result = LDNewObject())) {
+        return NULL;
+    }
+
+    LDi_rwlock_rdlock(&store->lock);
+
+    HASH_ITER(hh, store->flags, node, tmp) {
+        if (!(flag = LDi_flag_to_json(&node->flag))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, node->flag.key, flag)) {
+            goto error;
+        }
+        flag = NULL;
+    }
+
+    LDi_rwlock_rdunlock(&store->lock);
+
+    return result;
+
+  error:
+    LDJSONFree(result);
+    LDJSONFree(flag);
+
+    LDi_rwlock_rdunlock(&store->lock);
+
+    return NULL;
 }
 
 bool

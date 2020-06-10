@@ -45,8 +45,12 @@ struct LDStoreNode *LDi_storeGet(struct LDStore *const store,
 bool LDi_storeGetAll(struct LDStore *const store,
     struct LDStoreNode ***const flags, unsigned int *const flagCount);
 
+struct LDJSON *LDi_storeGetJSON(struct LDStore *const store);
+
 bool LDi_storeRegisterListener(struct LDStore *const store,
     const char *const flagKey, LDlistenerfn op);
 
 void LDi_storeUnregisterListener(struct LDStore *const store,
     const char *const flagKey, LDlistenerfn op);
+
+void LDi_storeFreeFlags(struct LDStore *const store);

@@ -384,13 +384,36 @@ LDSetClientStatusCallback(void (callback)(int))
 char *
 LDClientSaveFlags(struct LDClient *const client)
 {
-    /* blank for now */
+    struct LDJSON *bundle;
+    char *serialized;
+
+    LD_ASSERT_API(client);
+
+    if (!(bundle = LDi_storeGetJSON(&client->store))) {
+        return NULL;
+    }
+
+    if (!(serialized = LDJSONSerialize(bundle))) {
+        LDJSONFree(bundle);
+
+        return NULL;
+    }
+
+    LDJSONFree(bundle);
+
+    return serialized;
 }
 
-void
+LDBoolean
 LDClientRestoreFlags(struct LDClient *const client, const char *const data)
 {
-    /* blank for now */
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(data);
+
+    /* todo have streamput propagate errors or factor out */
+    LDi_onstreameventput(client, data);
+
+    return true;
 }
 
 struct LDJSON *

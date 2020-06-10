@@ -212,7 +212,6 @@ LDi_bgfeaturepoller(void *const v)
     }
 }
 
-/* exposed for testing */
 void
 LDi_onstreameventput(struct LDClient *const client, const char *const data)
 {

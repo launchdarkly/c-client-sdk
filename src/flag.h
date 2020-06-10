@@ -19,4 +19,6 @@ struct LDFlag {
 bool LDi_flag_parse(struct LDFlag *const result, const char *const key,
     const struct LDJSON *const raw);
 
+struct LDJSON *LDi_flag_to_json(struct LDFlag *const flag);
+
 void LDi_flag_destroy(struct LDFlag *const flag);

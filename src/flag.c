@@ -149,6 +149,17 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
         result->reason = NULL;
     }
 
+    /* deleted */
+    if ((tmp = LDObjectLookup(raw, "deleted"))) {
+        if (LDJSONGetType(tmp) != LDBool) {
+            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse deleted is not a boolean");
+
+            goto error;
+        }
+
+        result->deleted = LDGetBool(tmp);
+    }
+
     return true;
 
   error:
@@ -157,6 +168,122 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
     LDJSONFree(result->reason);
 
     return false;
+}
+
+struct LDJSON *
+LDi_flag_to_json(struct LDFlag *const flag)
+{
+    struct LDJSON *result, *tmp;
+
+    LD_ASSERT(flag);
+
+    result = NULL;
+    tmp    = NULL;
+
+    if (!(result = LDNewObject())) {
+        goto error;
+    }
+
+    if (!(tmp = LDNewText(flag->key))) {
+        goto error;
+    }
+
+    if (!LDObjectSetKey(result, "key", tmp)) {
+        goto error;
+    }
+    tmp = NULL;
+
+    if (!(tmp = LDJSONDuplicate(flag->value))) {
+        goto error;
+    }
+
+    if (!LDObjectSetKey(result, "value", tmp)) {
+        goto error;
+    }
+    tmp = NULL;
+
+    if (flag->version >= 0) {
+        if (!(tmp = LDNewNumber(flag->version))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, "version", tmp)) {
+            goto error;
+        }
+        tmp = NULL;
+    }
+
+    if (flag->flagVersion >= 0) {
+        if (!(tmp = LDNewNumber(flag->flagVersion))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, "flagVersion", tmp)) {
+            goto error;
+        }
+        tmp = NULL;
+    }
+
+    if (!(tmp = LDNewNumber(flag->variation))) {
+        goto error;
+    }
+
+    if (!LDObjectSetKey(result, "variation", tmp)) {
+        goto error;
+    }
+    tmp = NULL;
+
+    if (flag->trackEvents) {
+        if (!(tmp = LDNewBool(true))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, "trackEvents", tmp)) {
+            goto error;
+        }
+        tmp = NULL;
+    }
+
+    if (flag->reason) {
+        if (!(tmp = LDJSONDuplicate(flag->reason))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, "reason", tmp)) {
+            goto error;
+        }
+        tmp = NULL;
+    }
+
+    if (flag->debugEventsUntilDate != 0) {
+        if (!(tmp = LDNewNumber(flag->debugEventsUntilDate))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, "debugEventsUntilDate", tmp)) {
+            goto error;
+        }
+        tmp = NULL;
+    }
+
+    if (flag->deleted) {
+        if (!(tmp = LDNewBool(true))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, "deleted", tmp)) {
+            goto error;
+        }
+        tmp = NULL;
+    }
+
+    return result;
+
+  error:
+    LDJSONFree(result);
+    LDJSONFree(tmp);
+
+    return NULL;
 }
 
 void

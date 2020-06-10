@@ -1,77 +1,72 @@
-#include <stdio.h>
-
 #include "ldapi.h"
 #include "ldinternal.h"
 
-bool gotcallback = false;
-
-bool
-fake_stringwriter(void *context, const char *name, const char *data)
+static struct LDClient *
+makeTestClient()
 {
-    gotcallback = true;
-    return true;
-}
+    struct LDConfig *config;
+    struct LDUser *user;
+    struct LDClient *client;
 
-/*
- * Read flags from an external file and check for expected value.
- */
-void
-test1(void)
-{
-    LD_store_setfns(NULL, NULL /* no writer */, LD_store_fileread);
-
-    struct LDConfig *const config = LDConfigNew("abc");
+    LD_ASSERT(config = LDConfigNew("abc"));
     LDConfigSetOffline(config, true);
 
-    struct LDUser *const user = LDUserNew("fileuser");
+    LD_ASSERT(user = LDUserNew("test-user"));
 
-    struct LDClient *const client = LDClientInit(config, user, 0);
+    LD_ASSERT(client = LDClientInit(config, user, 0));
 
-    char buffer[256];
-    LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
-    if (strcmp(buffer, "as expected") != 0) {
-        printf("ERROR: didn't load file data\n");
-    }
+    return client;
+}
 
-    char *patch = "{ \"key\": \"filedata\", \"value\": \"updated\", \"version\": 2 } }";
-    LDi_onstreameventpatch(client, patch);
-    LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
-    if (strcmp(buffer, "as expected") != 0) {
-        printf("ERROR: applied stale patch\n");
-    }
+static void
+testRestoreAndSaveEmpty()
+{
+    struct LDClient *client;
+    char *bundle;
 
-    patch = "{ \"key\": \"filedata\", \"value\": \"updated\", \"version\": 4 } }";
-    LDi_onstreameventpatch(client, patch);
-    LDStringVariation(client, "filedata", "incorrect", buffer, sizeof(buffer));
-    if (strcmp(buffer, "updated") != 0) {
-        printf("ERROR: didn't apply good patch\n");
-    }
+    LD_ASSERT(client = makeTestClient());
+
+    LD_ASSERT(bundle = LDClientSaveFlags(client));
+    LD_ASSERT(LDClientRestoreFlags(client, bundle));
+
+    LDFree(bundle);
 
     LDClientClose(client);
 }
 
-/*
- * Test that flags get written out after receiving an update.
- */
-void
-test2(void)
+static void
+testRestoreAndSaveBasic()
 {
-    LD_store_setfns(NULL, fake_stringwriter, NULL);
+    struct LDClient *client;
+    char *bundle1, *bundle2;
+    struct LDFlag flag;
 
-    struct LDConfig *const config = LDConfigNew("abc");
-    LDConfigSetOffline(config, true);
+    LD_ASSERT(client = makeTestClient());
 
-    struct LDUser *const user = LDUserNew("fakeuser");
+    flag.key                  = LDStrDup("test");
+    flag.value                = LDNewBool(true);
+    flag.version              = 2;
+    flag.flagVersion          = -1;
+    flag.variation            = 3;
+    flag.trackEvents          = false;
+    flag.reason               = NULL;
+    flag.debugEventsUntilDate = 0;
+    flag.deleted              = false;
 
-    struct LDClient *const client = LDClientInit(config, user, 0);
+    LD_ASSERT(LDi_storeUpsert(&client->store, flag));
 
-    const char *const putflags = "{ \"bgcolor\": { \"value\": \"red\", \"version\": 1 } }";
+    LD_ASSERT(bundle1 = LDClientSaveFlags(client));
 
-    LDi_onstreameventput(client, putflags);
+    LDi_storeFreeFlags(&client->store);
 
-    if (!gotcallback) {
-        printf("ERROR: flag update didn't call writer\n");
-    }
+    LD_ASSERT(LDClientRestoreFlags(client, bundle1));
+
+    LD_ASSERT(bundle2 = LDClientSaveFlags(client));
+
+    LD_ASSERT(strcmp(bundle1, bundle2) == 0);
+
+    LDFree(bundle1);
+    LDFree(bundle2);
 
     LDClientClose(client);
 }
@@ -81,9 +76,8 @@ main(int argc, char **argv)
 {
     LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
 
-    test1();
-
-    test2();
+    testRestoreAndSaveEmpty();
+    testRestoreAndSaveBasic();
 
     return 0;
 }

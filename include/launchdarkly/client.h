@@ -65,7 +65,7 @@ LD_EXPORT(struct LDClient *) LDClientInit(struct LDConfig *const config,
 LD_EXPORT(char *) LDClientSaveFlags(struct LDClient *const client);
 
 /** @brief Set flag store from JSON string */
-LD_EXPORT(void) LDClientRestoreFlags(struct LDClient *const client,
+LD_EXPORT(LDBoolean) LDClientRestoreFlags(struct LDClient *const client,
     const char *const data);
 
 /** @brief Update the client with a new user.
