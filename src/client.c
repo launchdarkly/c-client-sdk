@@ -5,10 +5,11 @@
 #endif
 #include <math.h>
 
-#include "curl/curl.h"
+#include <curl/curl.h>
+
+#include <launchdarkly/api.h>
 
 #include "uthash.h"
-#include "ldapi.h"
 #include "ldinternal.h"
 
 static struct LDGlobal_i globalContext = {

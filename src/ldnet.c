@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "curl/curl.h"
+#include <curl/curl.h>
 
-#include "ldapi.h"
+#include <launchdarkly/api.h>
+
 #include "ldinternal.h"
 
 #define LD_STREAMTIMEOUT 300

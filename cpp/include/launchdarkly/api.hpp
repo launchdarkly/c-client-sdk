@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ldapi.h>
+#include <launchdarkly/api.h>
 
 class LD_EXPORT(LDClientCPP) {
     public:

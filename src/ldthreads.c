@@ -6,9 +6,9 @@
 #endif
 #include <math.h>
 
+#include <launchdarkly/api.h>
 #include <launchdarkly/json.h>
 
-#include "ldapi.h"
 #include "ldinternal.h"
 #include "flag.h"
 

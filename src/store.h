@@ -2,7 +2,8 @@
 
 #include <stdbool.h>
 
-#include "ldapi.h"
+#include <launchdarkly/api.h>
+
 #include "concurrency.h"
 #include "flag.h"
 #include "uthash.h"

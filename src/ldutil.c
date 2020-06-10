@@ -17,7 +17,8 @@
 
 #include <stdlib.h>
 
-#include "ldapi.h"
+#include <launchdarkly/api.h>
+
 #include "ldinternal.h"
 
 void

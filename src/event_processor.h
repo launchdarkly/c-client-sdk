@@ -1,8 +1,8 @@
 #pragma once
 
+#include <launchdarkly/api.h>
 #include <launchdarkly/json.h>
 
-#include "ldapi.h"
 #include "store.h"
 
 struct EventProcessor;

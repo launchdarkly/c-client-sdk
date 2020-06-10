@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#include "ldapi.h"
+#include <launchdarkly/api.h>
+
 #include "ldinternal.h"
 
 int
