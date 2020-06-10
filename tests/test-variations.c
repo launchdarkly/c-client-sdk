@@ -102,6 +102,7 @@ testWithClientAndFlagValue(void (*const op)(struct LDClient *),
     flag.key                  = LDStrDup("test");
     flag.value                = value;
     flag.version              = 2;
+    flag.flagVersion          = -1;
     flag.variation            = 3;
     flag.trackEvents          = false;
     flag.reason               = NULL;
@@ -338,6 +339,7 @@ testWithClientAndDetailsAndValue(
     flag.key                  = LDStrDup("test");
     flag.value                = value;
     flag.version              = 2;
+    flag.flagVersion          = -1;
     flag.variation            = 3;
     flag.trackEvents          = false;
     flag.reason               = NULL;

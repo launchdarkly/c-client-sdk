@@ -601,7 +601,12 @@ fillDetails(
         if (type == LDNull || LDJSONGetType(node->flag.value) == type ||
             LDJSONGetType(node->flag.value) == LDNull)
         {
-            details->reason         = LDJSONDuplicate(node->flag.reason);
+            if (node->flag.reason) {
+                details->reason  = LDJSONDuplicate(node->flag.reason);
+            } else {
+                details->reason = NULL;
+            }
+
             details->variationIndex = node->flag.variation;
         } else {
             details->reason         = LDNewObject();

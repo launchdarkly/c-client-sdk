@@ -597,12 +597,13 @@ LDi_valueToJSON(
     LD_ASSERT(value);
 
     switch (valueType) {
-        case LDNull:   tmp = LDNewNull();                    break;
-        case LDBool:   tmp = LDNewBool(*(bool *)value);      break;
-        case LDText:   tmp = LDNewText((const char *)value); break;
-        case LDNumber: tmp = LDNewNumber(*(double *)value);  break;
-        case LDObject: tmp = (struct LDJSON *)value;         break;
-        case LDArray:  tmp = (struct LDJSON *)value;         break;
+        case LDNull:   tmp = LDJSONDuplicate((struct LDJSON *)value);  break;
+        case LDBool:   tmp = LDNewBool(*(bool *)value);                break;
+        case LDText:   tmp = LDNewText((const char *)value);           break;
+        case LDNumber: tmp = LDNewNumber(*(double *)value);            break;
+        /* LDNull is actually used to represent these types for now */
+        case LDObject: LD_ASSERT(false);                               break;
+        case LDArray:  LD_ASSERT(false);                               break;
     }
 
     return tmp;
