@@ -40,7 +40,15 @@ LDClientGetForMobileKey(const char *keyName)
 {
     struct LDClient *lookup;
 
-    LD_ASSERT(keyName);
+    LD_ASSERT_API(keyName);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (keyName == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientGetForMobileKey NULL keyName");
+
+            return NULL;
+        }
+    #endif
 
     HASH_FIND_STR(globalContext.clientTable, keyName, lookup);
 
@@ -53,8 +61,8 @@ LDi_clientInitIsolated(struct LDGlobal_i *const shared,
 {
     struct LDClient *client;
 
-    LD_ASSERT(shared);
-    LD_ASSERT(mobileKey);
+    LD_ASSERT_API(shared);
+    LD_ASSERT_API(mobileKey);
 
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
@@ -139,9 +147,29 @@ LDClientInit(struct LDConfig *const config, struct LDUser *const user,
 {
     struct LDJSON *secondaryKey, *tmp;
 
-    LD_ASSERT(config);
-    LD_ASSERT(user);
-    LD_ASSERT(!globalContext.primaryClient);
+    LD_ASSERT_API(config);
+    LD_ASSERT_API(user);
+    LD_ASSERT_API(!globalContext.primaryClient);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientInit NULL config");
+
+            return NULL;
+        }
+
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientInit NULL user");
+
+            return NULL;
+        }
+
+        if (globalContext.primaryClient != NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientInit already initialized");
+
+            return NULL;
+        }
+    #endif
 
     globalContext.sharedUser   = user;
     globalContext.sharedConfig = config;
@@ -160,7 +188,7 @@ LDClientInit(struct LDConfig *const config, struct LDUser *const user,
     {
         const char *name;
 
-        name = LDIterKey(secondaryKey)
+        name = LDIterKey(secondaryKey);
 
         LD_ASSERT(name);
 
@@ -199,6 +227,16 @@ LDClientSetOffline(struct LDClient *const client)
 {
     struct LDClient *clientIter, *tmp;
 
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientSetOffline NULL client");
+
+            return;
+        }
+    #endif
+
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
         LDi_rwlock_wrlock(&clientIter->clientLock);
         clientIter->offline = true;
@@ -211,6 +249,16 @@ LDClientSetOnline(struct LDClient *const client)
 {
     struct LDClient *clientIter, *tmp;
 
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientSetOnline NULL client");
+
+            return;
+        }
+    #endif
+
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
         LDi_rwlock_wrlock(&clientIter->clientLock);
         clientIter->offline = false;
@@ -222,7 +270,15 @@ LDClientSetOnline(struct LDClient *const client)
 LDBoolean
 LDClientIsOffline(struct LDClient *const client)
 {
-    LD_ASSERT(client);
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientIsOffline NULL client");
+
+            return true;
+        }
+    #endif
 
     LDi_rwlock_rdlock(&client->clientLock);
     bool offline = client->offline;
@@ -234,7 +290,15 @@ LDClientIsOffline(struct LDClient *const client)
 void
 LDClientSetBackground(struct LDClient *const client, const LDBoolean background)
 {
-    LD_ASSERT(client);
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientSetBackground NULL client");
+
+            return;
+        }
+    #endif
 
     LDi_rwlock_wrlock(&client->clientLock);
     client->background = background;
@@ -247,8 +311,22 @@ LDClientIdentify(struct LDClient *const client, struct LDUser *const user)
 {
     struct LDClient *clientIter, *tmp;
 
-    LD_ASSERT(client);
-    LD_ASSERT(user);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientIdentify NULL client");
+
+            return;
+        }
+
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientIdentify NULL user");
+
+            return;
+        }
+    #endif
 
     LDi_rwlock_wrlock(&globalContext.sharedUserLock);
 
@@ -283,7 +361,7 @@ LDClientIdentify(struct LDClient *const client, struct LDUser *const user)
 void
 clientCloseIsolated(struct LDClient *const client)
 {
-    LD_ASSERT(client);
+    LD_ASSERT_API(client);
 
     LDi_rwlock_wrlock(&client->clientLock);
     LDi_updatestatus(client, LDStatusShuttingdown);
@@ -320,25 +398,35 @@ clientCloseIsolated(struct LDClient *const client)
 void
 LDClientClose(struct LDClient *const client)
 {
-    struct LDClient *clientIter, *tmp;
+    if (client) {
+        struct LDClient *clientIter, *tmp;
 
-    HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
-        HASH_DEL(globalContext.clientTable, clientIter);
-        clientCloseIsolated(clientIter);
+        HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
+            HASH_DEL(globalContext.clientTable, clientIter);
+            clientCloseIsolated(clientIter);
+        }
+
+        LDUserFree(globalContext.sharedUser);
+        LDConfigFree(globalContext.sharedConfig);
+
+        globalContext.sharedConfig  = NULL;
+        globalContext.primaryClient = NULL;
+        globalContext.clientTable   = NULL;
     }
-
-    LDUserFree(globalContext.sharedUser);
-    LDConfigFree(globalContext.sharedConfig);
-
-    globalContext.sharedConfig  = NULL;
-    globalContext.primaryClient = NULL;
-    globalContext.clientTable   = NULL;
 }
 
 LDBoolean
 LDClientIsInitialized(struct LDClient *const client)
 {
-    LD_ASSERT(client);
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientIsInitialized NULL client");
+
+            return false;
+        }
+    #endif
 
     LDi_rwlock_rdlock(&client->clientLock);
     bool isinit = client->status == LDStatusInitialized;
@@ -351,7 +439,15 @@ LDBoolean
 LDClientAwaitInitialized(struct LDClient *const client,
     const unsigned int timeoutmilli)
 {
-    LD_ASSERT(client);
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientAwaitInitialized NULL client");
+
+            return false;
+        }
+    #endif
 
     LDi_mutex_lock(&client->initCondMtx);
     LDi_rwlock_rdlock(&client->clientLock);
@@ -423,7 +519,15 @@ LDAllFlags(struct LDClient *const client)
     struct LDStoreNode **flags;
     unsigned int flagCount, i;
 
-    LD_ASSERT(client);
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientAllFlags NULL client");
+
+            return false;
+        }
+    #endif
 
     if (!(result = LDNewObject())) {
         return NULL;
@@ -466,17 +570,33 @@ LDAllFlags(struct LDClient *const client)
     return NULL;
 }
 
-/*
- * a block of functions to look up feature flags
- */
-
 static void
-fillDetails(const struct LDStoreNode *const node,
-    LDVariationDetails *const details, const LDJSONType type)
-{
+fillDetails(
+    const struct LDClient *const    client,
+    const char *const               flagKey,
+    const struct LDStoreNode *const node,
+    LDVariationDetails *const       details,
+    const LDJSONType                type
+) {
     LD_ASSERT(details);
 
-    if (node) {
+    if (!client) {
+        details->reason         = LDNewObject();
+        details->variationIndex = -1;
+
+        LDObjectSetKey(details->reason, "kind",
+            LDNewText("ERROR"));
+        LDObjectSetKey(details->reason, "errorKind",
+            LDNewText("CLIENT_NOT_SPECIFIED"));
+    } else if (!flagKey) {
+        details->reason         = LDNewObject();
+        details->variationIndex = -1;
+
+        LDObjectSetKey(details->reason, "kind",
+            LDNewText("ERROR"));
+        LDObjectSetKey(details->reason, "errorKind",
+            LDNewText("FLAG_NOT_SPECIFIED"));
+    } else if (node) {
         if (type == LDNull || LDJSONGetType(node->flag.value) == type ||
             LDJSONGetType(node->flag.value) == LDNull)
         {
@@ -548,10 +668,32 @@ LDi_evalInternal(
 ) {
     struct LDStoreNode *node;
 
-    LD_ASSERT(client);
-    LD_ASSERT(flagKey);
-    LD_ASSERT(fallbackValue);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(flagKey);
+    LD_ASSERT_API(fallbackValue);
     LD_ASSERT(resultValue);
+
+    if (selected) {
+        *selected = NULL;
+    }
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDi_evalInternal NULL client");
+
+            *resultValue = fallbackValue;
+
+            return false;
+        }
+
+        if (flagKey == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDi_evalInternal NULL flagKey");
+
+            *resultValue = fallbackValue;
+
+            return false;
+        }
+    #endif
 
     node = LDi_storeGet(&client->store, flagKey);
 
@@ -598,8 +740,8 @@ LDBoolVariationDetail(struct LDClient *const client, const char *const key,
     bool value, *valueRef, fallbackCast;
     struct LDStoreNode *selected;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
 
     fallbackCast = fallback;
     valueRef     = &value;
@@ -608,7 +750,7 @@ LDBoolVariationDetail(struct LDClient *const client, const char *const key,
     LDi_evalInternal(
         client, key, LDBool, &fallbackCast, (void **)&valueRef, &selected
     );
-    fillDetails(selected, details, LDBool);
+    fillDetails(client, key, selected, details, LDBool);
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
@@ -623,8 +765,8 @@ LDBoolVariation(struct LDClient *const client, const char *const key,
 {
     bool value, *valueRef, fallbackCast;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
 
     fallbackCast = fallback;
     valueRef     = &value;
@@ -645,8 +787,8 @@ LDIntVariationDetail(struct LDClient *const client, const char *const key,
     double value, *valueRef, fallbackCast;
     struct LDStoreNode *selected;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
 
     valueRef     = &value;
     fallbackCast = fallback;
@@ -655,7 +797,7 @@ LDIntVariationDetail(struct LDClient *const client, const char *const key,
     LDi_evalInternal(
         client, key, LDNumber, &fallbackCast, (void **)&valueRef, &selected
     );
-    fillDetails(selected, details, LDNumber);
+    fillDetails(client, key, selected, details, LDNumber);
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
@@ -670,8 +812,8 @@ LDIntVariation(struct LDClient *const client, const char *const key,
 {
     double value, *valueRef, fallbackCast;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
 
     valueRef     = &value;
     fallbackCast = fallback;
@@ -692,8 +834,8 @@ LDDoubleVariationDetail(struct LDClient *const client, const char *const key,
     double value, *valueRef, fallbackCast;
     struct LDStoreNode *selected;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
 
     valueRef     = &value;
     fallbackCast = fallback;
@@ -702,7 +844,7 @@ LDDoubleVariationDetail(struct LDClient *const client, const char *const key,
     LDi_evalInternal(
         client, key, LDNumber, &fallbackCast, (void **)&valueRef, &selected
     );
-    fillDetails(selected, details, LDNumber);
+    fillDetails(client, key, selected, details, LDNumber);
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
@@ -717,8 +859,8 @@ LDDoubleVariation(struct LDClient *const client, const char *const key,
 {
     double value, *valueRef, fallbackCast;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
 
     valueRef     = &value;
     fallbackCast = fallback;
@@ -741,15 +883,15 @@ LDStringVariationDetail(struct LDClient *const client, const char *const key,
     char *value;
     struct LDStoreNode *selected;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(!(!buffer && bufferSize));
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(!(!buffer && bufferSize));
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDText, (void *)fallback, (void **)&value, &selected
     );
-    fillDetails(selected, details, LDText);
+    fillDetails(client, key, selected, details, LDText);
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
@@ -769,9 +911,9 @@ LDStringVariation(struct LDClient *const client, const char *const key,
     size_t resultLength;
     char *value;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(!(!buffer && bufferSize));
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(!(!buffer && bufferSize));
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
@@ -794,15 +936,15 @@ LDStringVariationAllocDetail(struct LDClient *const client,
     char *value;
     struct LDStoreNode *selected;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(fallback);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fallback);
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDText, (void *)fallback, (void **)&value, &selected
     );
-    fillDetails(selected, details, LDText);
+    fillDetails(client, key, selected, details, LDText);
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
@@ -817,9 +959,9 @@ LDStringVariationAlloc(struct LDClient *const client, const char *const key,
 {
     char *value;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(fallback);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fallback);
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
@@ -837,15 +979,29 @@ LDJSONVariationDetail(struct LDClient *const client, const char *const key,
     const struct LDJSON *value;
     struct LDStoreNode *selected;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(fallback);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fallback);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDJSONVariationDetail NULL client");
+
+            return LDJSONDuplicate(fallback);
+        }
+
+        if (key == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDJSONVariationDetail NULL key");
+
+            return LDJSONDuplicate(fallback);
+        }
+    #endif
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDNull, (void *)fallback, (void **)&value, &selected
     );
-    fillDetails(selected, details, LDNull);
+    fillDetails(client, key, selected, details, LDNull);
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
@@ -860,9 +1016,9 @@ LDJSONVariation(struct LDClient *const client, const char *const key,
 {
     const struct LDJSON *value;
 
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(fallback);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fallback);
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
@@ -876,8 +1032,22 @@ LDJSONVariation(struct LDClient *const client, const char *const key,
 void
 LDClientTrack(struct LDClient *const client, const char *const name)
 {
-    LD_ASSERT(client);
-    LD_ASSERT(name);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(name);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientTrack NULL client");
+
+            return;
+        }
+
+        if (name == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientTrack NULL name");
+
+            return;
+        }
+    #endif
 
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_track(client->eventProcessor, client->shared->sharedUser, name,
@@ -889,8 +1059,22 @@ void
 LDClientTrackData(struct LDClient *const client, const char *const name,
     struct LDJSON *const data)
 {
-    LD_ASSERT(client);
-    LD_ASSERT(name);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(name);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientTrackData NULL client");
+
+            return;
+        }
+
+        if (name == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientTrackData NULL name");
+
+            return;
+        }
+    #endif
 
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_track(client->eventProcessor, client->shared->sharedUser, name,
@@ -902,8 +1086,22 @@ void
 LDClientTrackMetric(struct LDClient *const client, const char *const name,
     struct LDJSON *const data, const double metric)
 {
-    LD_ASSERT(client);
-    LD_ASSERT(name);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(name);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientTrackMetric NULL client");
+
+            return;
+        }
+
+        if (name == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientTrackMetric NULL name");
+
+            return;
+        }
+    #endif
 
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_track(client->eventProcessor, client->shared->sharedUser, name,
@@ -916,6 +1114,16 @@ LDClientFlush(struct LDClient *const client)
 {
     struct LDClient *clientIter, *tmp;
 
+    LD_ASSERT_API(client);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientFlush NULL client");
+
+            return;
+        }
+    #endif
+
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
         LDi_cond_signal(&clientIter->eventCond);
     }
@@ -925,9 +1133,32 @@ LDBoolean
 LDClientRegisterFeatureFlagListener(struct LDClient *const client,
     const char *const key, LDlistenerfn fn)
 {
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(fn);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fn);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDClientRegisterFeatureFlagListener NULL client");
+
+            return false;
+        }
+
+        if (key == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDClientRegisterFeatureFlagListener NULL key");
+
+            return false;
+        }
+
+        if (fn == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDClientRegisterFeatureFlagListener NULL listener");
+
+            return false;
+        }
+    #endif
 
     return LDi_storeRegisterListener(&client->store, key, fn);
 }
@@ -936,9 +1167,32 @@ void
 LDClientUnregisterFeatureFlagListener(struct LDClient *const client,
     const char *const key, LDlistenerfn fn)
 {
-    LD_ASSERT(client);
-    LD_ASSERT(key);
-    LD_ASSERT(fn);
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fn);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDClientUnregisterFeatureFlagListener NULL client");
+
+            return;
+        }
+
+        if (key == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDClientUnregisterFeatureFlagListener NULL key");
+
+            return;
+        }
+
+        if (fn == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDClientUnregisterFeatureFlagListener NULL listener");
+
+            return;
+        }
+    #endif
 
     LDi_storeUnregisterListener(&client->store, key, fn);
 }

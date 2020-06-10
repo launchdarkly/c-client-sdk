@@ -266,7 +266,15 @@ void
 LDUserSetCustomAttributesJSON(struct LDUser *const user,
     struct LDJSON *const custom)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetCustomAttributesJSON NULL user");
+
+            return;
+        }
+    #endif
 
     if (user->custom) {
         LDJSONFree(user->custom);
@@ -279,8 +287,16 @@ void
 LDUserSetPrivateAttributes(struct LDUser *const user,
     struct LDJSON *const privateAttributes)
 {
-    LD_ASSERT(user);
-    LD_ASSERT(LDJSONGetType(privateAttributes) == LDArray);
+    LD_ASSERT_API(user);
+    LD_ASSERT_API(LDJSONGetType(privateAttributes) == LDArray);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetPrivateAttributes NULL user");
+
+            return;
+        }
+    #endif
 
     if (user->privateAttributeNames) {
         LDJSONFree(user->privateAttributeNames);
@@ -292,7 +308,15 @@ LDUserSetPrivateAttributes(struct LDUser *const user,
 void
 LDUserSetAnonymous(struct LDUser *const user, const LDBoolean anon)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetAnonymous NULL user");
+
+            return;
+        }
+    #endif
 
     user->anonymous = anon;
 }
@@ -300,7 +324,15 @@ LDUserSetAnonymous(struct LDUser *const user, const LDBoolean anon)
 LDBoolean
 LDUserSetIP(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetIP NULL user");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&user->ip, str);
 }
@@ -308,7 +340,15 @@ LDUserSetIP(struct LDUser *const user, const char *const str)
 LDBoolean
 LDUserSetFirstName(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetFirstName NULL user");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&user->firstName, str);
 }
@@ -316,7 +356,15 @@ LDUserSetFirstName(struct LDUser *const user, const char *const str)
 LDBoolean
 LDUserSetLastName(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetLastName NULL user");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&user->lastName, str);
 }
@@ -324,7 +372,15 @@ LDUserSetLastName(struct LDUser *const user, const char *const str)
 LDBoolean
 LDUserSetEmail(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetEmail NULL user");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&user->email, str);
 }
@@ -332,7 +388,15 @@ LDUserSetEmail(struct LDUser *const user, const char *const str)
 LDBoolean
 LDUserSetName(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetName NULL user");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&user->name, str);
 }
@@ -340,7 +404,15 @@ LDUserSetName(struct LDUser *const user, const char *const str)
 LDBoolean
 LDUserSetAvatar(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetAvatar NULL user");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&user->avatar, str);
 }
@@ -348,7 +420,15 @@ LDUserSetAvatar(struct LDUser *const user, const char *const str)
 LDBoolean
 LDUserSetSecondary(struct LDUser *const user, const char *const str)
 {
-    LD_ASSERT(user);
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetSecondary NULL user");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&user->secondary, str);
 }

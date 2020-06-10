@@ -43,6 +43,12 @@ target_include_directories(ldclientapi
     PRIVATE ${LD_INCLUDE_PATHS}
 )
 
+target_compile_definitions(ldclientapi
+    PRIVATE -D LAUNCHDARKLY_CONCURRENCY_ABORT
+            -D LAUNCHDARKLY_USE_ASSERT
+            -D LAUNCHDARKLY_DEFENSIVE
+)
+
 if(MSVC)
     target_compile_definitions(ldclientapi
         PRIVATE -D CURL_STATICLIB

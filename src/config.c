@@ -7,7 +7,15 @@ LDConfigNew(const char *const mobileKey)
 {
     struct LDConfig *config;
 
-    LD_ASSERT(mobileKey);
+    LD_ASSERT_API(mobileKey);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (mobileKey == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigNew NULL mobileKey");
+
+            return NULL;
+        }
+    #endif
 
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
@@ -71,7 +79,16 @@ void
 LDConfigSetAllAttributesPrivate(struct LDConfig *const config,
     const LDBoolean allPrivate)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetAllAttributesPrivate NULL config");
+
+            return;
+        }
+    #endif
 
     config->allAttributesPrivate = allPrivate;
 }
@@ -82,7 +99,16 @@ LDConfigSetBackgroundPollingIntervalMillis(struct LDConfig *const config,
 {
     int minimum;
 
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetBackgroundPollingIntervalMillis NULL config");
+
+            return;
+        }
+    #endif
 
     minimum = 15 * 60 * 1000;
 
@@ -96,8 +122,22 @@ LDConfigSetBackgroundPollingIntervalMillis(struct LDConfig *const config,
 LDBoolean
 LDConfigSetAppURI(struct LDConfig *const config, const char *const uri)
 {
-    LD_ASSERT(config);
-    LD_ASSERT(uri);
+    LD_ASSERT_API(config);
+    LD_ASSERT_API(uri);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetAppURI NULL config");
+
+            return false;
+        }
+
+        if (uri == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetAppURI NULL uri");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&config->appURI, uri);
 }
@@ -106,7 +146,16 @@ void
 LDConfigSetConnectionTimeoutMillies(struct LDConfig *const config,
     const int millis)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetConnectionTimeoutMillies NULL config");
+
+            return;
+        }
+    #endif
 
     config->connectionTimeoutMillis = millis;
 }
@@ -115,7 +164,16 @@ void
 LDConfigSetDisableBackgroundUpdating(struct LDConfig *const config,
     const LDBoolean disable)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetDisableBackgroundUpdating NULL config");
+
+            return;
+        }
+    #endif
 
     config->disableBackgroundUpdating = disable;
 }
@@ -123,7 +181,16 @@ LDConfigSetDisableBackgroundUpdating(struct LDConfig *const config,
 void
 LDConfigSetEventsCapacity(struct LDConfig *const config, const int capacity)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetEventsCapacity NULL config");
+
+            return;
+        }
+    #endif
 
     config->eventsCapacity = capacity;
 }
@@ -132,7 +199,16 @@ void
 LDConfigSetEventsFlushIntervalMillis(struct LDConfig *const config,
     const int millis)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetEventsFlushIntervalMillis NULL config");
+
+            return;
+        }
+    #endif
 
     config->eventsFlushIntervalMillis = millis;
 }
@@ -140,8 +216,22 @@ LDConfigSetEventsFlushIntervalMillis(struct LDConfig *const config,
 LDBoolean
 LDConfigSetEventsURI(struct LDConfig *const config, const char *const uri)
 {
-    LD_ASSERT(config);
-    LD_ASSERT(uri);
+    LD_ASSERT_API(config);
+    LD_ASSERT_API(uri);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetEventsURI NULL config");
+
+            return false;
+        }
+
+        if (uri == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetEventsURI NULL uri");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&config->eventsURI, uri);
 }
@@ -149,8 +239,22 @@ LDConfigSetEventsURI(struct LDConfig *const config, const char *const uri)
 LDBoolean
 LDConfigSetMobileKey(struct LDConfig *const config, const char *const key)
 {
-    LD_ASSERT(config);
-    LD_ASSERT(key);
+    LD_ASSERT_API(config);
+    LD_ASSERT_API(key);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetMobleKey NULL config");
+
+            return false;
+        }
+
+        if (key == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetMobileKey NULL key");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&config->mobileKey, key);
 }
@@ -158,7 +262,16 @@ LDConfigSetMobileKey(struct LDConfig *const config, const char *const key)
 void
 LDConfigSetOffline(struct LDConfig *const config, const LDBoolean offline)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetOffline NULL config");
+
+            return;
+        }
+    #endif
 
     config->offline = offline;
 }
@@ -166,7 +279,16 @@ LDConfigSetOffline(struct LDConfig *const config, const LDBoolean offline)
 void
 LDConfigSetStreaming(struct LDConfig *const config, const LDBoolean streaming)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetStreaming NULL config");
+
+            return;
+        }
+    #endif
 
     config->streaming = streaming;
 }
@@ -177,7 +299,16 @@ LDConfigSetPollingIntervalMillis(struct LDConfig *const config,
 {
     int minimum;
 
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetPollingIntervalMillis NULL config");
+
+            return;
+        }
+    #endif
 
     minimum = 30 * 1000;
 
@@ -191,8 +322,22 @@ LDConfigSetPollingIntervalMillis(struct LDConfig *const config,
 LDBoolean
 LDConfigSetStreamURI(struct LDConfig *const config, const char *const uri)
 {
-    LD_ASSERT(config);
-    LD_ASSERT(uri);
+    LD_ASSERT_API(config);
+    LD_ASSERT_API(uri);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetStreamURI NULL config");
+
+            return false;
+        }
+
+        if (uri == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetStreamURI NULL uri");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&config->streamURI, uri);
 }
@@ -200,7 +345,16 @@ LDConfigSetStreamURI(struct LDConfig *const config, const char *const uri)
 void
 LDConfigSetUseReport(struct LDConfig *const config, const LDBoolean report)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetUseReport NULL config");
+
+            return;
+        }
+    #endif
 
     config->useReport = report;
 }
@@ -209,7 +363,16 @@ void
 LDConfigSetUseEvaluationReasons(struct LDConfig *const config,
     const LDBoolean reasons)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetUseEvaluationReasons NULL config");
+
+            return;
+        }
+    #endif
 
     config->useReasons = reasons;
 }
@@ -217,8 +380,22 @@ LDConfigSetUseEvaluationReasons(struct LDConfig *const config,
 LDBoolean
 LDConfigSetProxyURI(struct LDConfig *const config, const char *const uri)
 {
-    LD_ASSERT(config);
-    LD_ASSERT(uri);
+    LD_ASSERT_API(config);
+    LD_ASSERT_API(uri);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetProxyURI NULL config");
+
+            return false;
+        }
+
+        if (uri == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDConfigSetProxyURI NULL uri");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&config->proxyURI, uri);
 }
@@ -226,7 +403,16 @@ LDConfigSetProxyURI(struct LDConfig *const config, const char *const uri)
 void
 LDConfigSetVerifyPeer(struct LDConfig *const config, const LDBoolean enabled)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetVerifyPeer NULL config");
+
+            return;
+        }
+    #endif
 
     config->verifyPeer = enabled;
 }
@@ -235,7 +421,23 @@ LDBoolean
 LDConfigSetSSLCertificateAuthority(struct LDConfig *const config,
     const char *const certFile)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetSSLCertificateAuthority NULL config");
+
+            return false;
+        }
+
+        if (certFile == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetSSLCertificateAuthority NULL certFile");
+
+            return false;
+        }
+    #endif
 
     return LDSetString(&config->certFile, certFile);
 }
@@ -244,7 +446,16 @@ void
 LDConfigSetPrivateAttributes(struct LDConfig *const config,
     struct LDJSON *attributes)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetPrivateAttributes NULL config");
+
+            return;
+        }
+    #endif
 
     if (attributes) {
         LD_ASSERT(LDJSONGetType(attributes) == LDArray);
@@ -261,9 +472,9 @@ LDConfigAddSecondaryMobileKey(struct LDConfig *const config,
 {
     struct LDJSON *tmp;
 
-    LD_ASSERT(config);
-    LD_ASSERT(name);
-    LD_ASSERT(key);
+    LD_ASSERT_API(config);
+    LD_ASSERT_API(name);
+    LD_ASSERT_API(key);
 
     if (strcmp(name, LDPrimaryEnvironmentName) == 0) {
         LD_LOG(LD_LOG_ERROR,
@@ -310,7 +521,16 @@ void
 LDConfigSetInlineUsersInEvents(struct LDConfig *const config,
     const LDBoolean inlineUsers)
 {
-    LD_ASSERT(config);
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigSetInlineUsersInEvents NULL config");
+
+            return;
+        }
+    #endif
 
     config->inlineUsersInEvents = inlineUsers;
 }

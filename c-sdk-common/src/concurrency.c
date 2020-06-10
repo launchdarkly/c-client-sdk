@@ -487,7 +487,15 @@ LDi_cond_wait_imp(ld_cond_t *const cond, ld_mutex_t *const mutex,
     LD_ASSERT(mutex);
 
     #ifdef _WIN32
-        status = SleepConditionVariableCS(cond, mutex, milliseconds) == 0;
+        status = SleepConditionVariableCS(cond, mutex, milliseconds);
+
+        if (status == 0) {
+            if (GetLastError() != ERROR_TIMEOUT) {
+                status = 1;
+            }
+        } else {
+            status = 0;
+        }
     #else
         if ((status = LDi_clockGetTime(&ts, LD_CLOCK_REALTIME) == false)) {
             goto done;
@@ -506,6 +514,8 @@ LDi_cond_wait_imp(ld_cond_t *const cond, ld_mutex_t *const mutex,
                     strerror(status));
 
                 goto done;
+            } else {
+                status = 0;
             }
         }
     #endif
