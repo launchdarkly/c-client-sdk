@@ -438,6 +438,35 @@ LDi_onEvent(const char *const eventName, const char *const eventBuffer,
     return true;
 }
 
+double
+LDi_calculateStreamDelay(const unsigned int retries)
+{
+    if (retries == 0) {
+        return 0;
+    } else if (retries == 1) {
+        return 1000;
+    } else {
+        double backoff;
+
+        unsigned int rng = 0;
+
+        LDi_random(&rng);
+
+        /* calculate time to wait */
+        backoff = 1000 * pow(2, retries);
+
+        /* cap (min not built in) */
+        if (backoff > 30 * 1000) {
+            backoff = 30 * 1000;
+        }
+
+        /* jitter */
+        backoff /= 2;
+
+        return backoff + LDi_normalize(rng, 0, LD_RAND_MAX, 0, backoff);
+    }
+}
+
 THREAD_RETURN
 LDi_bgfeaturestreamer(void *const v)
 {
@@ -449,26 +478,9 @@ LDi_bgfeaturestreamer(void *const v)
         /* Wait on any retry delays required. Status change such as shut down
         will cause a short circuit */
         if (retries) {
-            int delay = 0;
-
-            if (retries == 1) {
-                delay = 1000;
-            } else {
-                unsigned int rng = 0;
-
-                LDi_random(&rng);
-
-                delay = 1000 * pow(2, retries - 2);
-
-                delay += rng % delay;
-
-                if (delay > 30 * 1000) {
-                    delay = 30 * 1000;
-                }
-            }
-
             LDi_mutex_lock(&client->condMtx);
-            LDi_cond_wait(&client->streamCond, &client->condMtx, delay);
+            LDi_cond_wait(&client->streamCond, &client->condMtx,
+                LDi_calculateStreamDelay(retries));
             LDi_mutex_unlock(&client->condMtx);
         }
 

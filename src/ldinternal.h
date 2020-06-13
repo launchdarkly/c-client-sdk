@@ -76,4 +76,6 @@ THREAD_RETURN LDi_bgeventsender(void *const v);
 THREAD_RETURN LDi_bgfeaturepoller(void *const v);
 THREAD_RETURN LDi_bgfeaturestreamer(void *const v);
 
+double LDi_calculateStreamDelay(const unsigned int retries);
+
 #endif /* C_CLIENT_LDINTERNAL_H */
