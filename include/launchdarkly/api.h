@@ -1,5 +1,5 @@
 /*!
- * @file ldapi.h
+ * @file api.h
  * @brief Public API. Include this for every public operation.
  */
 

@@ -1,3 +1,8 @@
+/*!
+ * @file user.h
+ * @brief Public API Interface for User construction
+ */
+
 #pragma once
 
 #include <launchdarkly/json.h>

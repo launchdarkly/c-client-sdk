@@ -1,3 +1,8 @@
+/*!
+ * @file config.h
+ * @brief Public API Interface for Configuration
+ */
+
 #pragma once
 
 #include <launchdarkly/boolean.h>

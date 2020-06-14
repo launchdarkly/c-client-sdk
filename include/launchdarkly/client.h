@@ -1,3 +1,9 @@
+/*!
+ * @file client.h
+ * @brief Public Client control and variations
+ */
+
+
 #pragma once
 
 #include <launchdarkly/json.h>
