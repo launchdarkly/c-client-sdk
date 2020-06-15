@@ -2,6 +2,39 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.0] - 2020-06-15
+## Fixed
+- The `LDJSONVariation`, and `LDJSONVariationDetail` variations now correctly handle empty objects, and arrays.
+## Added
+- A new JSON representation `struct LDJSON` and a large family of related functions.
+- A dedicated C++ wrapper class `LDClientCPP`
+- The `LDUserSetCustomAttributesJSON` function using `struct LDJSON` to replace `LDUserAddPrivateAttribute`
+- A `LDLogLevel` enum for the new logging interface
+- A basic logging function that can be used instead of writing your own `LDBasicLogger`
+- The `LDConfigureGlobalLogger` used for configuring the logging function, and log level
+- The `LDLogLevelToString` function which converts `LDLogLevel` to a string
+## Changed
+- Instead of `make` we now use `CMake` to build the SDK.
+- The main include entrypoint is now `launchdarkly/api.h` instead of `ldapi.h`
+- Previously the SDK defined either a class or struct depending on the language detected. Now there is a dedicated base C interface, and C++ wrapper.
+- The types `LDClient`, `LDConfig`, and `LDUser` no longer use a typedef, and require the `struct` prefix.
+- The `stdbool.h` header have been removed from the public API. All instances of `bool` have been replaced with `LDBoolean` which will contain a value of 0 or 1.
+- Updated the `LDUserSetPrivateAttributes` function to accept `struct LDJSON`
+- Updated the `LDAllFlags` function to return `struct LDJSON`
+- Updated the `LDJSONVariation`, and `LDJSONVariationDetail` variations to use `struct LDJSON`
+- The entire public API now has a "defensive mode" enabled by default, which is controlled by the `LAUNCHDARKLY_DEFENSIVE` compile time definition. This mode will check, and log detectable errors of API usage.
+- Internal asserts can be controlled with the `LAUNCHDARKLY_USE_ASSERT` compile time definition.
+## Removed
+- All old types and functions related to logging
+- The `LDNode*` family of functions
+- The `LDNode` struct
+- The `LDConfigAddPrivateAttribute`function
+- The `LDUserSetCustomAttributesJSON` function
+- The `LDUserAddPrivateAttribute` function
+- The `LDClientGetLockedFlags` function
+- The `LDClientUnlockFlags` function
+- The `LD_store_*` family of functions
+
 ## [1.7.6] - 2020-04-01
 ### Fixed:
 - Standardized streaming retry behavior. Previously exponential back-off was skipped.
