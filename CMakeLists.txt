@@ -84,6 +84,12 @@ if(NOT SKIP_BASE_INSTALL)
         DESTINATION            include
         FILES_MATCHING PATTERN "*.h*"
     )
+
+    INSTALL(
+        DIRECTORY              ${PROJECT_SOURCE_DIR}/c-sdk-common/include/
+        DESTINATION            include
+        FILES_MATCHING PATTERN "*.h*"
+    )
 endif()
 
 # ldclientapicpp target --------------------------------------------------------
