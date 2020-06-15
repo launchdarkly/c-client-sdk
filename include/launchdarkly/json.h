@@ -55,7 +55,7 @@ LD_EXPORT(struct LDJSON *) LDNewBool(const LDBoolean boolean);
 LD_EXPORT(struct LDJSON *) LDNewNumber(const double number);
 
 /**
- * @brief Returns a a new constructed JSON node of type `LDJSONText`.
+ * @brief Returns a new constructed JSON node of type `LDJSONText`.
  * @param[in] text The text to copy and then assign the new node.
  * May not be `NULL`.
  * @return `NULL` on failure.
@@ -223,7 +223,7 @@ LD_EXPORT(struct LDJSON *) LDCollectionDetachIter(
  * @param[in] array May not be `NULL`.
  * must be of type `LDJSONArray`.
  * @param[in] index The index to lookup in the array
- * @return Item if it exists, otherwise `NULL if does not exist, or on failure.`
+ * @return Item if it exists, otherwise `NULL` if does not exist, or on failure.
  */
 LD_EXPORT(struct LDJSON *) LDArrayLookup(const struct LDJSON *const array,
     const unsigned int index);
@@ -314,7 +314,7 @@ LD_EXPORT(LDBoolean) LDObjectMerge(struct LDJSON *const to,
  ******************************************************************************/
 
 /**
- * @brief Serialize JSON text into a JSON structure.
+ * @brief Serialize JSON structure into JSON text.
  * @param[in] json Structure to serialize.
  * May be `NULL`.
  * @return `NULL` on failure
