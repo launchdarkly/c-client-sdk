@@ -1,11 +1,21 @@
+# Windows release script for PowerShell
 
-# Windows test script for PowerShell (just puts artifacts in output directory)
+$ErrorActionPreference = "Stop"
+
+# prevents console errors from CircleCI host
+$global:ProgressPreference = "SilentlyContinue"
+
+# the built in powershell zip seems to be horribly broken when working with
+# nested directories
+choco install zip
 
 $prefix = $env:LD_LIBRARY_FILE_PREFIX  # set in .ldrelease/config.yml
 New-Item -ItemType Directory -Force -Path .\artifacts
 
-$compress = @{
-LiteralPath = "ldclientapi.dll", "ldclientapi.lib", "ldapi.h", "uthash.h"
-DestinationPath = ".\artifacts\$prefix-dynamic.zip"
-}
-Compress-Archive @compress
+cd "build-static/release"
+zip -r "../../artifacts/${prefix}-static.zip" *
+cd ../..
+
+cd "build-dynamic/release"
+zip -r "../../artifacts/${prefix}-dynamic.zip" *
+cd ../..
