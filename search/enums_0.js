@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['ld_5flog_5flevel',['ld_log_level',['../ldapi_8h.html#a6c1d7034643b5de731bda31ab6173bb4',1,'ldapi.h']]],
-  ['ldnodetype',['LDNodeType',['../ldapi_8h.html#ade5304d6783a89419b2485648122af00',1,'ldapi.h']]],
-  ['ldstatus',['LDStatus',['../ldapi_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da',1,'ldapi.h']]]
+  ['ldjsontype',['LDJSONType',['../json_8h.html#a35e090b31eb4dd4fc1f6b10c313ce398',1,'json.h']]],
+  ['ldloglevel',['LDLogLevel',['../logging_8h.html#a350a93aa37f635cf7e778121189bb49c',1,'logging.h']]],
+  ['ldstatus',['LDStatus',['../client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da',1,'client.h']]]
 ];
