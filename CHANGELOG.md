@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.1] - 2020-06-18
+### Changed:
+- Update DLLs to include metadata on Windows
+
+### Removed:
+- Redundant internal logic related to stream cancellation
+
 ## [2.0.0] - 2020-06-15
 ## Fixed
 - The `LDJSONVariation`, and `LDJSONVariationDetail` variations now correctly handle empty objects, and arrays.
