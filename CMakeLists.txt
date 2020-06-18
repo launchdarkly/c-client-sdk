@@ -1,14 +1,38 @@
 cmake_minimum_required(VERSION 2.8.8)
 
-project(ldclientapi)
+cmake_policy(SET CMP0048 NEW)
+
+file(READ "include/launchdarkly/api.h" HeaderVersionFile)
+
+string(REGEX MATCH
+    "#define LD_SDK_VERSION \"([0-9\\.]+).*\""
+    _
+    ${HeaderVersionFile}
+)
+
+message("Extracted version: ${CMAKE_MATCH_1}")
+
+project(ldclientapi VERSION ${CMAKE_MATCH_1})
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles")
 
 include(CTest)
+include(generate_product_version)
 
 find_package(CURL REQUIRED)
 
 if(NOT DEFINED MSVC)
     set(LD_LIBRARIES pthread m)
 endif()
+
+generate_product_version(
+   WindowsVersionInfo
+   NAME "ldclientapi"
+   COMPANY_NAME "Catamorphic"
+   VERSION_MAJOR ${PROJECT_VERSION_MAJOR}
+   VERSION_MINOR ${PROJECT_VERSION_MINOR}
+   VERSION_PATCH ${PROJECT_VERSION_PATCH}
+)
 
 set(LD_INCLUDE_PATHS
     "src"
@@ -25,7 +49,13 @@ endif(APPLE)
 
 file(GLOB SOURCES "src/*" "c-sdk-common/src/*")
 
+if(DEFINED MSVC)
+    list(APPEND SOURCES "${WindowsVersionInfo}")
+endif()
+
 set(LD_LIBRARIES ${LD_LIBRARIES} ${CURL_LIBRARIES})
+
+configure_file(include/launchdarkly/api.h include/launchdarkly/api.h)
 
 # ldclientapi target -----------------------------------------------------------
 
@@ -94,7 +124,11 @@ endif()
 
 # ldclientapicpp target --------------------------------------------------------
 
-add_library(ldclientapicpp "cpp/api.cpp")
+if(DEFINED MSVC)
+    add_library(ldclientapicpp "cpp/api.cpp" "${WindowsVersionInfo}")
+else()
+    add_library(ldclientapicpp "cpp/api.cpp")
+endif()
 
 target_include_directories(ldclientapicpp PUBLIC "cpp/include")
 
