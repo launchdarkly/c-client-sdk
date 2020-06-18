@@ -13,6 +13,8 @@ set -e
 
 mkdir -p artifacts
 
+base=$(pwd)
+
 cd "${base}/build-static/release"
 zip -r "${base}/artifacts/${LD_LIBRARY_FILE_PREFIX}-static.zip" *
 tar -cf "${base}/artifacts/${LD_LIBRARY_FILE_PREFIX}-static.tar" *

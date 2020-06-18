@@ -217,48 +217,6 @@ prepareShared(const char *const url, const struct LDConfig *const config,
     return false;
 }
 
-/*
- * record the timestamp of the last received data. if nothing has been
- * seen for a while, disconnect. this shouldn't normally happen.
- */
-static int
-progressinspector(void *const rawContext, double dltotal, double dlnow,
-    double ultotal, double ulnow)
-{
-    struct streamdata *streamData;
-    time_t now;
-
-    LD_ASSERT(rawContext);
-
-    now        = time(NULL);
-    streamData = (struct streamdata *)rawContext;
-
-    if (streamData->lastdataamt != dlnow) {
-        streamData->lastdataamt  = dlnow;
-        streamData->lastdatatime = now;
-    }
-
-    if (now - streamData->lastdatatime > LD_STREAMTIMEOUT) {
-        LD_LOG(LD_LOG_ERROR, "giving up stream, too slow");
-
-        return 1;
-    }
-
-    LDi_rwlock_rdlock(&streamData->client->clientLock);
-
-    const bool failed   = streamData->client->status == LDStatusFailed;
-    const bool stopping = streamData->client->status == LDStatusShuttingdown;
-    const bool offline  = streamData->client->offline;
-
-    LDi_rwlock_rdunlock(&streamData->client->clientLock);
-
-    if (failed || stopping || offline ) {
-        return 1;
-    }
-
-    return 0;
-}
-
 void
 LDi_cancelread(const int handle)
 {
@@ -373,8 +331,6 @@ LDi_readstream(struct LDClient *const client, int *response,
         return;
     }
 
-    LDFree(jsonuser);
-
     if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT")
             != CURLE_OK)
@@ -425,29 +381,6 @@ LDi_readstream(struct LDClient *const client, int *response,
         goto cleanup;
     }
 
-    if (curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0) != CURLE_OK) {
-        LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_NOPROGRESS failed");
-
-        goto cleanup;
-    }
-
-    if (curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progressinspector)
-        != CURLE_OK)
-    {
-        LD_LOG(LD_LOG_CRITICAL,
-            "curl_easy_setopt CURLOPT_PROGRESSFUNCTION failed");
-
-        goto cleanup;
-    }
-
-    if (curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, (void *)&streamdata)
-        != CURLE_OK)
-    {
-        LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_PROGRESSDATA failed");
-
-        goto cleanup;
-    }
-
     LD_LOG_1(LD_LOG_INFO, "connecting to stream %s", url);
     const CURLcode res = curl_easy_perform(curl);
     if (res == CURLE_OK) {
@@ -462,6 +395,7 @@ LDi_readstream(struct LDClient *const client, int *response,
   cleanup:
     LDFree(streamdata.mem.memory);
     LDFree(headers.memory);
+    LDFree(jsonuser);
 
     curl_slist_free_all(headerlist);
 
