@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.2] - 2020-07-02
+### Changed:
+- 2.0.0 Accidentally included the debug runtime on Windows. The debug runtime has been removed.
+
 ## [2.0.1] - 2020-06-18
 ### Changed:
 - Update DLLs to include metadata on Windows
