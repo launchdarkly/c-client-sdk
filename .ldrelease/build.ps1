@@ -12,7 +12,7 @@ Write-Host
 Write-Host Building curl
 Push-Location
 cd curl-7.59.0/winbuild
-ExecuteOrFail { nmake /f Makefile.vc mode=static }
+ExecuteOrFail { nmake /f Makefile.vc mode=static BUILD=release }
 Pop-Location
 
 Write-Host
@@ -28,8 +28,8 @@ ExecuteOrFail {
         -D CURL_INCLUDE_DIR="C:/Users/circleci/project/curl-7.59.0/builds/libcurl-vc-x64-release-static-ipv6-sspi-winssl/include" `
         ..
 }
-ExecuteOrFail { cmake --build . }
-ExecuteOrFail { cmake --build . --target install }
+ExecuteOrFail { cmake --build . --config Release }
+ExecuteOrFail { cmake --build . --target install --config Release }
 Pop-Location
 
 Write-Host
@@ -47,6 +47,6 @@ ExecuteOrFail {
         -D CURL_INCLUDE_DIR="C:/Users/circleci/project/curl-7.59.0/builds/libcurl-vc-x64-release-static-ipv6-sspi-winssl/include" `
         ..
 }
-ExecuteOrFail { cmake --build . }
-ExecuteOrFail { cmake --build . --target install }
+ExecuteOrFail { cmake --build . --config Release }
+ExecuteOrFail { cmake --build . --target install --config Release }
 Pop-Location
