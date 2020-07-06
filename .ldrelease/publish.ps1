@@ -12,10 +12,18 @@ choco install zip
 $prefix = $env:LD_LIBRARY_FILE_PREFIX  # set in .ldrelease/config.yml
 New-Item -ItemType Directory -Force -Path .\artifacts
 
-cd "build-static/release"
-zip -r "../../artifacts/${prefix}-static.zip" *
+cd "build-static-release/artifacts"
+zip -r "../../artifacts/${prefix}-static-release.zip" *
 cd ../..
 
-cd "build-dynamic/release"
-zip -r "../../artifacts/${prefix}-dynamic.zip" *
+cd "build-dynamic-release/artifacts"
+zip -r "../../artifacts/${prefix}-dynamic-release.zip" *
+cd ../..
+
+cd "build-static-debug/artifacts"
+zip -r "../../artifacts/${prefix}-static-debug.zip" *
+cd ../..
+
+cd "build-dynamic-debug/artifacts"
+zip -r "../../artifacts/${prefix}-dynamic-debug.zip" *
 cd ../..
