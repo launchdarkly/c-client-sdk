@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.3] - 2020-07-06
+### Changed:
+- Windows artifacts are now released under both debug, and release configurations
+
+### Fixed:
+- Windows release artifacts no longer include miscellaneous build files introduced by 2.0.2
+
+
 ## [2.0.2] - 2020-07-02
 ### Changed:
 - 2.0.0 Accidentally included the debug runtime on Windows. The debug runtime has been removed.
