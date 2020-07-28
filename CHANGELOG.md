@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.0] - 2020-07-28
+### Added:
+- Added `LDUserSetCountry`. Thanks @mstrater !
+
 ## [2.0.3] - 2020-07-06
 ### Changed:
 - Windows artifacts are now released under both debug, and release configurations
