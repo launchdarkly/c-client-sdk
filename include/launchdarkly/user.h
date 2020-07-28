@@ -51,6 +51,10 @@ LD_EXPORT(LDBoolean) LDUserSetName(struct LDUser *const user,
 LD_EXPORT(LDBoolean) LDUserSetAvatar(struct LDUser *const user,
     const char *const str);
 
+/** @brief Set the user's country. */
+LD_EXPORT(LDBoolean) LDUserSetCountry(struct LDUser *const user,
+    const char *const str);
+
 /** @brief Set the user's secondary key. */
 LD_EXPORT(LDBoolean) LDUserSetSecondary(struct LDUser *const user,
     const char *const str);

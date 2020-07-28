@@ -12,6 +12,7 @@ struct LDUser {
     char *email;
     char *name;
     char *avatar;
+    char *country;
     struct LDJSON *privateAttributeNames;
     struct LDJSON *custom;
 };
