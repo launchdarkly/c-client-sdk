@@ -116,6 +116,7 @@ var searchData=
   ['ldusernew',['LDUserNew',['../user_8h.html#a3c0db523b6dc37d3776ee3a445db95fc',1,'user.h']]],
   ['ldusersetanonymous',['LDUserSetAnonymous',['../user_8h.html#a9f609f2e41bd6bf3fcba13bfe65facde',1,'user.h']]],
   ['ldusersetavatar',['LDUserSetAvatar',['../user_8h.html#ac8975494686befd88bdb2ada279257eb',1,'user.h']]],
+  ['ldusersetcountry',['LDUserSetCountry',['../user_8h.html#a45076c03bea1733074d3d3a1b4012231',1,'user.h']]],
   ['ldusersetcustomattributesjson',['LDUserSetCustomAttributesJSON',['../user_8h.html#ab49a09285783842e3e93801e5186168f',1,'user.h']]],
   ['ldusersetemail',['LDUserSetEmail',['../user_8h.html#a4d3534193155b8010bf3daab4c7c0b31',1,'user.h']]],
   ['ldusersetfirstname',['LDUserSetFirstName',['../user_8h.html#a05c2a1568a61840eb96c23597c256fa5',1,'user.h']]],
