@@ -48,6 +48,7 @@ LDUserNew(const char *const key)
     user->email                 = NULL;
     user->name                  = NULL;
     user->avatar                = NULL;
+    user->country               = NULL;
     user->privateAttributeNames = NULL;
     user->custom                = NULL;
 
@@ -65,6 +66,7 @@ LDUserFree(struct LDUser *const user)
         LDFree(user->email);
         LDFree(user->name);
         LDFree(user->avatar);
+        LDFree(user->country);
         LDJSONFree(user->custom);
         LDJSONFree(user->privateAttributeNames);
         LDFree(user);
@@ -210,6 +212,7 @@ LDi_userToJSON(
     addstring(email);
     addstring(name);
     addstring(avatar);
+    addstring(country);
 
     if (lduser->custom) {
         struct LDJSON *const custom = LDJSONDuplicate(lduser->custom);
@@ -416,6 +419,22 @@ LDUserSetAvatar(struct LDUser *const user, const char *const str)
     #endif
 
     return LDSetString(&user->avatar, str);
+}
+
+LDBoolean
+LDUserSetCountry(struct LDUser *const user, const char *const str)
+{
+    LD_ASSERT_API(user);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (user == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDUserSetCountry NULL user");
+
+            return false;
+        }
+    #endif
+
+    return LDSetString(&user->country, str);
 }
 
 LDBoolean
