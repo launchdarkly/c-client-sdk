@@ -21,7 +21,7 @@ jobs:
       - checkout
       - run:
           name: Build
-          command: ./.ldrelease/linux-build.sh
+          command: ./.ldrelease/build.sh
       - run:
           name: Test
           command: ./.ldrelease/test.sh
@@ -38,7 +38,7 @@ jobs:
           command: ./.ldrelease/mac-prepare.sh
       - run:
           name: Build
-          command: ./.ldrelease/mac-build.sh
+          command: ./.ldrelease/build.sh
       - run:
           name: Test
           command: ./.ldrelease/test.sh
