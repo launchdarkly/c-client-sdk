@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.1] - 2020-08-19
+### Fixed:
+- Create shared library artifacts for linux and mac (fixes #57)
+
+
 ## [2.1.0] - 2020-07-28
 ### Added:
 - Added `LDUserSetCountry`. Thanks @mstrater !
