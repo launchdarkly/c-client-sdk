@@ -51,7 +51,7 @@ void LDi_onstreameventput(struct LDClient *client, const char *data);
 void LDi_onstreameventpatch(struct LDClient *client, const char *data);
 void LDi_onstreameventdelete(struct LDClient *client, const char *data);
 
-void (*LDi_statuscallback)(int);
+extern void (*LDi_statuscallback)(int);
 
 void LDi_millisleep(int ms);
 /* must be called exactly once before rng is used */
