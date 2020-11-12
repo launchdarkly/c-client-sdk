@@ -28,7 +28,7 @@ jobs:
 
   build-test-osx:
     macos:
-      xcode: "9.0"
+      xcode: "9.4.1"
     environment:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
