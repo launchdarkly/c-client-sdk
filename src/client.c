@@ -18,7 +18,7 @@ static struct LDGlobal_i globalContext = {
 
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 
-void (*LDi_statuscallback)(int);
+static void (*LDi_statuscallback)(int) = NULL;
 
 void
 LDi_earlyinit(void)
