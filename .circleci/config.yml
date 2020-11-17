@@ -23,8 +23,10 @@ jobs:
           name: Build
           command: ./.ldrelease/build.sh
       - run:
-          name: Test
-          command: ./.ldrelease/test.sh
+          name: Unit test with memcheck
+          command: |
+            cd build-static
+            ctest -T memcheck
 
   build-test-osx:
     macos:
