@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.2] - 2020-11-17
+### Changed:
+- OSX artifacts are now generated with Xcode 9.4.1
+
+### Fixed:
+- Removed extra internal definition of LDi_statuscallback
+
 ## [2.1.1] - 2020-08-19
 ### Fixed:
 - Create shared library artifacts for linux and mac (fixes #57)
