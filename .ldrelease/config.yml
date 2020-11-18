@@ -8,7 +8,7 @@ circleci:
     env:
       LD_LIBRARY_FILE_PREFIX: linux-gcc-64bit
   mac:
-    xcode: "9.0"
+    xcode: "9.4.1"
     env:
       LD_LIBRARY_FILE_PREFIX: osx-clang-64bit
   windows:
