@@ -351,7 +351,7 @@ LDClientIdentify(struct LDClient *const client, struct LDUser *const user)
         */
 
         LDi_reinitializeconnection(clientIter);
-        LD_ASSERT(LDi_identify(clientIter->eventProcessor, user));
+        LDi_identify(clientIter->eventProcessor, user);
 
         LDi_rwlock_wrunlock(&clientIter->clientLock);
     }

@@ -206,6 +206,15 @@ prepareShared(const char *const url, const struct LDConfig *const config,
         }
     }
 
+    if (curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS,
+        (long)config->connectionTimeoutMillis) != CURLE_OK)
+    {
+        LD_LOG(LD_LOG_CRITICAL,
+            "curl_easy_setopt CURLOPT_CONNECTTIMEOUT_MS failed");
+
+        goto error;
+    }
+
     *r_curl = curl; *r_headers = headers;
 
     return true;
