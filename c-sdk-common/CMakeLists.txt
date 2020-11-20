@@ -12,6 +12,8 @@ set(LD_INCLUDE_PATHS
     "src"
     "include"
     ${CURL_INCLUDE_DIR}
+    "test-utils/include"
+    "test-utils/src"
 )
 
 if(APPLE)
@@ -19,7 +21,7 @@ if(APPLE)
     set(LD_PUBLIC_LIBRARIES "-framework CoreFoundation" "-framework IOKit")
 endif(APPLE)
 
-file(GLOB SOURCES "src/*")
+file(GLOB SOURCES "src/*" "test-utils/src/*")
 
 set(LD_LIBRARIES ${LD_LIBRARIES} ${CURL_LIBRARIES})
 
@@ -41,11 +43,13 @@ if(MSVC)
     target_compile_definitions(ldsharedapi
         PRIVATE -D CURL_STATICLIB
                 -D _CRT_SECURE_NO_WARNINGS
+                -D LAUNCHDARKLY_USE_ASSERT
     )
 else()
     target_compile_definitions(ldsharedapi
         PRIVATE -D __USE_XOPEN
                 -D _GNU_SOURCE
+                -D LAUNCHDARKLY_USE_ASSERT
     )
 
     target_compile_options(ldsharedapi

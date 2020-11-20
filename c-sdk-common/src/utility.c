@@ -17,6 +17,7 @@
     #include <windows.h>
 #else
     #include <unistd.h>
+    #include <errno.h>
 #endif
 
 int
@@ -68,14 +69,31 @@ LDi_sleepMilliseconds(const unsigned long milliseconds)
         return true;
     #else
         int status;
+        useconds_t usec;
 
-        if ((status = usleep(1000 * milliseconds)) != 0) {
-            LD_LOG_1(LD_LOG_CRITICAL, "usleep failed with: %s",
-                strerror(status));
+        if (milliseconds >= 1000) {
+            usec = 999999;
 
-            LD_ASSERT(false);
+            LD_LOG(LD_LOG_WARNING,
+                "LDi_sleepMilliseconds capping usleep at 999999");
+        } else {
+            usec = milliseconds * 1000;
+        }
 
-            return false;
+        if ((status = usleep(usec)) != 0) {
+            if (errno == EINTR) {
+                LD_LOG(LD_LOG_WARNING,
+                    "LDi_sleepMilliseconds usleep got EINTR skipping sleep");
+
+                return false;
+            } else {
+                LD_LOG_1(LD_LOG_CRITICAL, "usleep failed with: %s",
+                    strerror(errno));
+
+                LD_ASSERT(false);
+
+                return false;
+            }
         }
 
         return true;
