@@ -348,42 +348,6 @@ LDi_onstreameventdelete(struct LDClient *const client, const char *const data)
     LDJSONFree(payload);
 }
 
-static void
-onstreameventping(struct LDClient *const client)
-{
-    /*
-    LDi_rwlock_rdlock(&client->clientLock);
-
-    if (client->status == LDStatusFailed || client->status == LDStatusShuttingdown) {
-        LDi_rwlock_rdunlock(&client->clientLock);
-        return;
-    }
-
-    LDi_rwlock_rdunlock(&client->clientLock);
-
-    int response = 0;
-    char *const data = LDi_fetchfeaturemap(client, &response);
-
-    if (response == 200) {
-        if (!data) { return; }
-
-        if (LDi_clientsetflags(client, true, data, 1)) {
-            LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-            LDi_savedata("features", client->shared->sharedUser->key, data);
-            LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-        }
-    } else {
-        if (response == 401 || response == 403) {
-            LDi_rwlock_wrlock(&client->clientLock);
-            LDi_updatestatus(client, LDStatusFailed);
-            LDi_rwlock_wrunlock(&client->clientLock);
-        }
-    }
-
-    LDFree(data);
-    */
-}
-
 void
 LDi_startstopstreaming(struct LDClient *const client, bool stopstreaming)
 {
@@ -429,8 +393,6 @@ LDi_onEvent(const char *const eventName, const char *const eventBuffer,
         LDi_onstreameventpatch(client, eventBuffer);
     } else if (strcmp(eventName, "delete") == 0) {
         LDi_onstreameventdelete(client, eventBuffer);
-    } else if (strcmp(eventName, "ping") == 0) {
-        onstreameventping(client);
     } else {
         LD_LOG_1(LD_LOG_ERROR, "sse unknown event name: %s", eventName);
     }

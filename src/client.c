@@ -117,16 +117,6 @@ LDi_clientInitIsolated(struct LDGlobal_i *const shared,
     LDi_thread_create(&client->streamingThread, LDi_bgfeaturestreamer, client);
 
     LDi_rwlock_rdlock(&shared->sharedUserLock);
-    char *const flags = NULL;
-    // char *const flags = LDi_loaddata("features", shared->sharedUser->key);
-    LDi_rwlock_rdunlock(&shared->sharedUserLock);
-
-    if (flags) {
-        // LDi_clientsetflags(client, false, flags, 1);
-        LDFree(flags);
-    }
-
-    LDi_rwlock_rdlock(&shared->sharedUserLock);
 
     if (!LDi_identify(client->eventProcessor, shared->sharedUser)) {
         LDi_rwlock_rdunlock(&shared->sharedUserLock);
