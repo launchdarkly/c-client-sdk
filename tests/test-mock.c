@@ -229,7 +229,8 @@ main()
         LD_ASSERT(WSAStartup(0x202, &wsaData) == 0);
     #endif
 
-    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+    LDBasicLoggerThreadSafeInitialize();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
     
     testBasicPoll();
     testBasicStream();
@@ -237,6 +238,8 @@ main()
     #ifdef _WIN32
         WSACleanup();
     #endif
+
+    LDBasicLoggerThreadSafeShutdown();
 
     return 0;
 }

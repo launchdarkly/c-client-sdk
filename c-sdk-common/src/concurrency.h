@@ -57,6 +57,11 @@ extern ld_mutex_unary_t   LDi_mutex_destroy;
 extern ld_mutex_unary_t   LDi_mutex_lock;
 extern ld_mutex_unary_t   LDi_mutex_unlock;
 
+extern ld_mutex_unary_t   LDi_mutex_nl_init;
+extern ld_mutex_unary_t   LDi_mutex_nl_destroy;
+extern ld_mutex_unary_t   LDi_mutex_nl_lock;
+extern ld_mutex_unary_t   LDi_mutex_nl_unlock;
+
 extern ld_thread_join_t   LDi_thread_join;
 extern ld_thread_create_t LDi_thread_create;
 

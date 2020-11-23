@@ -21,8 +21,32 @@ typedef enum {
 /** @brief Internal: Used for the non macro portion */
 LD_EXPORT(void) LDi_log(const LDLogLevel level, const char *const format, ...);
 
-/** @brief A provided logger that can be used as a convenient default */
+/**
+ * @brief A provided logger that can be used as a convenient default.
+ * @deprecated This is deprecated in favor of `LDBasicLoggerThreadSafe`.
+ */
 LD_EXPORT(void) LDBasicLogger(const LDLogLevel level, const char *const text);
+
+/**
+ * @brief Setup routine for `LDBasicLoggerThreadSafe`.
+ * Call this before `LDBasicLoggerThreadSafe` is used.
+ */
+LD_EXPORT(void) LDBasicLoggerThreadSafeInitialize(void);
+
+/**
+ * @brief A provided logger that can be used as a convenient default.
+ * Must call `LDBasicLoggerTSInitialize` before use. This should be used instead
+ * of `LDBasicLogger`.
+ */
+LD_EXPORT(void) LDBasicLoggerThreadSafe(
+    const LDLogLevel level, const char *const text);
+
+/**
+ * @brief Shutdown routine for `LDBasicLoggerThreadSafe`
+ * Call this when `LDBasicLoggerThreadSafe` is no longer used, after all
+ * LaunchDarkly resources are destroyed.
+ */
+LD_EXPORT(void) LDBasicLoggerThreadSafeShutdown(void);
 
 /**
  * @brief Set the logger, and the log level to use. This routine should only be

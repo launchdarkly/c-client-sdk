@@ -4,9 +4,11 @@
 #include <launchdarkly/logging.h>
 
 #include "assertion.h"
+#include "concurrency.h"
 
 static LDLogLevel sdkloggerlevel = LD_LOG_INFO;
 static void (*sdklogger)(const LDLogLevel level, const char *const text) = NULL;
+static ld_mutex_t basicLoggerLock;
 
 const char *
 LDLogLevelToString(const LDLogLevel level)
@@ -31,6 +33,30 @@ LDBasicLogger(const LDLogLevel level, const char *const text)
 }
 
 void
+LDBasicLoggerThreadSafeInitialize(void)
+{
+    LDi_mutex_nl_init(&basicLoggerLock);
+}
+
+void
+LDBasicLoggerThreadSafe(const LDLogLevel level, const char *const text)
+{
+    if (!LDi_mutex_nl_lock(&basicLoggerLock)) {
+        return;
+    }
+
+    printf("[%s] %s\n", LDLogLevelToString(level), text);
+    
+    LDi_mutex_nl_unlock(&basicLoggerLock);
+}
+
+void
+LDBasicLoggerThreadSafeShutdown(void)
+{
+    LDi_mutex_nl_destroy(&basicLoggerLock);
+}
+
+void
 LDConfigureGlobalLogger(const LDLogLevel level,
     void (*logger)(const LDLogLevel level, const char *const text))
 {
@@ -44,9 +70,7 @@ LDi_log(const LDLogLevel level, const char *const format, ...)
     char buffer[4096];
     va_list va;
 
-    LD_ASSERT(format);
-
-    if (!sdklogger || level > sdkloggerlevel) {
+    if (!format || !sdklogger || level > sdkloggerlevel) {
         return;
     }
 

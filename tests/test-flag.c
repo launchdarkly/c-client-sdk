@@ -40,9 +40,12 @@ testParseAndSerializeAllFields()
 int
 main()
 {
-    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+    LDBasicLoggerThreadSafeInitialize();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
 
     testParseAndSerializeAllFields();
+
+    LDBasicLoggerThreadSafeShutdown();
 
     return 0;
 };
