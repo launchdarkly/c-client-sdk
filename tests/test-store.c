@@ -75,10 +75,13 @@ testRestoreAndSaveBasic()
 int
 main(int argc, char **argv)
 {
-    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+    LDBasicLoggerThreadSafeInitialize();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
 
     testRestoreAndSaveEmpty();
     testRestoreAndSaveBasic();
+
+    LDBasicLoggerThreadSafeShutdown();
 
     return 0;
 }

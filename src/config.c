@@ -26,7 +26,7 @@ LDConfigNew(const char *const mobileKey)
 
     config->allAttributesPrivate            = false;
     config->backgroundPollingIntervalMillis = 15 * 60 * 1000;
-    config->connectionTimeoutMillis         = 10000;
+    config->connectionTimeoutMillis         = 10 * 1000;
     config->disableBackgroundUpdating       = false;
     config->eventsCapacity                  = 100;
     config->eventsFlushIntervalMillis       = 30000;

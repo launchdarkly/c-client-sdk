@@ -61,9 +61,12 @@ LDi_clientInitIsolated(struct LDGlobal_i *const shared,
     const char *const mobileKey)
 {
     struct LDClient *client;
+    unsigned int threadCount;
 
     LD_ASSERT_API(shared);
     LD_ASSERT_API(mobileKey);
+    
+    threadCount = 0;
 
     LDi_once(&LDi_earlyonce, LDi_earlyinit);
 
@@ -83,63 +86,119 @@ LDi_clientInitIsolated(struct LDGlobal_i *const shared,
     client->streamhandle        = 0;
 
     if (!LDSetString(&client->mobileKey, mobileKey)) {
-        clientCloseIsolated(client);
-
-        return NULL;
+        goto err1;
     }
 
     if (!(client->eventProcessor =
         LDi_newEventProcessor(shared->sharedConfig)))
     {
-        clientCloseIsolated(client);
-
-        return NULL;
+        goto err2;
     }
 
     if (!LDi_storeInitialize(&client->store)) {
-        clientCloseIsolated(client);
-
-        return NULL;
+        goto err3;
     }
 
-    LDi_rwlock_init(&client->clientLock);
-
-    LDi_mutex_init(&client->initCondMtx);
-    LDi_mutex_init(&client->condMtx);
-
-    LDi_cond_init(&client->initCond);
-    LDi_cond_init(&client->eventCond);
-    LDi_cond_init(&client->pollCond);
-    LDi_cond_init(&client->streamCond);
-
-    LDi_thread_create(&client->eventThread, LDi_bgeventsender, client);
-    LDi_thread_create(&client->pollingThread, LDi_bgfeaturepoller, client);
-    LDi_thread_create(&client->streamingThread, LDi_bgfeaturestreamer, client);
-
-    LDi_rwlock_rdlock(&shared->sharedUserLock);
-    char *const flags = NULL;
-    // char *const flags = LDi_loaddata("features", shared->sharedUser->key);
-    LDi_rwlock_rdunlock(&shared->sharedUserLock);
-
-    if (flags) {
-        // LDi_clientsetflags(client, false, flags, 1);
-        LDFree(flags);
+    if (!LDi_rwlock_init(&client->clientLock)) {
+        goto err4;
     }
+
+    if (!LDi_mutex_init(&client->initCondMtx)) {
+        goto err5;
+    }
+
+    if (!LDi_mutex_init(&client->condMtx)) {
+        goto err6;
+    }
+
+    if (!LDi_cond_init(&client->initCond)) {
+        goto err7;
+    }
+
+    if (!LDi_cond_init(&client->eventCond)) {
+        goto err8;
+    }
+
+    if (!LDi_cond_init(&client->pollCond)) {
+        goto err9;
+    }
+
+    if (!LDi_cond_init(&client->streamCond)) {
+        goto err10;
+    }
+
+    if (!LDi_thread_create(&client->eventThread, LDi_bgeventsender, client)) {
+        goto err11;
+    }
+    threadCount++;
+
+    if (!LDi_thread_create(
+        &client->pollingThread, LDi_bgfeaturepoller, client))
+    {
+        goto err12;
+    }
+    threadCount++;
+
+    if (!LDi_thread_create(
+        &client->streamingThread, LDi_bgfeaturestreamer, client))
+    {
+        goto err12;
+    }
+    threadCount++;
 
     LDi_rwlock_rdlock(&shared->sharedUserLock);
 
     if (!LDi_identify(client->eventProcessor, shared->sharedUser)) {
         LDi_rwlock_rdunlock(&shared->sharedUserLock);
-        LDi_rwlock_wrunlock(&client->clientLock);
 
-        clientCloseIsolated(client);
-
-        return NULL;
+        goto err12;
     }
 
     LDi_rwlock_rdunlock(&shared->sharedUserLock);
 
     return client;
+
+  err12:
+    LDi_rwlock_wrlock(&client->clientLock);
+    LDi_updatestatus(client, LDStatusShuttingdown);
+    LDi_reinitializeconnection(client);
+    LDi_rwlock_wrunlock(&client->clientLock);
+    
+    if (threadCount > 0) {
+        LDi_thread_join(&client->eventThread);
+    }
+    
+    if (threadCount > 1) {
+        LDi_thread_join(&client->pollingThread);
+    }
+    
+    if (threadCount > 2) {
+        LDi_thread_join(&client->streamingThread);
+    }
+  err11:
+    LDi_cond_destroy(&client->streamCond);
+  err10:
+    LDi_cond_destroy(&client->pollCond);
+  err9:
+    LDi_cond_destroy(&client->eventCond);
+  err8:
+    LDi_cond_destroy(&client->initCond);
+  err7:
+    LDi_mutex_destroy(&client->condMtx);
+  err6:
+    LDi_mutex_destroy(&client->initCondMtx);
+  err5:
+    LDi_rwlock_destroy(&client->clientLock);
+  err4:
+    LDi_storeDestroy(&client->store);
+  err3:
+    LDi_freeEventProcessor(client->eventProcessor);
+  err2:
+    LDFree(client->mobileKey);
+  err1:
+    LDFree(client);
+
+    return NULL;
 }
 
 struct LDClient *
@@ -342,16 +401,8 @@ LDClientIdentify(struct LDClient *const client, struct LDUser *const user)
 
         LDi_updatestatus(client, LDStatusInitializing);
 
-        /*
-        TODO load for specific user
-        char *const flags = NULL;
-        if (flags) {
-            LDFree(flags);
-        }
-        */
-
         LDi_reinitializeconnection(clientIter);
-        LD_ASSERT(LDi_identify(clientIter->eventProcessor, user));
+        LDi_identify(clientIter->eventProcessor, user);
 
         LDi_rwlock_wrunlock(&clientIter->clientLock);
     }

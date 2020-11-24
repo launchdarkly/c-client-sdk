@@ -10,6 +10,9 @@ main()
     struct LDClient *client, *secondary;
     struct LDConfig *config;
     struct LDUser *user;
+    
+    LDBasicLoggerThreadSafeInitialize();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
 
     LD_ASSERT(config = LDConfigNew("my-primary-key"));
     LDConfigSetOffline(config, true);
@@ -22,6 +25,8 @@ main()
     LD_ASSERT(!LDClientGetForMobileKey("unknown environment"));
 
     LDClientClose(client);
+
+    LDBasicLoggerThreadSafeShutdown();
 
     return 0;
 }

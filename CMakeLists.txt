@@ -137,12 +137,28 @@ target_link_libraries(ldclientapicpp PUBLIC ldclientapi)
 # test targets -----------------------------------------------------------------
 
 if(BUILD_TESTING)
+    file(GLOB TEST_UTILS_SRC "test-utils/src/*" "c-sdk-common/test-utils/src/*")
+
+    add_library(test-utils STATIC ${TEST_UTILS_SRC})
+
+    target_link_libraries(test-utils ldclientapi)
+
+    target_include_directories(test-utils
+        PUBLIC ${LD_INCLUDE_PATHS}
+               "c-sdk-common/test-utils/include"
+    )
+
+    target_compile_definitions(test-utils
+        PRIVATE -D LAUNCHDARKLY_USE_ASSERT
+                -D LAUNCHDARKLY_CONCURRENCY_ABORT
+    )
+
     file(GLOB TESTS "tests/test-*")
     foreach(testsource ${TESTS})
         get_filename_component(testsourceleaf ${testsource} NAME)
         string(REPLACE ".c" "" testexe ${testsourceleaf})
         add_executable(${testexe} ${testsource})
-        target_link_libraries(${testexe} ldclientapi)
+        target_link_libraries(${testexe} ldclientapi test-utils)
         target_include_directories(${testexe} PRIVATE ${LD_INCLUDE_PATHS})
         add_test(NAME ${testexe} COMMAND ${CMAKE_BINARY_DIR}/${testexe})
         target_compile_definitions(${testexe}

@@ -357,7 +357,8 @@ testWithClientAndDetailsAndValue(
 int
 main()
 {
-    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+    LDBasicLoggerThreadSafeInitialize();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
 
     testWithClient(testBoolVariationDefault);
     testWithClient(testIntVariationDefault);
@@ -388,6 +389,8 @@ main()
     testWithClientAndDetailsAndValue(testStringVariationAllocDetail,
         LDNewText("b"));
     testWithClientAndDetailsAndValue(testJSONVariationDetail, LDNewText("c"));
+
+    LDBasicLoggerThreadSafeShutdown();
 
     return 0;
 }

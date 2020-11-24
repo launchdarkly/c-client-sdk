@@ -148,6 +148,49 @@ LDi_mutex_init_imp(ld_mutex_t *const mutex)
 }
 
 static bool
+LDi_mutex_init_nl_imp(ld_mutex_t *const mutex)
+{
+    int status;
+
+    #ifndef _WIN32
+        pthread_mutexattr_t attributes;
+        int kind;
+    #endif
+
+    #ifdef _WIN32
+        InitializeCriticalSection(mutex);
+
+        status = 0;
+    #else
+        if ((status = pthread_mutexattr_init(&attributes)) != 0) {
+            goto done;
+        }
+
+        #ifdef LAUNCHDARKLY_CONCURRENCY_UNSAFE
+            kind = PTHREAD_MUTEX_NORMAL;
+        #else
+            kind = PTHREAD_MUTEX_ERRORCHECK;
+        #endif
+
+        if ((status = pthread_mutexattr_settype(&attributes, kind)) != 0) {
+            goto done;
+        }
+
+        if ((status = pthread_mutex_init(mutex, &attributes)) != 0) {
+            goto done;
+        }
+
+        /* this should never fail */
+        if ((status = pthread_mutexattr_destroy(&attributes)) != 0) {
+            goto done;
+        }
+    #endif
+
+  done:
+    return status == 0;
+}
+
+static bool
 LDi_mutex_destroy_imp(ld_mutex_t *const mutex)
 {
     int status;
@@ -175,6 +218,22 @@ LDi_mutex_destroy_imp(ld_mutex_t *const mutex)
 
     #ifdef LAUNCHDARKLY_TRACE_CONCURRENCY
         LD_LOG_1(LD_LOG_TRACE, "LDi_mutex_destroy end %p", (void *)mutex);
+    #endif
+
+    return status == 0;
+}
+
+static bool
+LDi_mutex_destroy_nl_imp(ld_mutex_t *const mutex)
+{
+    int status;
+
+    #ifdef _WIN32
+        DeleteCriticalSection(mutex);
+
+        status = 0;
+    #else
+        status = pthread_mutex_destroy(mutex);
     #endif
 
     return status == 0;
@@ -214,6 +273,22 @@ LDi_mutex_lock_imp(ld_mutex_t *const mutex)
 }
 
 static bool
+LDi_mutex_lock_nl_imp(ld_mutex_t *const mutex)
+{
+    int status;
+
+    #ifdef _WIN32
+        EnterCriticalSection(mutex);
+
+        status = 0;
+    #else
+        status = pthread_mutex_lock(mutex);
+    #endif
+
+    return status == 0;
+}
+
+static bool
 LDi_mutex_unlock_imp(ld_mutex_t *const mutex)
 {
     int status;
@@ -241,6 +316,22 @@ LDi_mutex_unlock_imp(ld_mutex_t *const mutex)
 
     #ifdef LAUNCHDARKLY_TRACE_CONCURRENCY
         LD_LOG_1(LD_LOG_TRACE, "LDi_mutex_unlock end %p", (void *)mutex);
+    #endif
+
+    return status == 0;
+}
+
+static bool
+LDi_mutex_unlock_nl_imp(ld_mutex_t *const mutex)
+{
+    int status;
+
+    #ifdef _WIN32
+        LeaveCriticalSection(mutex);
+
+        status = 0;
+    #else
+        status = pthread_mutex_unlock(mutex);
     #endif
 
     return status == 0;
@@ -631,22 +722,27 @@ LDi_cond_init_imp(ld_cond_t *const cond)
     return status == 0;
 }
 
-ld_mutex_unary_t   LDi_mutex_init      = LDi_mutex_init_imp;
-ld_mutex_unary_t   LDi_mutex_destroy   = LDi_mutex_destroy_imp;
-ld_mutex_unary_t   LDi_mutex_lock      = LDi_mutex_lock_imp;
-ld_mutex_unary_t   LDi_mutex_unlock    = LDi_mutex_unlock_imp;
+ld_mutex_unary_t   LDi_mutex_init       = LDi_mutex_init_imp;
+ld_mutex_unary_t   LDi_mutex_destroy    = LDi_mutex_destroy_imp;
+ld_mutex_unary_t   LDi_mutex_lock       = LDi_mutex_lock_imp;
+ld_mutex_unary_t   LDi_mutex_unlock     = LDi_mutex_unlock_imp;
 
-ld_thread_join_t   LDi_thread_join     = LDi_thread_join_imp;
-ld_thread_create_t LDi_thread_create   = LDi_thread_create_imp;
+ld_mutex_unary_t   LDi_mutex_nl_init    = LDi_mutex_init_nl_imp;
+ld_mutex_unary_t   LDi_mutex_nl_destroy = LDi_mutex_destroy_nl_imp;
+ld_mutex_unary_t   LDi_mutex_nl_lock    = LDi_mutex_lock_nl_imp;
+ld_mutex_unary_t   LDi_mutex_nl_unlock  = LDi_mutex_unlock_nl_imp;
 
-ld_rwlock_unary_t  LDi_rwlock_init     = LDi_rwlock_init_imp;
-ld_rwlock_unary_t  LDi_rwlock_destroy  = LDi_rwlock_destroy_imp;
-ld_rwlock_unary_t  LDi_rwlock_rdlock   = LDi_rwlock_rdlock_imp;
-ld_rwlock_unary_t  LDi_rwlock_wrlock   = LDi_rwlock_wrlock_imp;
-ld_rwlock_unary_t  LDi_rwlock_rdunlock = LDi_rwlock_rdunlock_imp;
-ld_rwlock_unary_t  LDi_rwlock_wrunlock = LDi_rwlock_wrunlock_imp;
+ld_thread_join_t   LDi_thread_join      = LDi_thread_join_imp;
+ld_thread_create_t LDi_thread_create    = LDi_thread_create_imp;
 
-ld_cond_unary_t    LDi_cond_init       = LDi_cond_init_imp;
-ld_cond_wait_t     LDi_cond_wait       = LDi_cond_wait_imp;
-ld_cond_unary_t    LDi_cond_signal     = LDi_cond_signal_imp;
-ld_cond_unary_t    LDi_cond_destroy    = LDi_cond_destroy_imp;
+ld_rwlock_unary_t  LDi_rwlock_init      = LDi_rwlock_init_imp;
+ld_rwlock_unary_t  LDi_rwlock_destroy   = LDi_rwlock_destroy_imp;
+ld_rwlock_unary_t  LDi_rwlock_rdlock    = LDi_rwlock_rdlock_imp;
+ld_rwlock_unary_t  LDi_rwlock_wrlock    = LDi_rwlock_wrlock_imp;
+ld_rwlock_unary_t  LDi_rwlock_rdunlock  = LDi_rwlock_rdunlock_imp;
+ld_rwlock_unary_t  LDi_rwlock_wrunlock  = LDi_rwlock_wrunlock_imp;
+
+ld_cond_unary_t    LDi_cond_init        = LDi_cond_init_imp;
+ld_cond_wait_t     LDi_cond_wait        = LDi_cond_wait_imp;
+ld_cond_unary_t    LDi_cond_signal      = LDi_cond_signal_imp;
+ld_cond_unary_t    LDi_cond_destroy     = LDi_cond_destroy_imp;

@@ -220,12 +220,17 @@ testOnlyUserKey()
 int
 main()
 {
+    LDBasicLoggerThreadSafeInitialize();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
+
     testNoPayloadIfNoEvents();
     testTrackMetricQueued();
     testBasicSummary();
     testBasicSummaryUnknown();
     testInlineUser();
     testOnlyUserKey();
+
+    LDBasicLoggerThreadSafeShutdown();
 
     return 0;
 }

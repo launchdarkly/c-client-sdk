@@ -37,10 +37,13 @@ testStreamBackoff()
 int
 main()
 {
-    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
+    LDBasicLoggerThreadSafeInitialize();
+    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
 
     testGenerateUUIDv4();
     testStreamBackoff();
+
+    LDBasicLoggerThreadSafeShutdown();
 
     return 0;
 }
