@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sdk_20layout_20and_20overview',['SDK Layout and Overview',['../index.html',1,'']]]
+  ['deprecated_20list',['Deprecated List',['../deprecated.html',1,'']]]
 ];

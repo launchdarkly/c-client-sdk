@@ -2,6 +2,7 @@ var NAVTREE =
 [
   [ "C Client-Side SDK", "index.html", [
     [ "SDK Layout and Overview", "index.html", null ],
+    [ "Deprecated List", "deprecated.html", null ],
     [ "Data Structures", "annotated.html", [
       [ "Data Structures", "annotated.html", "annotated_dup" ],
       [ "Data Structure Index", "classes.html", null ]

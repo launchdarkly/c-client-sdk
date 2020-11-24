@@ -144,10 +144,21 @@ Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logging_8h.html#a02615d4b0cce81b9d93b02b03f219bfe">LDi_log</a> (const <a class="el" href="logging_8h.html#a350a93aa37f635cf7e778121189bb49c">LDLogLevel</a> level, const char *const format,...)</td></tr>
 <tr class="memdesc:a02615d4b0cce81b9d93b02b03f219bfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Internal: Used for the non macro portion. <br /></td></tr>
 <tr class="separator:a02615d4b0cce81b9d93b02b03f219bfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad72c84890cc42a3321a42fe3366dd22c"><td class="memItemLeft" align="right" valign="top"><a id="ad72c84890cc42a3321a42fe3366dd22c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logging_8h.html#ad72c84890cc42a3321a42fe3366dd22c">LDBasicLogger</a> (const <a class="el" href="logging_8h.html#a350a93aa37f635cf7e778121189bb49c">LDLogLevel</a> level, const char *const text)</td></tr>
-<tr class="memdesc:ad72c84890cc42a3321a42fe3366dd22c"><td class="mdescLeft">&#160;</td><td class="mdescRight">A provided logger that can be used as a convenient default. <br /></td></tr>
+<tr class="memitem:ad72c84890cc42a3321a42fe3366dd22c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logging_8h.html#ad72c84890cc42a3321a42fe3366dd22c">LDBasicLogger</a> (const <a class="el" href="logging_8h.html#a350a93aa37f635cf7e778121189bb49c">LDLogLevel</a> level, const char *const text)</td></tr>
+<tr class="memdesc:ad72c84890cc42a3321a42fe3366dd22c"><td class="mdescLeft">&#160;</td><td class="mdescRight">A provided logger that can be used as a convenient default.  <a href="#ad72c84890cc42a3321a42fe3366dd22c">More...</a><br /></td></tr>
 <tr class="separator:ad72c84890cc42a3321a42fe3366dd22c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7205a2cff9d1c65d8a65f761f1f3a5ae"><td class="memItemLeft" align="right" valign="top"><a id="a7205a2cff9d1c65d8a65f761f1f3a5ae"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logging_8h.html#a7205a2cff9d1c65d8a65f761f1f3a5ae">LDBasicLoggerThreadSafeInitialize</a> (void)</td></tr>
+<tr class="memdesc:a7205a2cff9d1c65d8a65f761f1f3a5ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup routine for <code>LDBasicLoggerThreadSafe</code>. Call this before <code>LDBasicLoggerThreadSafe</code> is used. <br /></td></tr>
+<tr class="separator:a7205a2cff9d1c65d8a65f761f1f3a5ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afce7d8591d78e48fdd1cdffdfdae89fc"><td class="memItemLeft" align="right" valign="top"><a id="afce7d8591d78e48fdd1cdffdfdae89fc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logging_8h.html#afce7d8591d78e48fdd1cdffdfdae89fc">LDBasicLoggerThreadSafe</a> (const <a class="el" href="logging_8h.html#a350a93aa37f635cf7e778121189bb49c">LDLogLevel</a> level, const char *const text)</td></tr>
+<tr class="memdesc:afce7d8591d78e48fdd1cdffdfdae89fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">A provided logger that can be used as a convenient default. Must call <code>LDBasicLoggerTSInitialize</code> before use. This should be used instead of <code>LDBasicLogger</code>. <br /></td></tr>
+<tr class="separator:afce7d8591d78e48fdd1cdffdfdae89fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38d953860351dc04b02b027c3f7f45fa"><td class="memItemLeft" align="right" valign="top"><a id="a38d953860351dc04b02b027c3f7f45fa"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logging_8h.html#a38d953860351dc04b02b027c3f7f45fa">LDBasicLoggerThreadSafeShutdown</a> (void)</td></tr>
+<tr class="memdesc:a38d953860351dc04b02b027c3f7f45fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shutdown routine for <code>LDBasicLoggerThreadSafe</code> Call this when <code>LDBasicLoggerThreadSafe</code> is no longer used, after all LaunchDarkly resources are destroyed. <br /></td></tr>
+<tr class="separator:a38d953860351dc04b02b027c3f7f45fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a079e4006b1a14ecd3d6bec98939f0438"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logging_8h.html#a079e4006b1a14ecd3d6bec98939f0438">LDConfigureGlobalLogger</a> (const <a class="el" href="logging_8h.html#a350a93aa37f635cf7e778121189bb49c">LDLogLevel</a> level, void(*logger)(const <a class="el" href="logging_8h.html#a350a93aa37f635cf7e778121189bb49c">LDLogLevel</a> level, const char *const text))</td></tr>
 <tr class="memdesc:a079e4006b1a14ecd3d6bec98939f0438"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the logger, and the log level to use. This routine should only be used before any other LD routine. After any other routine has been used setting the logger is no longer a safe operation and may result in undefined behavior manifesting itself.  <a href="#a079e4006b1a14ecd3d6bec98939f0438">More...</a><br /></td></tr>
 <tr class="separator:a079e4006b1a14ecd3d6bec98939f0438"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,6 +169,37 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="logg
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Public API Interface for Logging. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="ad72c84890cc42a3321a42fe3366dd22c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad72c84890cc42a3321a42fe3366dd22c">&#9670;&nbsp;</a></span>LDBasicLogger()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDBasicLogger </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="logging_8h.html#a350a93aa37f635cf7e778121189bb49c">LDLogLevel</a>&#160;</td>
+          <td class="paramname"><em>level</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>text</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>A provided logger that can be used as a convenient default. </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>This is deprecated in favor of <code>LDBasicLoggerThreadSafe</code>. </dd></dl>
+
+</div>
+</div>
 <a id="a079e4006b1a14ecd3d6bec98939f0438"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a079e4006b1a14ecd3d6bec98939f0438">&#9670;&nbsp;</a></span>LDConfigureGlobalLogger()</h2>
 

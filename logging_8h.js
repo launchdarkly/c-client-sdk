@@ -11,6 +11,9 @@ var logging_8h =
       [ "LD_LOG_TRACE", "logging_8h.html#a350a93aa37f635cf7e778121189bb49caf40c91335e72221d40433d7978abd9c4", null ]
     ] ],
     [ "LDBasicLogger", "logging_8h.html#ad72c84890cc42a3321a42fe3366dd22c", null ],
+    [ "LDBasicLoggerThreadSafe", "logging_8h.html#afce7d8591d78e48fdd1cdffdfdae89fc", null ],
+    [ "LDBasicLoggerThreadSafeInitialize", "logging_8h.html#a7205a2cff9d1c65d8a65f761f1f3a5ae", null ],
+    [ "LDBasicLoggerThreadSafeShutdown", "logging_8h.html#a38d953860351dc04b02b027c3f7f45fa", null ],
     [ "LDConfigureGlobalLogger", "logging_8h.html#a079e4006b1a14ecd3d6bec98939f0438", null ],
     [ "LDi_log", "logging_8h.html#a02615d4b0cce81b9d93b02b03f219bfe", null ],
     [ "LDLogLevelToString", "logging_8h.html#a8ecb45e0a3c4cb14e3675c27fc4e7f75", null ]
