@@ -2,6 +2,21 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.2.0] - 2020-11-24
+### Added:
+- LDBasicLoggerThreadSafeInitialize used to setup LDBasicLoggerThreadSafe
+- LDBasicLoggerThreadSafe a thread safe alternative to LDBasicLogger
+- LDBasicLoggerThreadSafeShutdown to cleanup LDBasicLoggerThreadSafe resources
+- Tests utilizing a mock HTTP server
+
+### Fixed:
+- Resource cleanup on failed client initialization
+- LDConfigSetConnectionTimeoutMillis configuration value being ignored
+
+### Deprecated:
+- Marked LDBasicLogger as deprecated
+
+
 ## [2.1.2] - 2020-11-17
 ### Changed:
 - OSX artifacts are now generated with Xcode 9.4.1
