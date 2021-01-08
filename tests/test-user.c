@@ -81,6 +81,78 @@ testPrivateAttributes()
     LDUserFree(user);
 }
 
+void
+testGeneratesKeyForNullKey()
+{
+    struct LDUser *user;
+
+    LD_ASSERT(user = LDUserNew(NULL));
+    LD_ASSERT(user->key != NULL);
+
+    LDUserFree(user);
+}
+
+void
+testSettersAndDefaults()
+{
+    struct LDUser *user;
+    struct LDJSON *attributes, *tmp;
+
+    LD_ASSERT(user = LDUserNew("a"));
+
+    LD_ASSERT(user->anonymous == false);
+    LDUserSetAnonymous(user, true);
+    LD_ASSERT(user->anonymous == true);
+
+    #define testStringField(method, field)                                     \
+        LD_ASSERT(field == NULL);                                              \
+        LD_ASSERT(method(user, "alice"));                                      \
+        LD_ASSERT(strcmp(field, "alice") == 0);                                \
+        LD_ASSERT(method(user, "bob"));                                        \
+        LD_ASSERT(strcmp(field, "bob") == 0);                                  \
+        LD_ASSERT(method(user, NULL));                                         \
+        LD_ASSERT(field == NULL);                                              \
+        LD_ASSERT(method(user, "shouldFree"));                                 \
+        LD_ASSERT(strcmp(field, "shouldFree") == 0);                           \
+
+    testStringField(LDUserSetIP, user->ip);
+    testStringField(LDUserSetFirstName, user->firstName);
+    testStringField(LDUserSetLastName, user->lastName);
+    testStringField(LDUserSetEmail, user->email);
+    testStringField(LDUserSetName, user->name);
+    testStringField(LDUserSetAvatar, user->avatar);
+    testStringField(LDUserSetCountry, user->country);
+    testStringField(LDUserSetSecondary, user->secondary);
+
+    #undef testStringField
+
+    LD_ASSERT(user->privateAttributeNames == NULL);
+    LD_ASSERT(attributes = LDNewArray());
+    LD_ASSERT(tmp = LDNewText("name"));
+    LD_ASSERT(LDArrayPush(attributes, tmp));
+    LDUserSetPrivateAttributes(user, attributes);
+    LD_ASSERT(user->privateAttributeNames == attributes);
+    LD_ASSERT(attributes = LDNewArray());
+    LD_ASSERT(tmp = LDNewText("email"));
+    LD_ASSERT(LDArrayPush(attributes, tmp));
+    LDUserSetPrivateAttributes(user, attributes);
+    LD_ASSERT(user->privateAttributeNames == attributes);
+
+    LD_ASSERT(user->custom == NULL);
+    LD_ASSERT(attributes = LDNewObject());
+    LD_ASSERT(tmp = LDNewText("bob"));
+    LD_ASSERT(LDObjectSetKey(attributes, "otherName", tmp));
+    LDUserSetCustomAttributesJSON(user, attributes);
+    LD_ASSERT(user->custom == attributes);
+    LD_ASSERT(attributes = LDNewObject());
+    LD_ASSERT(tmp = LDNewText("alice"));
+    LD_ASSERT(LDObjectSetKey(attributes, "otherName", tmp));
+    LDUserSetCustomAttributesJSON(user, attributes);
+    LD_ASSERT(user->custom == attributes);
+
+    LDUserFree(user);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -89,6 +161,8 @@ main(int argc, char **argv)
 
     testBasicSerialization();
     testPrivateAttributes();
+    testGeneratesKeyForNullKey();
+    testSettersAndDefaults();
 
     LDBasicLoggerThreadSafeShutdown();
 

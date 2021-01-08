@@ -838,11 +838,11 @@ LDi_summarizeEvent(
         }
 
         if (!(tmp = LDi_valueToJSON(actualValue, variationType))) {
-            return NULL;
+            goto cleanup;
         }
 
         if (!LDObjectSetKey(entry, "value", tmp)) {
-            return NULL;
+            goto cleanup;
         } else {
             tmp = NULL;
         }
@@ -974,6 +974,8 @@ LDi_processEvalEvent(
         LDi_addEvent(context, featureEvent);
 
         LDJSONFree(featureEvent);
+
+        LDi_mutex_unlock(&context->lock);
 
         return false;
     }

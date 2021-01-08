@@ -60,6 +60,7 @@ LDUserFree(struct LDUser *const user)
 {
     if (user) {
         LDFree(user->key);
+        LDFree(user->ip);
         LDFree(user->secondary);
         LDFree(user->firstName);
         LDFree(user->lastName);

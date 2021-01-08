@@ -35,27 +35,31 @@ void LDi_once(ld_once_t *once, void (*fn)(void));
 unsigned char * LDi_base64_encode(const unsigned char *src, size_t len,
 	size_t *out_len);
 
-void LDi_cancelread(int handle);
+void LDi_cancelread(const int handle);
 char *LDi_fetchfeaturemap(struct LDClient *client, int *response);
 
 void LDi_readstream(struct LDClient *const client, int *response,
     struct LDSSEParser *const parser,
     void cbhandle(struct LDClient *client, int handle));
 
-void LDi_sendevents(struct LDClient *client, const char *eventdata,
-    const char *const payloadUUID, int *response);
+void LDi_sendevents(struct LDClient *const client, const char *const eventdata,
+    const char *const payloadUUID, int *const response);
 
-void LDi_reinitializeconnection(struct LDClient *client);
-void LDi_startstopstreaming(struct LDClient *client, bool stopstreaming);
-void LDi_onstreameventput(struct LDClient *client, const char *data);
-void LDi_onstreameventpatch(struct LDClient *client, const char *data);
-void LDi_onstreameventdelete(struct LDClient *client, const char *data);
+void LDi_reinitializeconnection(struct LDClient *const client);
+void LDi_startstopstreaming(struct LDClient *const client,
+    const bool stopstreaming);
+void LDi_onstreameventput(struct LDClient *const client,
+	  const char *const data);
+void LDi_onstreameventpatch(struct LDClient *const client,
+	  const char *const data);
+void LDi_onstreameventdelete(struct LDClient *const client,
+	  const char *const data);
 
 void LDi_millisleep(int ms);
 /* must be called exactly once before rng is used */
 void LDi_initializerng();
 /* returns true on success, may leave buffer dirty */
-bool LDi_randomhex(char *buffer, size_t buffersize);
+bool LDi_randomhex(char *const buffer, const size_t buffersize);
 /* returns a unique device identifier, returns NULL on failure */
 char *LDi_deviceid();
 
@@ -68,7 +72,7 @@ extern ld_once_t LDi_earlyonce;
 void LDi_earlyinit(void);
 
 /* expects caller to own LDi_clientlock */
-void LDi_updatestatus(struct LDClient *client, const LDStatus status);
+void LDi_updatestatus(struct LDClient *const client, const LDStatus status);
 
 THREAD_RETURN LDi_bgeventsender(void *const v);
 THREAD_RETURN LDi_bgfeaturepoller(void *const v);

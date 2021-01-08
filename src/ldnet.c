@@ -78,11 +78,12 @@ StreamWriteCallback(void *const contents, size_t size, size_t nmemb,
 }
 
 static curl_socket_t
-SocketCallback(void *const rawContext, curlsocktype type,
+SocketCallback(void *const rawContext, curlsocktype socketType,
     struct curl_sockaddr *const addr)
 {
     struct cbhandlecontext *ctx;
     curl_socket_t fd;
+    (void)socketType;
 
     LD_ASSERT(rawContext);
 
@@ -553,8 +554,8 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 }
 
 void
-LDi_sendevents(struct LDClient *const client, const char *eventdata,
-    const char *const payloadUUID, int *response)
+LDi_sendevents(struct LDClient *const client, const char *const eventdata,
+    const char *const payloadUUID, int *const response)
 {
     struct MemoryStruct headers, data;
     CURL *curl = NULL;

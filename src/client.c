@@ -12,9 +12,7 @@
 #include "uthash.h"
 #include "ldinternal.h"
 
-static struct LDGlobal_i globalContext = {
-    NULL, NULL, NULL, NULL, LD_RWLOCK_INIT
-};
+static struct LDGlobal_i globalContext;
 
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 
@@ -24,6 +22,10 @@ void
 LDi_earlyinit(void)
 {
     LDi_rwlock_init(&globalContext.sharedUserLock);
+    globalContext.clientTable   = NULL;
+    globalContext.primaryClient = NULL;
+    globalContext.sharedConfig  = NULL;
+    globalContext.sharedUser    = NULL;
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
@@ -37,7 +39,7 @@ LDClientGet()
 }
 
 struct LDClient *
-LDClientGetForMobileKey(const char *keyName)
+LDClientGetForMobileKey(const char *const keyName)
 {
     struct LDClient *lookup;
 
@@ -205,7 +207,7 @@ struct LDClient *
 LDClientInit(struct LDConfig *const config, struct LDUser *const user,
     const unsigned int maxwaitmilli)
 {
-    struct LDJSON *secondaryKey, *tmp;
+    struct LDJSON *secondaryKey;
 
     LD_ASSERT_API(config);
     LD_ASSERT_API(user);
@@ -792,7 +794,7 @@ LDi_evalInternal(
 
 LDBoolean
 LDBoolVariationDetail(struct LDClient *const client, const char *const key,
-    LDBoolean fallback, LDVariationDetails *const details)
+    const LDBoolean fallback, LDVariationDetails *const details)
 {
     bool value, *valueRef, fallbackCast;
     struct LDStoreNode *selected;
@@ -818,7 +820,7 @@ LDBoolVariationDetail(struct LDClient *const client, const char *const key,
 
 LDBoolean
 LDBoolVariation(struct LDClient *const client, const char *const key,
-    LDBoolean fallback)
+    const LDBoolean fallback)
 {
     bool value, *valueRef, fallbackCast;
 
@@ -931,6 +933,10 @@ LDDoubleVariation(struct LDClient *const client, const char *const key,
     return *valueRef;
 }
 
+#ifndef min
+    #define min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
 char *
 LDStringVariationDetail(struct LDClient *const client, const char *const key,
     const char *const fallback, char *const buffer, const size_t bufferSize,
@@ -954,7 +960,7 @@ LDStringVariationDetail(struct LDClient *const client, const char *const key,
     }
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    resultLength = strlen(value);
+    resultLength = min(strlen(value), bufferSize - 1);
     memcpy(buffer, value, resultLength);
     buffer[resultLength] = '\0';
 
@@ -978,7 +984,7 @@ LDStringVariation(struct LDClient *const client, const char *const key,
     );
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    resultLength = strlen(value);
+    resultLength = min(strlen(value), bufferSize - 1);
     memcpy(buffer, value, resultLength);
     buffer[resultLength] = '\0';
 
@@ -987,7 +993,7 @@ LDStringVariation(struct LDClient *const client, const char *const key,
 
 char *
 LDStringVariationAllocDetail(struct LDClient *const client,
-    const char *const key, const char* fallback,
+    const char *const key, const char *const fallback,
     LDVariationDetails *const details)
 {
     char *value;
@@ -1012,7 +1018,7 @@ LDStringVariationAllocDetail(struct LDClient *const client,
 
 char *
 LDStringVariationAlloc(struct LDClient *const client, const char *const key,
-    const char* fallback)
+    const char *const fallback)
 {
     char *value;
 
