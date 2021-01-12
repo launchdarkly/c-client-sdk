@@ -2,6 +2,16 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.2.1] - 2021-01-12
+### Fixed:
+- Fixed the IP field of a user object leaking in certain situations
+- Fixed the non allocating string variation not respecting result buffer limits
+- Minor compiler warnings in MSVC
+
+### Added:
+- Added code coverage reporting to CMake
+- Better unit test coverage
+
 ## [2.2.0] - 2020-11-24
 ### Added:
 - LDBasicLoggerThreadSafeInitialize used to setup LDBasicLoggerThreadSafe
