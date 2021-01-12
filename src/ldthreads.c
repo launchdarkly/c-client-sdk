@@ -349,7 +349,7 @@ LDi_onstreameventdelete(struct LDClient *const client, const char *const data)
 }
 
 void
-LDi_startstopstreaming(struct LDClient *const client, bool stopstreaming)
+LDi_startstopstreaming(struct LDClient *const client, const bool stopstreaming)
 {
     client->shouldstopstreaming = stopstreaming;
     LDi_cond_signal(&client->pollCond);

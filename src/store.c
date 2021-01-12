@@ -126,7 +126,7 @@ LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
     if (!(replacement = LDi_allocateStoreNode(flag))) {
         LDi_flag_destroy(&flag);
 
-        return NULL;
+        return false;
     }
 
     LDi_rwlock_wrlock(&store->lock);

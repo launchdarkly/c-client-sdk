@@ -117,6 +117,7 @@ LDi_deviceid()
   #ifdef __linux__
     if (readfile("/var/lib/dbus/machine-id", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid failed to read /var/lib/dbus/machine-id");
+
         return NULL;
     }
   #elif _WIN32
@@ -125,7 +126,8 @@ LDi_deviceid()
     const LSTATUS openstatus = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
 
     if (openstatus != ERROR_SUCCESS) {
-        LD_LOG(LD_LOG_ERROR, "LDi_deviceid RegOpenKeyExA got %u", openstatus);
+        LD_LOG_1(LD_LOG_ERROR, "LDi_deviceid RegOpenKeyExA got %u", openstatus);
+
         return NULL;
     }
 
@@ -133,7 +135,9 @@ LDi_deviceid()
 
     if (querystatus != ERROR_SUCCESS) {
         RegCloseKey(hkey);
-        LD_LOG(LD_LOG_ERROR, "LDi_deviceid RegGetValueA got %u", openstatus);
+
+        LD_LOG_1(LD_LOG_ERROR, "LDi_deviceid RegGetValueA got %u", openstatus);
+
         return NULL;
     }
 
@@ -143,6 +147,7 @@ LDi_deviceid()
 
     if (!entry) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryFromPath failed");
+
         return NULL;
     }
 
@@ -152,11 +157,13 @@ LDi_deviceid()
 
     if (!uuid) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryCreateCFProperty failed");
+
         return NULL;
     }
 
     if (!CFStringGetCString(uuid, buffer, sizeof(buffer), kCFStringEncodingASCII)) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid CFStringGetCString failed");
+
         CFRelease(uuid); return NULL;
     }
 
@@ -164,6 +171,7 @@ LDi_deviceid()
   #elif __FreeBSD__
     if (readfile("/etc/hostid", (unsigned char*)buffer, sizeof(buffer) - 1) == -1) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid failed to read /etc/hostid");
+
         return NULL;
     }
   #else

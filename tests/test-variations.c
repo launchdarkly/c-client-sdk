@@ -36,6 +36,16 @@ testStringVariationDefault(struct LDClient *const client)
 }
 
 static void
+testStringVariationDefaultSmallBuffer(struct LDClient *const client)
+{
+    char buffer[3];
+
+    LD_ASSERT(strcmp(LDStringVariation(
+        client, "test", "fallback", buffer, sizeof(buffer)
+    ), "fa") == 0);
+}
+
+static void
 testStringVariationAllocDefault(struct LDClient *const client)
 {
     char *result;
@@ -206,6 +216,17 @@ testStringVariationDetailDefault(struct LDClient *const client,
 }
 
 static void
+testStringVariationDetailDefaultSmallBuffer(struct LDClient *const client,
+    LDVariationDetails *const details)
+{
+    char buffer[3];
+
+    LD_ASSERT(strcmp(LDStringVariationDetail(
+        client, "test", "fallback", buffer, sizeof(buffer), details
+    ), "fa") == 0);
+}
+
+static void
 testStringVariationAllocDetailDefault(struct LDClient *const client,
     LDVariationDetails *const details)
 {
@@ -364,6 +385,7 @@ main()
     testWithClient(testIntVariationDefault);
     testWithClient(testDoubleVariationDefault);
     testWithClient(testStringVariationDefault);
+    testWithClient(testStringVariationDefaultSmallBuffer);
     testWithClient(testStringVariationAllocDefault);
     testWithClient(testJSONVariationDefault);
 
@@ -378,6 +400,7 @@ main()
     testWithClientAndDetails(testIntVariationDetailDefault);
     testWithClientAndDetails(testDoubleVariationDetailDefault);
     testWithClientAndDetails(testStringVariationDetailDefault);
+    testWithClientAndDetails(testStringVariationDetailDefaultSmallBuffer);
     testWithClientAndDetails(testStringVariationAllocDetailDefault);
     testWithClientAndDetails(testJSONVariationDetailDefault);
 

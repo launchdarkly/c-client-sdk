@@ -19,6 +19,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles")
 include(CTest)
 include(generate_product_version)
 
+if (COVERAGE)
+    include(CMakeFiles/CodeCoverage.cmake)
+    append_coverage_compiler_flags()
+    setup_target_for_coverage_gcovr_html(NAME coverage)
+endif (COVERAGE)
+
 find_package(CURL REQUIRED)
 
 if(NOT DEFINED MSVC)

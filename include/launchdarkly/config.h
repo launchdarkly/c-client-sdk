@@ -132,8 +132,8 @@ LD_EXPORT(LDBoolean) LDConfigAddSecondaryMobileKey(
  * This API is ineffective if LDConfigSetVerifyPeer is set to false. See
  * [CURLOPT_CAINFO](https://curl.haxx.se/libcurl/c/CURLOPT_CAINFO.html) for
  * more information. */
-LD_EXPORT(LDBoolean) LDConfigSetSSLCertificateAuthority(struct LDConfig *config,
-    const char *certFile);
+LD_EXPORT(LDBoolean) LDConfigSetSSLCertificateAuthority(
+    struct LDConfig *const config, const char *const certFile);
 
 /** @brief Determines if an entire user object, or only the user key should be
  * included in events. Defaults to false. */
