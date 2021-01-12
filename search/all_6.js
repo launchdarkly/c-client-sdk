@@ -55,7 +55,7 @@ var searchData=
   ['ldconfigsetpollingintervalmillis',['LDConfigSetPollingIntervalMillis',['../config_8h.html#a8f1b9e918a474798493e8563201bef3e',1,'config.h']]],
   ['ldconfigsetprivateattributes',['LDConfigSetPrivateAttributes',['../config_8h.html#a61d603bd0a3e5cab55d57d76ec47d2db',1,'config.h']]],
   ['ldconfigsetproxyuri',['LDConfigSetProxyURI',['../config_8h.html#af6b0a5570fc186be1180ec6ef0113265',1,'config.h']]],
-  ['ldconfigsetsslcertificateauthority',['LDConfigSetSSLCertificateAuthority',['../config_8h.html#aa37199141bba6eba18e736c6bfbf8f97',1,'config.h']]],
+  ['ldconfigsetsslcertificateauthority',['LDConfigSetSSLCertificateAuthority',['../config_8h.html#a8543ec299f77465aa6b122d6a30c0c71',1,'config.h']]],
   ['ldconfigsetstreaming',['LDConfigSetStreaming',['../config_8h.html#ac676a76ff4e845f87c0b965c22fe467c',1,'config.h']]],
   ['ldconfigsetstreamuri',['LDConfigSetStreamURI',['../config_8h.html#a8b36cd943df7efc4366eb7aa171ecb79',1,'config.h']]],
   ['ldconfigsetuseevaluationreasons',['LDConfigSetUseEvaluationReasons',['../config_8h.html#a33cf7e2e4cf7d4ea59f9f26b9e3f3ca2',1,'config.h']]],
