@@ -162,14 +162,18 @@ LDi_storeGet(struct LDStore *const store,
     LD_ASSERT(key);
 
     LDi_rwlock_rdlock(&store->lock);
+
     HASH_FIND_STR(store->flags, key, lookup);
-    LDi_rwlock_rdunlock(&store->lock);
 
     if (lookup && !lookup->flag.deleted) {
         LDi_rc_increment(&lookup->rc);
 
+        LDi_rwlock_rdunlock(&store->lock);
+
         return lookup;
     } else {
+        LDi_rwlock_rdunlock(&store->lock);
+
         return NULL;
     }
 }

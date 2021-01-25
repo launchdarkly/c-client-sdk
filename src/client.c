@@ -805,7 +805,6 @@ LDBoolVariationDetail(struct LDClient *const client, const char *const key,
     fallbackCast = fallback;
     valueRef     = &value;
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDBool, &fallbackCast, (void **)&valueRef, &selected
     );
@@ -813,7 +812,6 @@ LDBoolVariationDetail(struct LDClient *const client, const char *const key,
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return *valueRef;
 }
@@ -830,11 +828,9 @@ LDBoolVariation(struct LDClient *const client, const char *const key,
     fallbackCast = fallback;
     valueRef     = &value;
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDBool, &fallbackCast, (void **)&valueRef, NULL
     );
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return *valueRef;
 }
@@ -852,7 +848,6 @@ LDIntVariationDetail(struct LDClient *const client, const char *const key,
     valueRef     = &value;
     fallbackCast = fallback;
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDNumber, &fallbackCast, (void **)&valueRef, &selected
     );
@@ -860,7 +855,6 @@ LDIntVariationDetail(struct LDClient *const client, const char *const key,
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return *valueRef;
 }
@@ -877,11 +871,9 @@ LDIntVariation(struct LDClient *const client, const char *const key,
     valueRef     = &value;
     fallbackCast = fallback;
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDNumber, &fallbackCast, (void **)&valueRef, NULL
     );
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return *valueRef;
 }
@@ -899,7 +891,6 @@ LDDoubleVariationDetail(struct LDClient *const client, const char *const key,
     valueRef     = &value;
     fallbackCast = fallback;
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDNumber, &fallbackCast, (void **)&valueRef, &selected
     );
@@ -907,7 +898,6 @@ LDDoubleVariationDetail(struct LDClient *const client, const char *const key,
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return *valueRef;
 }
@@ -924,11 +914,9 @@ LDDoubleVariation(struct LDClient *const client, const char *const key,
     valueRef     = &value;
     fallbackCast = fallback;
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDNumber, &fallbackCast, (void **)&valueRef, NULL
     );
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return *valueRef;
 }
@@ -950,7 +938,6 @@ LDStringVariationDetail(struct LDClient *const client, const char *const key,
     LD_ASSERT_API(key);
     LD_ASSERT_API(!(!buffer && bufferSize));
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDText, (void *)fallback, (void **)&value, &selected
     );
@@ -958,7 +945,6 @@ LDStringVariationDetail(struct LDClient *const client, const char *const key,
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     resultLength = min(strlen(value), bufferSize - 1);
     memcpy(buffer, value, resultLength);
@@ -978,11 +964,9 @@ LDStringVariation(struct LDClient *const client, const char *const key,
     LD_ASSERT_API(key);
     LD_ASSERT_API(!(!buffer && bufferSize));
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDText, (void *)fallback, (void **)&value, NULL
     );
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     resultLength = min(strlen(value), bufferSize - 1);
     memcpy(buffer, value, resultLength);
@@ -1003,7 +987,6 @@ LDStringVariationAllocDetail(struct LDClient *const client,
     LD_ASSERT_API(key);
     LD_ASSERT_API(fallback);
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDText, (void *)fallback, (void **)&value, &selected
     );
@@ -1011,7 +994,6 @@ LDStringVariationAllocDetail(struct LDClient *const client,
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return LDStrDup(value);
 }
@@ -1026,11 +1008,9 @@ LDStringVariationAlloc(struct LDClient *const client, const char *const key,
     LD_ASSERT_API(key);
     LD_ASSERT_API(fallback);
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDText, (void *)fallback, (void **)&value, NULL
     );
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return LDStrDup(value);
 }
@@ -1060,7 +1040,6 @@ LDJSONVariationDetail(struct LDClient *const client, const char *const key,
         }
     #endif
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDNull, (void *)fallback, (void **)&value, &selected
     );
@@ -1068,7 +1047,6 @@ LDJSONVariationDetail(struct LDClient *const client, const char *const key,
     if (selected) {
         LDi_rc_decrement(&selected->rc);
     }
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return LDJSONDuplicate(value);
 }
@@ -1083,11 +1061,9 @@ LDJSONVariation(struct LDClient *const client, const char *const key,
     LD_ASSERT_API(key);
     LD_ASSERT_API(fallback);
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_evalInternal(
         client, key, LDNull, (void *)fallback, (void **)&value, NULL
     );
-    LDi_rwlock_rdunlock(&client->clientLock);
 
     return LDJSONDuplicate(value);
 }
