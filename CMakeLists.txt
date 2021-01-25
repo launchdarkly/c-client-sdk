@@ -14,6 +14,8 @@ message("Extracted version: ${CMAKE_MATCH_1}")
 
 project(ldclientapi VERSION ${CMAKE_MATCH_1})
 
+option(BUILD_BENCHMARKS "Also build benchmarks" OFF)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles")
 
 include(CTest)
@@ -172,4 +174,21 @@ if(BUILD_TESTING)
                     -D LAUNCHDARKLY_CONCURRENCY_ABORT
         )
     endforeach(testsource)
+endif()
+
+# benchmark targets ------------------------------------------------------------
+
+if(BUILD_BENCHMARKS)
+  file(GLOB BENCHMARKS "benchmarks/benchmark-*")
+  foreach(benchmarksource ${BENCHMARKS})
+      get_filename_component(benchmarksourceleaf ${benchmarksource} NAME)
+      string(REPLACE ".c" "" benchmarkexe ${benchmarksourceleaf})
+      add_executable(${benchmarkexe} ${benchmarksource})
+      target_link_libraries(${benchmarkexe} ldclientapi)
+      target_include_directories(${benchmarkexe} PRIVATE ${LD_INCLUDE_PATHS})
+      target_compile_definitions(${benchmarkexe}
+          PRIVATE -D LAUNCHDARKLY_USE_ASSERT
+                  -D LAUNCHDARKLY_CONCURRENCY_ABORT
+      )
+  endforeach(benchmarksource)
 endif()
