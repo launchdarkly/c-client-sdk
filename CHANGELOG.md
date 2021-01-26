@@ -2,6 +2,18 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.3.0] - 2021-01-26
+### Added:
+- Added the `LDClientAlias` function. This can be used to associate two user objects for analytics purposes with an `alias` event.
+- Added the `LDConfigAutoAliasOptOut` function. This can be used to control the new behavior of `LDClientIdentify`. By passing true `LDClientIdentify` will not automatically generate `alias` events.
+
+### Changed:
+- The `LDClientIdentify` method will now automatically generate an alias event when switching from an anonymous to a known user. This event associates the two users for analytics purposes as they most likely represent a single person.
+
+### Fixed:
+- Relaxed internal locking to improve performance.
+
+
 ## [2.2.1] - 2021-01-12
 ### Fixed:
 - Fixed the IP field of a user object leaking in certain situations
