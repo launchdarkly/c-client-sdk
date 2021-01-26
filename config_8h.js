@@ -1,6 +1,7 @@
 var config_8h =
 [
     [ "LDConfigAddSecondaryMobileKey", "config_8h.html#ad8a0f3d2b1221f1d832629a209336eb4", null ],
+    [ "LDConfigAutoAliasOptOut", "config_8h.html#a6378e40188e49e5c7724c11e4de28df5", null ],
     [ "LDConfigFree", "config_8h.html#a3dd39b7723ab6bb02954fcf4901e8c04", null ],
     [ "LDConfigNew", "config_8h.html#a9ae6b26c0246af5941368b3b9fb0f324", null ],
     [ "LDConfigSetAllAttributesPrivate", "config_8h.html#a5e3b8caa5c203a18acb3f94483ae2262", null ],

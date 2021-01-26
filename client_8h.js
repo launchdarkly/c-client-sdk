@@ -13,6 +13,7 @@ var client_8h =
     [ "LDAllFlags", "client_8h.html#ab194c7abbce3ca4a52ee6c267ac0f8b5", null ],
     [ "LDBoolVariation", "client_8h.html#a5694c3f5f952d6a2fd4134ffc2b8838c", null ],
     [ "LDBoolVariationDetail", "client_8h.html#a03c065565d9e006c3192446a765b26ab", null ],
+    [ "LDClientAlias", "client_8h.html#afc20d0adbd21c63ff82380dc9006b82e", null ],
     [ "LDClientAwaitInitialized", "client_8h.html#a6ae5e33ce19de111c5a2650e70b4d38f", null ],
     [ "LDClientClose", "client_8h.html#ab7d00dbcd76715c1da55ba2469a0cc4f", null ],
     [ "LDClientFlush", "client_8h.html#a675adeb6d3c92b221bb806ecbdb73bb4", null ],
