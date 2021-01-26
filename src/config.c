@@ -45,6 +45,7 @@ LDConfigNew(const char *const mobileKey)
     config->mobileKey                       = NULL;
     config->streamURI                       = NULL;
     config->secondaryMobileKeys             = NULL;
+    config->autoAliasOptOut                 = 0;
 
     if (!LDSetString(&config->appURI, "https://app.launchdarkly.com")) {
         goto error;
@@ -534,6 +535,24 @@ LDConfigSetInlineUsersInEvents(struct LDConfig *const config,
     #endif
 
     config->inlineUsersInEvents = inlineUsers;
+}
+
+void
+LDConfigAutoAliasOptOut(struct LDConfig *const config,
+    const LDBoolean optOut)
+{
+    LD_ASSERT_API(config);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (config == NULL) {
+            LD_LOG(LD_LOG_WARNING,
+                "LDConfigAutoAliasOptOut NULL config");
+
+            return;
+        }
+    #endif
+
+    config->autoAliasOptOut = optOut;
 }
 
 void

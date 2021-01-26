@@ -372,6 +372,8 @@ void
 LDClientIdentify(struct LDClient *const client, struct LDUser *const user)
 {
     struct LDClient *clientIter, *tmp;
+    struct LDUser *previousUser;
+    LDBoolean shouldAlias;
 
     LD_ASSERT_API(client);
     LD_ASSERT_API(user);
@@ -392,11 +394,10 @@ LDClientIdentify(struct LDClient *const client, struct LDUser *const user)
 
     LDi_rwlock_wrlock(&globalContext.sharedUserLock);
 
-    if (user != globalContext.sharedUser) {
-        LDUserFree(globalContext.sharedUser);
-    }
-
+    previousUser = globalContext.sharedUser;
     globalContext.sharedUser = user;
+    shouldAlias = previousUser->anonymous && !user->anonymous &&
+        !globalContext.sharedConfig->autoAliasOptOut;
 
     HASH_ITER(hh, globalContext.clientTable, clientIter, tmp) {
         LDi_rwlock_wrlock(&clientIter->clientLock);
@@ -406,7 +407,15 @@ LDClientIdentify(struct LDClient *const client, struct LDUser *const user)
         LDi_reinitializeconnection(clientIter);
         LDi_identify(clientIter->eventProcessor, user);
 
+        if (shouldAlias) {
+            LDi_alias(clientIter->eventProcessor, user, previousUser);
+        }
+
         LDi_rwlock_wrunlock(&clientIter->clientLock);
+    }
+
+    if (previousUser != user) {
+        LDUserFree(previousUser);
     }
 
     LDi_rwlock_wrunlock(&globalContext.sharedUserLock);
@@ -1066,6 +1075,39 @@ LDJSONVariation(struct LDClient *const client, const char *const key,
     );
 
     return LDJSONDuplicate(value);
+}
+
+void
+LDClientAlias(
+    struct LDClient *const     client,
+    const struct LDUser *const currentUser,
+    const struct LDUser *const previousUser
+) {
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(currentUser);
+    LD_ASSERT_API(previousUser);
+
+    #ifdef LAUNCHDARKLY_DEFENSIVE
+        if (client == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientAlias NULL client");
+
+            return;
+        }
+
+        if (currentUser == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientAlias NULL currentUser");
+
+            return;
+        }
+
+        if (previousUser == NULL) {
+            LD_LOG(LD_LOG_WARNING, "LDClientAlias NULL previousUser");
+
+            return;
+        }
+    #endif
+
+    LDi_alias(client->eventProcessor, currentUser, previousUser);
 }
 
 void

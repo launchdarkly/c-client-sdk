@@ -140,6 +140,12 @@ LD_EXPORT(LDBoolean) LDConfigSetSSLCertificateAuthority(
 LD_EXPORT(void) LDConfigSetInlineUsersInEvents(struct LDConfig *const config,
     const LDBoolean inlineUsers);
 
+/** @brief Determines if Identify should automatically generate alias events.
+ * When true LDClientIdentify will not generate alias events.
+ * Defaults to false. */
+LD_EXPORT(void) LDConfigAutoAliasOptOut(struct LDConfig *const config,
+    const LDBoolean optOut);
+
 /** @brief Free an existing `LDConfig` instance.
  *
  * You will likely never use this routine as ownership is transferred to
