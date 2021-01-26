@@ -34,6 +34,13 @@ LDi_track(
 );
 
 bool
+LDi_alias(
+    struct EventProcessor *const context,
+    const struct LDUser *const   currentUser,
+    const struct LDUser *const   previousUser
+);
+
+bool
 LDi_bundleEventPayload(
     struct EventProcessor *const context,
     struct LDJSON **const        result

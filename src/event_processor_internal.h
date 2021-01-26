@@ -47,6 +47,13 @@ LDi_newCustomEvent(
     const double                       now
 );
 
+struct LDJSON *
+LDi_newAliasEvent(
+    const struct LDUser *const currentUser,
+    const struct LDUser *const previousUser,
+    const double               now
+);
+
 struct LDJSON *LDi_objectToArray(const struct LDJSON *const object);
 
 struct LDJSON *

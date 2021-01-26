@@ -117,6 +117,11 @@ LD_EXPORT(void) LDClientClose(struct LDClient *const client);
 /** @brief Add handler for when client status changes */
 LD_EXPORT(void) LDSetClientStatusCallback(void (callback)(int status));
 
+/** @brief Record a alias event */
+LD_EXPORT(void) LDClientAlias(struct LDClient *const client,
+    const struct LDUser *const currentUser,
+    const struct LDUser *const previousUser);
+
 /** @brief Record a custom event. */
 LD_EXPORT(void) LDClientTrack(struct LDClient *const client,
     const char *const name);

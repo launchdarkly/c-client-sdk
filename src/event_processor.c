@@ -324,10 +324,91 @@ LDi_newCustomEvent(
         }
     }
 
+    if (user->anonymous) {
+        if (!(tmp = LDNewText("anonymousUser"))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(event, "contextKind", tmp)) {
+            LDJSONFree(tmp);
+
+            goto error;
+        }
+    }
+
     return event;
 
   error:
     LDJSONFree(event);
+
+    return NULL;
+}
+
+static struct LDJSON *
+contextKindString(const struct LDUser *const user)
+{
+    if (user->anonymous) {
+        return LDNewText("anonymousUser");
+    } else {
+        return LDNewText("user");
+    }
+}
+
+struct LDJSON *
+LDi_newAliasEvent(
+    const struct LDUser *const   currentUser,
+    const struct LDUser *const   previousUser,
+    const double                 now
+) {
+    struct LDJSON *tmp, *event;
+
+    LD_ASSERT(currentUser);
+    LD_ASSERT(previousUser);
+
+    tmp   = NULL;
+    event = NULL;
+
+    if (!(event = LDi_newBaseEvent("alias", now))) {
+        goto error;
+    }
+
+    if (!(tmp = LDNewText(currentUser->key))) {
+        goto error;
+    }
+
+    if (!LDObjectSetKey(event, "key", tmp)) {
+        goto error;
+    }
+
+    if (!(tmp = LDNewText(previousUser->key))) {
+        goto error;
+    }
+
+    if (!LDObjectSetKey(event, "previousKey", tmp)) {
+        goto error;
+    }
+
+    if (!(tmp = contextKindString(currentUser))) {
+        goto error;
+    }
+
+    if (!LDObjectSetKey(event, "contextKind", tmp)) {
+        goto error;
+    }
+
+    if (!(tmp = contextKindString(previousUser))) {
+        goto error;
+    }
+
+    if (!LDObjectSetKey(event, "previousContextKind", tmp)) {
+        goto error;
+    }
+
+    return event;
+
+  error:
+    LDJSONFree(event);
+    LDJSONFree(tmp);
 
     return NULL;
 }
@@ -355,6 +436,38 @@ LDi_track(
         context, user, key, data, metric, hasMetric, now)))
     {
         LD_LOG(LD_LOG_ERROR, "failed to construct custom event");
+
+        LDi_mutex_unlock(&context->lock);
+
+        return false;
+    }
+
+    LDi_addEvent(context, event);
+
+    LDi_mutex_unlock(&context->lock);
+
+    return true;
+}
+
+bool
+LDi_alias(
+    struct EventProcessor *const context,
+    const struct LDUser *const   currentUser,
+    const struct LDUser *const   previousUser
+) {
+    struct LDJSON *event;
+    double now;
+
+    LD_ASSERT(context);
+    LD_ASSERT(currentUser);
+    LD_ASSERT(previousUser);
+
+    LDi_getUnixMilliseconds(&now);
+
+    LDi_mutex_lock(&context->lock);
+
+    if (!(event = LDi_newAliasEvent(currentUser, previousUser, now))) {
+        LD_LOG(LD_LOG_ERROR, "failed to construct alias event");
 
         LDi_mutex_unlock(&context->lock);
 
@@ -705,6 +818,21 @@ LDi_newFeatureRequestEvent(
             } else {
                 tmp = NULL;
             }
+        }
+    }
+
+    if (user->anonymous) {
+        if (!(tmp = LDNewText("anonymousUser"))) {
+            LDJSONFree(event);
+
+            return NULL;
+        }
+
+        if (!LDObjectSetKey(event, "contextKind", tmp)) {
+            LDJSONFree(tmp);
+            LDJSONFree(event);
+
+            return NULL;
         }
     }
 

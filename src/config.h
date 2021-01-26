@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include <launchdarkly/json.h>
+#include <launchdarkly/boolean.h>
 
 struct LDConfig {
     bool allAttributesPrivate;
@@ -24,6 +25,7 @@ struct LDConfig {
     bool useReasons;
     char *certFile;
     bool inlineUsersInEvents;
+    LDBoolean autoAliasOptOut;
     /* map of name -> key */
     struct LDJSON *secondaryMobileKeys;
     /* array of strings */
