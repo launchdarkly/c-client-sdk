@@ -1,3 +1,6 @@
+#include <string.h>
+#include <stdio.h>
+
 #include "event_processor.h"
 #include "event_processor_internal.h"
 #include "utility.h"
@@ -138,7 +141,10 @@ LDi_addUserInfoToEvent(
     LD_ASSERT(user);
 
     if (context->config->inlineUsersInEvents) {
-        if (!(tmp = LDi_userToJSON(context->config, user, true))) {
+        if (!(tmp = LDi_userToJSON(user, LDBooleanTrue,
+            context->config->allAttributesPrivate,
+            context->config->privateAttributeNames)))
+        {
             LD_LOG(LD_LOG_ERROR, "alloc error");
 
             return false;
@@ -207,7 +213,10 @@ LDi_newIdentifyEvent(
         return false;
     }
 
-    if (!(tmp = LDi_userToJSON(context->config, user, true))) {
+    if (!(tmp = LDi_userToJSON(user, LDBooleanTrue,
+        context->config->allAttributesPrivate,
+        context->config->privateAttributeNames)))
+    {
         LD_LOG(LD_LOG_ERROR, "alloc error");
 
         LDJSONFree(event);

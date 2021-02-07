@@ -3,6 +3,7 @@
 #include <string.h>
 
 #ifdef _WIN32
+    #define _WINSOCK_DEPRECATED_NO_WARNINGS
     #include <ws2tcpip.h>
     #include <windows.h>
 #else
@@ -32,10 +33,10 @@ LDi_writeAll(const ld_socket_t socket, const char *const buffer,
     while (sent < bufferSize) {
         int status;
 
-        status = send(socket, buffer + sent, bufferSize - sent, 0);
+        status = (int)send(socket, buffer + sent, (int)(bufferSize - sent), 0);
         LD_ASSERT(status > 0);
 
-        sent += status;
+        sent += (size_t)status;
     }
 }
 
@@ -274,7 +275,7 @@ LDi_readHTTPRequest(const ld_socket_t acceptFD,
     LD_ASSERT(clientFD >= 0);
 
     while (!request->done) {
-        readSize = recv(clientFD, &buffer, 4096, 0);
+        readSize = recv(clientFD, buffer, 4096, 0);
         LD_ASSERT(readSize >= 0);
         http_parser_execute(&parser, &settings, buffer, readSize);
     }

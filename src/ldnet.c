@@ -250,6 +250,8 @@ LDi_readstream(struct LDClient *const client, int *response,
     struct cbhandlecontext handledata;
     CURL *curl;
     struct curl_slist *headerlist, *headertmp;
+    struct LDJSON *userJSON;
+    char *userJSONText;
 
     LD_ASSERT(client);
     LD_ASSERT(response);
@@ -271,12 +273,23 @@ LDi_readstream(struct LDClient *const client, int *response,
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    char *const jsonuser = LDi_usertojsontext(client,
-        client->shared->sharedUser, false);
+
+    userJSON = LDi_userToJSON(client->shared->sharedUser, LDBooleanFalse,
+        LDBooleanFalse, NULL);
+
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    if (!jsonuser) {
+    if (userJSON == NULL) {
+        LD_LOG(LD_LOG_CRITICAL, "failed to convert user to user");
+
+        return;
+    }
+
+    userJSONText = LDJSONSerialize(userJSON);
+    LDJSONFree(userJSON);
+
+    if (userJSONText == NULL) {
         LD_LOG(LD_LOG_CRITICAL, "failed to serialize user");
 
         return;
@@ -287,20 +300,19 @@ LDi_readstream(struct LDClient *const client, int *response,
         if (snprintf(url, sizeof(url), "%s/meval",
             client->shared->sharedConfig->streamURI) < 0)
         {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_CRITICAL, "snprintf usereport failed");
 
             return;
         }
-    }
-    else {
+    } else {
         size_t b64len;
         unsigned char *const b64text = LDi_base64_encode(
-            (unsigned char*)jsonuser, strlen(jsonuser), &b64len);
+            (unsigned char*)userJSONText, strlen(userJSONText), &b64len);
 
         if (!b64text) {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_ERROR, "LDi_base64_encode == NULL in LDi_readstream");
 
@@ -313,7 +325,7 @@ LDi_readstream(struct LDClient *const client, int *response,
         LDFree(b64text);
 
         if (status < 0) {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_ERROR, "snprintf !usereport failed");
 
@@ -325,7 +337,7 @@ LDi_readstream(struct LDClient *const client, int *response,
         const size_t len = strlen(url);
 
         if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_ERROR, "snprintf useReason failed");
 
@@ -337,7 +349,8 @@ LDi_readstream(struct LDClient *const client, int *response,
         &WriteMemoryCallback, &headers, &StreamWriteCallback,
         &streamdata, client))
     {
-        LDFree(jsonuser);
+        LDFree(userJSONText);
+
         return;
     }
 
@@ -359,7 +372,9 @@ LDi_readstream(struct LDClient *const client, int *response,
         }
         headerlist = headertmp;
 
-        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonuser) != CURLE_OK) {
+        if (curl_easy_setopt(
+            curl, CURLOPT_POSTFIELDS, userJSONText) != CURLE_OK)
+        {
             LD_LOG(LD_LOG_CRITICAL,
                 "curl_easy_setopt CURLOPT_POSTFIELDS failed");
 
@@ -405,7 +420,7 @@ LDi_readstream(struct LDClient *const client, int *response,
   cleanup:
     LDFree(streamdata.mem.memory);
     LDFree(headers.memory);
-    LDFree(jsonuser);
+    LDFree(userJSONText);
 
     curl_slist_free_all(headerlist);
 
@@ -418,17 +433,30 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
     struct MemoryStruct headers, data;
     CURL *curl = NULL;
     struct curl_slist *headerlist = NULL, *headertmp = NULL;
+    struct LDJSON *userJSON;
+    char *userJSONText;
 
     memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
-    char *const jsonuser = LDi_usertojsontext(client,
-        client->shared->sharedUser, false);
+
+    userJSON = LDi_userToJSON(client->shared->sharedUser, LDBooleanFalse,
+        LDBooleanFalse, NULL);
+
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdunlock(&client->clientLock);
 
-    if (!jsonuser) {
+    if (userJSON == NULL) {
+        LD_LOG(LD_LOG_CRITICAL, "failed to convert user to user");
+
+        return NULL;
+    }
+
+    userJSONText = LDJSONSerialize(userJSON);
+    LDJSONFree(userJSON);
+
+    if (userJSONText == NULL) {
         LD_LOG(LD_LOG_CRITICAL, "failed to serialize user");
 
         return NULL;
@@ -439,7 +467,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         if (snprintf(url, sizeof(url), "%s/msdk/evalx/user",
             client->shared->sharedConfig->appURI) < 0)
         {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_CRITICAL, "snprintf usereport failed");
 
@@ -449,10 +477,10 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
     else {
         size_t b64len;
         unsigned char *const b64text = LDi_base64_encode(
-            (unsigned char*)jsonuser, strlen(jsonuser), &b64len);
+            (unsigned char*)userJSONText, strlen(userJSONText), &b64len);
 
         if (!b64text) {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_CRITICAL,
                 "LDi_base64_encode == NULL in LDi_fetchfeaturemap");
@@ -466,7 +494,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         LDFree(b64text);
 
         if (status < 0) {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_ERROR, "snprintf !usereport failed");
 
@@ -477,7 +505,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
     if (client->shared->sharedConfig->useReasons) {
         const size_t len = strlen(url);
         if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
-            LDFree(jsonuser);
+            LDFree(userJSONText);
 
             LD_LOG(LD_LOG_ERROR, "snprintf useReason failed");
 
@@ -488,12 +516,12 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
     if (!prepareShared(url, client->shared->sharedConfig, &curl, &headerlist,
         &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data, client))
     {
-        LDFree(jsonuser);
+        LDFree(userJSONText);
 
         return NULL;
     }
 
-    LDFree(jsonuser);
+    LDFree(userJSONText);
 
     if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT")
@@ -513,7 +541,9 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         }
         headerlist = headertmp;
 
-        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonuser) != CURLE_OK) {
+        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS,
+            userJSONText) != CURLE_OK)
+        {
             LD_LOG(LD_LOG_CRITICAL,
                 "curl_easy_setopt CURLOPT_POSTFIELDS failed");
 

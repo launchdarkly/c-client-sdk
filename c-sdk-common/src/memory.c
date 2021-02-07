@@ -1,53 +1,64 @@
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include <curl/curl.h>
 
 #include "cJSON.h"
 
+#include <launchdarkly/boolean.h>
 #include <launchdarkly/memory.h>
 
 #include "assertion.h"
+#include "memory.h"
 
-static void *(*customAlloc)(const size_t bytes) = malloc;
+void *(*LDi_customAlloc)(const size_t bytes) = malloc;
 
 void *
 LDAlloc(const size_t bytes)
 {
-    return customAlloc(bytes);
+    return LDi_customAlloc(bytes);
 }
 
-static void (*customFree)(void *const buffer) = free;
+void (*LDi_customFree)(void *const buffer) = free;
 
 void
 LDFree(void *const buffer)
 {
-    customFree(buffer);
+    LDi_customFree(buffer);
 }
 
-static char *(*customStrDup)(const char *const string) = strdup;
+static char *
+LDi_strdup(const char *const string)
+{
+#ifdef _WIN32
+    return _strdup(string);
+#else
+    return strdup(string);
+#endif
+}
+
+char *(*LDi_customStrDup)(const char *const string) = LDi_strdup;
 
 char *
 LDStrDup(const char *const string)
 {
-    return customStrDup(string);
+    return LDi_customStrDup(string);
 }
 
-static void *(*customRealloc)(void *const buffer, const size_t bytes) = realloc;
+void *(*LDi_customRealloc)(void *const buffer, const size_t bytes) = realloc;
 
 void *
 LDRealloc(void *const buffer, const size_t bytes)
 {
-    return customRealloc(buffer, bytes);
+    return LDi_customRealloc(buffer, bytes);
 }
 
-static void *(*customCalloc)(const size_t nmemb, const size_t size) = calloc;
+void *(*LDi_customCalloc)(const size_t nmemb, const size_t size) = calloc;
 
 void *
 LDCalloc(const size_t nmemb, const size_t size)
 {
-    return customCalloc(nmemb, size);
+    return LDi_customCalloc(nmemb, size);
 }
 
 static char *
@@ -64,50 +75,56 @@ LDi_strndup(const char *const str, const size_t n)
     }
 }
 
-static char *(*customStrNDup)(const char *const str, const size_t n) =
-    LDi_strndup;
+char *(*LDi_customStrNDup)(const char *const str, const size_t n) = LDi_strndup;
 
 char *
 LDStrNDup(const char *const str, const size_t n)
 {
-    return customStrNDup(str, n);
+    return LDi_customStrNDup(str, n);
 }
 
 void
-LDSetMemoryRoutines(void *(*const newMalloc)(const size_t),
+LDSetMemoryRoutines(
+    void *(*const newMalloc)(const size_t),
     void (*const newFree)(void *const),
     void *(*const newRealloc)(void *const, const size_t),
     char *(*const newStrDup)(const char *const),
     void *(*const newCalloc)(const size_t, const size_t),
     char *(*const newStrNDup)(const char *const, const size_t))
 {
-    LD_ASSERT(newMalloc);
-    LD_ASSERT(newFree);
-    LD_ASSERT(newRealloc);
-    LD_ASSERT(newStrDup);
-    LD_ASSERT(newCalloc);
+    LD_ASSERT_API(newMalloc);
+    LD_ASSERT_API(newFree);
+    LD_ASSERT_API(newRealloc);
+    LD_ASSERT_API(newStrDup);
+    LD_ASSERT_API(newCalloc);
 
-    customAlloc   = newMalloc;
-    customFree    = newFree;
-    customRealloc = newRealloc;
-    customStrDup  = newStrDup;
-    customCalloc  = newCalloc;
-    customStrNDup = newStrNDup;
+    LDi_customAlloc   = newMalloc;
+    LDi_customFree    = newFree;
+    LDi_customRealloc = newRealloc;
+    LDi_customStrDup  = newStrDup;
+    LDi_customCalloc  = newCalloc;
+    LDi_customStrNDup = newStrNDup;
 }
 
 void
 LDGlobalInit(void)
 {
-    static bool first = true;
+    static LDBoolean first = LDBooleanTrue;
 
     if (first) {
         struct cJSON_Hooks hooks;
-        CURLcode status;
+        CURLcode           status;
 
-        first = false;
+        first = LDBooleanFalse;
 
-        status = curl_global_init_mem(CURL_GLOBAL_DEFAULT, LDAlloc, LDFree,
-            LDRealloc, LDStrDup, LDCalloc);
+        status = curl_global_init_mem(
+            CURL_GLOBAL_DEFAULT,
+            LDAlloc,
+            LDFree,
+            LDRealloc,
+            LDStrDup,
+            LDCalloc);
+
         LD_ASSERT(!status);
 
         hooks.malloc_fn = LDAlloc;

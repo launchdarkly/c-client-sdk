@@ -5,6 +5,7 @@
 #include <launchdarkly/json.h>
 
 #ifdef _WIN32
+    #define _WINSOCK_DEPRECATED_NO_WARNINGS
     #include <winsock2.h>
 #endif
 

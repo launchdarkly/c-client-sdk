@@ -375,7 +375,7 @@ LDi_reinitializeconnection(struct LDClient *const client)
     LDi_cond_signal(&client->streamCond);
 }
 
-static bool
+static LDBoolean
 LDi_onEvent(const char *const eventName, const char *const eventBuffer,
     void *const rawContext)
 {
@@ -397,7 +397,7 @@ LDi_onEvent(const char *const eventName, const char *const eventBuffer,
         LD_LOG_1(LD_LOG_ERROR, "sse unknown event name: %s", eventName);
     }
 
-    return true;
+    return LDBooleanTrue;
 }
 
 double

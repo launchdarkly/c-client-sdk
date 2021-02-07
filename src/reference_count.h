@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "concurrency.h"
 
 struct ld_rc_t {

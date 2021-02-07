@@ -8,7 +8,8 @@
 #include <launchdarkly/export.h>
 
 /** @brief The log levels compatible with the logging interface */
-typedef enum {
+typedef enum
+{
     LD_LOG_FATAL = 0,
     LD_LOG_CRITICAL,
     LD_LOG_ERROR,
@@ -38,8 +39,8 @@ LD_EXPORT(void) LDBasicLoggerThreadSafeInitialize(void);
  * Must call `LDBasicLoggerTSInitialize` before use. This should be used instead
  * of `LDBasicLogger`.
  */
-LD_EXPORT(void) LDBasicLoggerThreadSafe(
-    const LDLogLevel level, const char *const text);
+LD_EXPORT(void)
+LDBasicLoggerThreadSafe(const LDLogLevel level, const char *const text);
 
 /**
  * @brief Shutdown routine for `LDBasicLoggerThreadSafe`
@@ -57,11 +58,13 @@ LD_EXPORT(void) LDBasicLoggerThreadSafeShutdown(void);
  * @param[in] logger The new function to use for all future logging.
  * @return Void.
  */
-LD_EXPORT(void) LDConfigureGlobalLogger(const LDLogLevel level,
+LD_EXPORT(void)
+LDConfigureGlobalLogger(
+    const LDLogLevel level,
     void (*logger)(const LDLogLevel level, const char *const text));
 
 /** @brief A macro interface that allows convenient logging of line numbers */
-#define LD_LOG(level, text) \
+#define LD_LOG(level, text)                                                    \
     LDi_log(level, "[%s, %d] %s", __FILE__, __LINE__, text)
 
 /**

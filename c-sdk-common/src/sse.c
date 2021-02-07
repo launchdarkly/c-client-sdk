@@ -1,16 +1,15 @@
-#include <stddef.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include <launchdarkly/memory.h>
 
 #include "assertion.h"
-
 #include "sse.h"
 
 void
-LDSSEParserInitialize(struct LDSSEParser *const parser,
-    ld_sse_dispatch dispatch, void *const context)
+LDSSEParserInitialize(
+    struct LDSSEParser *const parser,
+    ld_sse_dispatch           dispatch,
+    void *const               context)
 {
     LD_ASSERT(parser);
     LD_ASSERT(dispatch);
@@ -37,7 +36,7 @@ LDSSEParserDestroy(struct LDSSEParser *const parser)
     }
 }
 
-static bool
+static LDBoolean
 LDi_processLine(struct LDSSEParser *const parser, const char *line)
 {
     LD_ASSERT(parser);
@@ -46,21 +45,21 @@ LDi_processLine(struct LDSSEParser *const parser, const char *line)
     if (line[0] == ':') {
         /* skip comment */
     } else if (line[0] == '\0') {
-        bool status;
+        LDBoolean status;
         /* dispatch */
         if (parser->eventName == NULL) {
             LD_LOG(LD_LOG_WARNING, "SSE dispatch with NULL event name");
 
-            status = true;
+            status = LDBooleanTrue;
         } else if (parser->eventBody == NULL) {
             LD_LOG(LD_LOG_WARNING, "SSE dispatch with NULL event body");
 
-            status = true;
+            status = LDBooleanTrue;
         } else {
             LD_ASSERT(parser->dispatch);
 
-            status = parser->dispatch(parser->eventName, parser->eventBody,
-                parser->context);
+            status = parser->dispatch(
+                parser->eventName, parser->eventBody, parser->context);
         }
 
         LDFree(parser->eventName);
@@ -69,13 +68,13 @@ LDi_processLine(struct LDSSEParser *const parser, const char *line)
         parser->eventName = NULL;
         parser->eventBody = NULL;
 
-        if (status == false) {
-            return false;
+        if (status == LDBooleanFalse) {
+            return LDBooleanFalse;
         }
     } else if (strncmp(line, "data:", 5) == 0) {
-        char *eventBodyTmp;
-        size_t lineSize, currentBodySize;
-        bool notEmpty;
+        char *    eventBodyTmp;
+        size_t    lineSize, currentBodySize;
+        LDBoolean notEmpty;
 
         line += 5;
         line += line[0] == ' ';
@@ -93,7 +92,7 @@ LDi_processLine(struct LDSSEParser *const parser, const char *line)
             parser->eventBody, lineSize + currentBodySize + notEmpty + 1);
 
         if (eventBodyTmp == NULL) {
-            return false;
+            return LDBooleanFalse;
         }
 
         parser->eventBody = eventBodyTmp;
@@ -117,25 +116,27 @@ LDi_processLine(struct LDSSEParser *const parser, const char *line)
         parser->eventName = LDStrDup(line);
 
         if (parser->eventName == NULL) {
-            return false;
+            return LDBooleanFalse;
         }
     }
 
-    return true;
+    return LDBooleanTrue;
 }
 
-bool
-LDSSEParserProcess(struct LDSSEParser *const parser,
-    const void *const buffer, const size_t bufferSize)
+LDBoolean
+LDSSEParserProcess(
+    struct LDSSEParser *const parser,
+    const void *const         buffer,
+    const size_t              bufferSize)
 {
-    void *bufferTmp;
-    char *newLineLocation;
+    void * bufferTmp;
+    char * newLineLocation;
     size_t consumed;
 
     LD_ASSERT(parser);
 
     if (bufferSize == 0) {
-        return true;
+        return LDBooleanTrue;
     }
 
     LD_ASSERT(buffer);
@@ -143,24 +144,25 @@ LDSSEParserProcess(struct LDSSEParser *const parser,
     bufferTmp = LDRealloc(parser->buffer, parser->bufferSize + bufferSize + 1);
 
     if (bufferTmp == NULL) {
-        return false;
+        return LDBooleanFalse;
     }
 
     parser->buffer = bufferTmp;
-    consumed       =  0;
+    consumed       = 0;
 
     memcpy(&(parser->buffer[parser->bufferSize]), buffer, bufferSize);
 
-    parser->bufferSize                 += bufferSize;
-    parser->buffer[parser->bufferSize]  = '\0';
+    parser->bufferSize += bufferSize;
+    parser->buffer[parser->bufferSize] = '\0';
 
-    while ((newLineLocation = (char *)memchr(parser->buffer + consumed, '\n',
-        parser->bufferSize - consumed)))
+    while (
+        (newLineLocation = (char *)memchr(
+             parser->buffer + consumed, '\n', parser->bufferSize - consumed)))
     {
         *newLineLocation = '\0';
 
         if (!LDi_processLine(parser, parser->buffer + consumed)) {
-            return false;
+            return LDBooleanFalse;
         }
 
         consumed = newLineLocation - parser->buffer + 1;
@@ -171,5 +173,5 @@ LDSSEParserProcess(struct LDSSEParser *const parser,
         memmove(parser->buffer, parser->buffer + consumed, parser->bufferSize);
     }
 
-    return true;
+    return LDBooleanTrue;
 }

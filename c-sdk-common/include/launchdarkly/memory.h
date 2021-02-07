@@ -23,7 +23,9 @@ LD_EXPORT(void *) LDCalloc(const size_t nmemb, const size_t size);
 LD_EXPORT(char *) LDStrNDup(const char *const str, const size_t n);
 
 /** @brief Set all the memory related functions to be used by the SDK */
-LD_EXPORT(void) LDSetMemoryRoutines(void *(*const newMalloc)(const size_t),
+LD_EXPORT(void)
+LDSetMemoryRoutines(
+    void *(*const newMalloc)(const size_t),
     void (*const newFree)(void *const),
     void *(*const newRealloc)(void *const, const size_t),
     char *(*const newStrDup)(const char *const),
