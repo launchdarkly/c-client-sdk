@@ -9,7 +9,7 @@ static struct LDClient *
 makeTestClient()
 {
     struct LDConfig *config;
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
@@ -25,9 +25,9 @@ makeTestClient()
 static void
 testNoPayloadIfNoEvents()
 {
-    struct LDConfig *config;
+    struct LDConfig *      config;
     struct EventProcessor *processor;
-    struct LDJSON *payload;
+    struct LDJSON *        payload;
 
     LD_ASSERT(config = LDConfigNew("abc"));
     LD_ASSERT(processor = LDi_newEventProcessor(config));
@@ -43,12 +43,12 @@ static void
 testTrackMetricQueued()
 {
     struct LDClient *client;
-    double metricValue;
-    const char *metricName;
-    struct LDJSON *payload, *event;
+    double           metricValue;
+    const char *     metricName;
+    struct LDJSON *  payload, *event;
 
     metricValue = 0.52;
-    metricName = "metricName";
+    metricName  = "metricName";
 
     LD_ASSERT(client = makeTestClient());
 
@@ -71,10 +71,10 @@ static void
 testAliasEventIsQueued()
 {
     struct LDClient *client;
-    double metricValue;
-    const char *metricName;
-    struct LDJSON *payload, *event;
-    struct LDUser *previous, *current;
+    double           metricValue;
+    const char *     metricName;
+    struct LDJSON *  payload, *event;
+    struct LDUser *  previous, *current;
 
     LD_ASSERT(previous = LDUserNew("p"));
     LD_ASSERT(current = LDUserNew("c"));
@@ -100,9 +100,9 @@ static void
 testBasicSummary()
 {
     struct LDClient *client;
-    struct LDFlag flag;
-    struct LDJSON *payload, *event, *expected, *startDate, *endDate;
-    char *expectedString;
+    struct LDFlag    flag;
+    struct LDJSON *  payload, *event, *expected, *startDate, *endDate;
+    char *           expectedString;
 
     LD_ASSERT(client = makeTestClient());
 
@@ -134,11 +134,11 @@ testBasicSummary()
     LDObjectDeleteKey(event, "startDate");
     LDObjectDeleteKey(event, "endDate");
 
-    LD_ASSERT(expected = LDJSONDeserialize(
-        "{\"kind\":\"summary\",\"features\":{\"test\":{\"default\":false,"
-        "\"counters\":[{\"count\":2,\"value\":true,\"version\":2,"
-        "\"variation\":3}]}}}"
-    ));
+    LD_ASSERT(
+        expected = LDJSONDeserialize(
+            "{\"kind\":\"summary\",\"features\":{\"test\":{\"default\":false,"
+            "\"counters\":[{\"count\":2,\"value\":true,\"version\":2,"
+            "\"variation\":3}]}}}"));
 
     LD_ASSERT(LDJSONCompare(event, expected));
 
@@ -151,7 +151,7 @@ static void
 testBasicSummaryUnknown()
 {
     struct LDClient *client;
-    struct LDJSON *payload, *event, *expected, *startDate, *endDate;
+    struct LDJSON *  payload, *event, *expected, *startDate, *endDate;
 
     LD_ASSERT(client = makeTestClient());
 
@@ -170,10 +170,11 @@ testBasicSummaryUnknown()
     LDObjectDeleteKey(event, "startDate");
     LDObjectDeleteKey(event, "endDate");
 
-    LD_ASSERT(expected = LDJSONDeserialize(
-        "{\"kind\":\"summary\", \"features\":{\"test\":{\"default\":false,"
-        "\"counters\":[{\"count\":1,\"value\":false,\"unknown\":true}]}}}"
-    ));
+    LD_ASSERT(
+        expected = LDJSONDeserialize(
+            "{\"kind\":\"summary\", \"features\":{\"test\":{\"default\":false,"
+            "\"counters\":[{\"count\":1,\"value\":false,\"unknown\":true}]}}"
+            "}"));
 
     LD_ASSERT(LDJSONCompare(event, expected));
 
@@ -186,9 +187,9 @@ static void
 testInlineUser()
 {
     struct LDConfig *config;
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDClient *client;
-    struct LDJSON *payload, *event, *expected;
+    struct LDJSON *  payload, *event, *expected;
 
     LD_ASSERT(config = LDConfigNew("abc"));
     LDConfigSetOffline(config, true);
@@ -204,9 +205,7 @@ testInlineUser()
     LD_ASSERT(LDCollectionGetSize(payload) == 2);
     LD_ASSERT(event = LDArrayLookup(payload, 1))
 
-    LD_ASSERT(expected = LDJSONDeserialize(
-        "{\"key\":\"my-user\"}"
-    ));
+    LD_ASSERT(expected = LDJSONDeserialize("{\"key\":\"my-user\"}"));
 
     LD_ASSERT(LDJSONCompare(LDObjectLookup(event, "user"), expected));
     LD_ASSERT(!LDObjectLookup(event, "userKey"));
@@ -220,9 +219,9 @@ static void
 testOnlyUserKey()
 {
     struct LDConfig *config;
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDClient *client;
-    struct LDJSON *payload, *event, *expected;
+    struct LDJSON *  payload, *event, *expected;
 
     LD_ASSERT(config = LDConfigNew("abc"));
     LDConfigSetOffline(config, true);
@@ -266,8 +265,8 @@ testConstructAliasEvent()
     LD_ASSERT(LDObjectSetKey(expected, "key", LDNewText("b")));
     LD_ASSERT(LDObjectSetKey(expected, "contextKind", LDNewText("user")));
     LD_ASSERT(LDObjectSetKey(expected, "previousKey", LDNewText("a")));
-    LD_ASSERT(LDObjectSetKey(expected, "previousContextKind",
-      LDNewText("anonymousUser")));
+    LD_ASSERT(LDObjectSetKey(
+        expected, "previousContextKind", LDNewText("anonymousUser")));
 
     LD_ASSERT(LDJSONCompare(result, expected));
 

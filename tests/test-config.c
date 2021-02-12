@@ -15,7 +15,7 @@ void
 testSetters()
 {
     struct LDConfig *config;
-    struct LDJSON *attributes, *tmp;
+    struct LDJSON *  attributes, *tmp;
 
     LD_ASSERT(config = LDConfigNew("a"));
     LD_ASSERT(strcmp("a", config->mobileKey) == 0);
@@ -25,12 +25,10 @@ testSetters()
 
     /* respects minimum */
     LDConfigSetBackgroundPollingIntervalMillis(config, 5);
-    LD_ASSERT(config->backgroundPollingIntervalMillis ==
-      15 * 60 * 1000);
+    LD_ASSERT(config->backgroundPollingIntervalMillis == 15 * 60 * 1000);
 
     LDConfigSetBackgroundPollingIntervalMillis(config, 20 * 60 * 1000);
-    LD_ASSERT(config->backgroundPollingIntervalMillis ==
-        20 * 60 * 1000);
+    LD_ASSERT(config->backgroundPollingIntervalMillis == 20 * 60 * 1000);
 
     LD_ASSERT(LDConfigSetAppURI(config, "https://test1.com"));
     LD_ASSERT(strcmp("https://test1.com", config->appURI) == 0);

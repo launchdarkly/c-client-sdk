@@ -4,7 +4,9 @@
 #include "flag.h"
 
 bool
-LDi_flag_parse(struct LDFlag *const result, const char *const key,
+LDi_flag_parse(
+    struct LDFlag *const       result,
+    const char *const          key,
     const struct LDJSON *const raw)
 {
     const struct LDJSON *tmp;
@@ -99,8 +101,8 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
     } else if (LDJSONGetType(tmp) == LDNull) {
         result->variation = -1;
     } else {
-        LD_LOG(LD_LOG_ERROR,
-            "LDi_flag_parse variation is not a number or null");
+        LD_LOG(
+            LD_LOG_ERROR, "LDi_flag_parse variation is not a number or null");
 
         goto error;
     }
@@ -121,7 +123,8 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
     /* debugEventsUntilDate */
     if ((tmp = LDObjectLookup(raw, "debugEventsUntilDate"))) {
         if (LDJSONGetType(tmp) != LDNumber) {
-            LD_LOG(LD_LOG_ERROR,
+            LD_LOG(
+                LD_LOG_ERROR,
                 "LDi_flag_parse debugEventsUntilDate not a number");
 
             goto error;
@@ -162,7 +165,7 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
 
     return true;
 
-  error:
+error:
     LDFree(result->key);
     LDJSONFree(result->value);
     LDJSONFree(result->reason);
@@ -279,7 +282,7 @@ LDi_flag_to_json(struct LDFlag *const flag)
 
     return result;
 
-  error:
+error:
     LDJSONFree(result);
     LDJSONFree(tmp);
 

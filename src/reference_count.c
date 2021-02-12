@@ -1,12 +1,12 @@
-#include "assertion.h"
 #include "reference_count.h"
+#include "assertion.h"
 
 bool
 LDi_rc_initialize(
     struct ld_rc_t *const rc,
     void *const           value,
-    void (*const destructor)(void *value)
-) {
+    void (*const destructor)(void *value))
+{
     LD_ASSERT(rc);
     LD_ASSERT(value);
     LD_ASSERT(destructor);

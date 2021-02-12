@@ -1,10 +1,10 @@
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "event_processor.h"
 #include "event_processor_internal.h"
-#include "utility.h"
 #include "ldinternal.h"
+#include "utility.h"
 
 static int
 LDi_getFlagVersion(const struct LDFlag *const flag)
@@ -22,7 +22,7 @@ LDi_newEventProcessor(const struct LDConfig *const config)
     struct EventProcessor *context;
 
     if (!(context =
-        (struct EventProcessor *)LDAlloc(sizeof(struct EventProcessor))))
+              (struct EventProcessor *)LDAlloc(sizeof(struct EventProcessor))))
     {
         goto error;
     }
@@ -45,7 +45,7 @@ LDi_newEventProcessor(const struct LDConfig *const config)
 
     return context;
 
-  error:
+error:
     LDi_freeEventProcessor(context);
 
     return NULL;
@@ -71,9 +71,8 @@ LDi_addEvent(struct EventProcessor *const context, struct LDJSON *const event)
     /* sanity check */
     LD_ASSERT(LDJSONGetType(context->events) == LDArray);
 
-    if (
-        LDCollectionGetSize(context->events) >= context->config->eventsCapacity
-    ) {
+    if (LDCollectionGetSize(context->events) >= context->config->eventsCapacity)
+    {
         LD_LOG(LD_LOG_WARNING, "event capacity exceeded, dropping event");
     } else {
         LDArrayPush(context->events, event);
@@ -85,8 +84,8 @@ LDi_newBaseEvent(const char *const kind, const double now)
 {
     struct LDJSON *tmp, *event;
 
-    tmp          = NULL;
-    event        = NULL;
+    tmp   = NULL;
+    event = NULL;
 
     if (!(event = LDNewObject())) {
         LD_LOG(LD_LOG_ERROR, "alloc error");
@@ -122,7 +121,7 @@ LDi_newBaseEvent(const char *const kind, const double now)
 
     return event;
 
-  error:
+error:
     LDJSONFree(event);
 
     return NULL;
@@ -132,8 +131,8 @@ bool
 LDi_addUserInfoToEvent(
     const struct EventProcessor *const context,
     struct LDJSON *const               event,
-    const struct LDUser *const         user
-) {
+    const struct LDUser *const         user)
+{
     struct LDJSON *tmp;
 
     LD_ASSERT(context);
@@ -141,9 +140,11 @@ LDi_addUserInfoToEvent(
     LD_ASSERT(user);
 
     if (context->config->inlineUsersInEvents) {
-        if (!(tmp = LDi_userToJSON(user, LDBooleanTrue,
-            context->config->allAttributesPrivate,
-            context->config->privateAttributeNames)))
+        if (!(tmp = LDi_userToJSON(
+                  user,
+                  LDBooleanTrue,
+                  context->config->allAttributesPrivate,
+                  context->config->privateAttributeNames)))
         {
             LD_LOG(LD_LOG_ERROR, "alloc error");
 
@@ -180,8 +181,8 @@ struct LDJSON *
 LDi_newIdentifyEvent(
     const struct EventProcessor *const context,
     const struct LDUser *const         user,
-    const double                       now
-) {
+    const double                       now)
+{
     struct LDJSON *event, *tmp;
 
     LD_ASSERT(context);
@@ -213,9 +214,11 @@ LDi_newIdentifyEvent(
         return false;
     }
 
-    if (!(tmp = LDi_userToJSON(user, LDBooleanTrue,
-        context->config->allAttributesPrivate,
-        context->config->privateAttributeNames)))
+    if (!(tmp = LDi_userToJSON(
+              user,
+              LDBooleanTrue,
+              context->config->allAttributesPrivate,
+              context->config->privateAttributeNames)))
     {
         LD_LOG(LD_LOG_ERROR, "alloc error");
 
@@ -238,11 +241,10 @@ LDi_newIdentifyEvent(
 
 bool
 LDi_identify(
-    struct EventProcessor *const context,
-    const struct LDUser *const   user
-) {
+    struct EventProcessor *const context, const struct LDUser *const user)
+{
     struct LDJSON *event;
-    double now;
+    double         now;
 
     LD_ASSERT(context);
     LD_ASSERT(user);
@@ -272,8 +274,8 @@ LDi_newCustomEvent(
     struct LDJSON *const               data,
     const double                       metric,
     const bool                         hasMetric,
-    const double                       now
-) {
+    const double                       now)
+{
     struct LDJSON *tmp, *event;
 
     LD_ASSERT(context);
@@ -347,7 +349,7 @@ LDi_newCustomEvent(
 
     return event;
 
-  error:
+error:
     LDJSONFree(event);
 
     return NULL;
@@ -365,10 +367,10 @@ contextKindString(const struct LDUser *const user)
 
 struct LDJSON *
 LDi_newAliasEvent(
-    const struct LDUser *const   currentUser,
-    const struct LDUser *const   previousUser,
-    const double                 now
-) {
+    const struct LDUser *const currentUser,
+    const struct LDUser *const previousUser,
+    const double               now)
+{
     struct LDJSON *tmp, *event;
 
     LD_ASSERT(currentUser);
@@ -415,7 +417,7 @@ LDi_newAliasEvent(
 
     return event;
 
-  error:
+error:
     LDJSONFree(event);
     LDJSONFree(tmp);
 
@@ -429,10 +431,10 @@ LDi_track(
     const char *const            key,
     struct LDJSON *const         data,
     const double                 metric,
-    const bool                   hasMetric
-) {
+    const bool                   hasMetric)
+{
     struct LDJSON *event;
-    double now;
+    double         now;
 
     LD_ASSERT(context);
     LD_ASSERT(user);
@@ -442,7 +444,7 @@ LDi_track(
     LDi_mutex_lock(&context->lock);
 
     if (!(event = LDi_newCustomEvent(
-        context, user, key, data, metric, hasMetric, now)))
+              context, user, key, data, metric, hasMetric, now)))
     {
         LD_LOG(LD_LOG_ERROR, "failed to construct custom event");
 
@@ -462,10 +464,10 @@ bool
 LDi_alias(
     struct EventProcessor *const context,
     const struct LDUser *const   currentUser,
-    const struct LDUser *const   previousUser
-) {
+    const struct LDUser *const   previousUser)
+{
     struct LDJSON *event;
-    double now;
+    double         now;
 
     LD_ASSERT(context);
     LD_ASSERT(currentUser);
@@ -525,10 +527,8 @@ LDi_objectToArray(const struct LDJSON *const object)
 }
 
 struct LDJSON *
-LDi_prepareSummaryEvent(
-    struct EventProcessor *const context,
-    const double                 now
-) {
+LDi_prepareSummaryEvent(struct EventProcessor *const context, const double now)
+{
     struct LDJSON *tmp, *summary, *iter, *counters;
 
     LD_ASSERT(context);
@@ -625,7 +625,7 @@ LDi_prepareSummaryEvent(
 
     return summary;
 
-  error:
+error:
     LDJSONFree(summary);
     LDJSONFree(counters);
 
@@ -634,11 +634,10 @@ LDi_prepareSummaryEvent(
 
 bool
 LDi_bundleEventPayload(
-    struct EventProcessor *const context,
-    struct LDJSON **const        result
-) {
+    struct EventProcessor *const context, struct LDJSON **const result)
+{
     struct LDJSON *nextEvents, *nextSummaryCounters, *summaryEvent;
-    double now;
+    double         now;
 
     LD_ASSERT(context);
     LD_ASSERT(result);
@@ -710,22 +709,32 @@ LDi_bundleEventPayload(
 }
 
 struct LDJSON *
-LDi_valueToJSON(
-    const void *const value,
-    const LDJSONType  valueType
-) {
+LDi_valueToJSON(const void *const value, const LDJSONType valueType)
+{
     struct LDJSON *tmp;
 
     LD_ASSERT(value);
 
     switch (valueType) {
-        case LDNull:   tmp = LDJSONDuplicate((struct LDJSON *)value);  break;
-        case LDBool:   tmp = LDNewBool(*(bool *)value);                break;
-        case LDText:   tmp = LDNewText((const char *)value);           break;
-        case LDNumber: tmp = LDNewNumber(*(double *)value);            break;
-        /* LDNull is actually used to represent these types for now */
-        case LDObject: LD_ASSERT(false);                               break;
-        case LDArray:  LD_ASSERT(false);                               break;
+    case LDNull:
+        tmp = LDJSONDuplicate((struct LDJSON *)value);
+        break;
+    case LDBool:
+        tmp = LDNewBool(*(bool *)value);
+        break;
+    case LDText:
+        tmp = LDNewText((const char *)value);
+        break;
+    case LDNumber:
+        tmp = LDNewNumber(*(double *)value);
+        break;
+    /* LDNull is actually used to represent these types for now */
+    case LDObject:
+        LD_ASSERT(false);
+        break;
+    case LDArray:
+        LD_ASSERT(false);
+        break;
     }
 
     return tmp;
@@ -741,8 +750,8 @@ LDi_newFeatureRequestEvent(
     const void *const               actualValue,
     const struct LDStoreNode *const node,
     const bool                      detailed,
-    const double                    now
-) {
+    const double                    now)
+{
     struct LDJSON *event, *tmp;
 
     LD_ASSERT(context);
@@ -758,8 +767,8 @@ LDi_newFeatureRequestEvent(
     }
 
     if (!LDi_addUserInfoToEvent(context, event, user)) {
-        LD_LOG(LD_LOG_ERROR,
-            "LDi_newFeatureRequestEvent failed adding user info");
+        LD_LOG(
+            LD_LOG_ERROR, "LDi_newFeatureRequestEvent failed adding user info");
 
         return NULL;
     }
@@ -855,12 +864,12 @@ LDi_summarizeEvent(
     const struct LDStoreNode *const node,
     const LDJSONType                variationType,
     const void *const               fallbackValue,
-    const void *const               actualValue
-) {
-    int status;
-    char keyText[128];
+    const void *const               actualValue)
+{
+    int            status;
+    char           keyText[128];
     struct LDJSON *tmp, *entry, *flagContext, *counters;
-    bool success;
+    bool           success;
 
     LD_ASSERT(context);
     LD_ASSERT(flagKey);
@@ -873,11 +882,14 @@ LDi_summarizeEvent(
 
     /* prepare summary key */
     if (node == NULL) {
-        status = snprintf(keyText, sizeof(keyText),
-            "unknown");
+        status = snprintf(keyText, sizeof(keyText), "unknown");
     } else {
-        status = snprintf(keyText, sizeof(keyText),
-            "%d %d", LDi_getFlagVersion(&node->flag), node->flag.variation);
+        status = snprintf(
+            keyText,
+            sizeof(keyText),
+            "%d %d",
+            LDi_getFlagVersion(&node->flag),
+            node->flag.variation);
     }
 
     if (status < 0) {
@@ -1056,16 +1068,16 @@ LDi_summarizeEvent(
 
     success = true;
 
-  cleanup:
+cleanup:
     return success;
 }
 
 static bool
-shouldGenerateFeatureEvent(const struct LDStoreNode *const node,
-    const double now)
+shouldGenerateFeatureEvent(
+    const struct LDStoreNode *const node, const double now)
 {
     return node &&
-        (node->flag.trackEvents || node->flag.debugEventsUntilDate > now);
+           (node->flag.trackEvents || node->flag.debugEventsUntilDate > now);
 }
 
 bool
@@ -1077,10 +1089,10 @@ LDi_processEvalEvent(
     const struct LDStoreNode *const node,
     const void *const               actualValue,
     const void *const               fallback,
-    const bool                      detailed
-) {
+    const bool                      detailed)
+{
     struct LDJSON *featureEvent;
-    double now;
+    double         now;
 
     LD_ASSERT(context);
     LD_ASSERT(user);
@@ -1093,8 +1105,16 @@ LDi_processEvalEvent(
     LDi_getUnixMilliseconds(&now);
 
     if (shouldGenerateFeatureEvent(node, now)) {
-        featureEvent = LDi_newFeatureRequestEvent(context, flagKey, user,
-            valueType, fallback, actualValue, node, detailed, now);
+        featureEvent = LDi_newFeatureRequestEvent(
+            context,
+            flagKey,
+            user,
+            valueType,
+            fallback,
+            actualValue,
+            node,
+            detailed,
+            now);
 
         if (featureEvent == NULL) {
             LD_LOG(LD_LOG_ERROR, "failed to create feature event");
@@ -1105,8 +1125,8 @@ LDi_processEvalEvent(
 
     LDi_mutex_lock(&context->lock);
 
-    if (!LDi_summarizeEvent(context, flagKey, node, valueType, fallback,
-        actualValue))
+    if (!LDi_summarizeEvent(
+            context, flagKey, node, valueType, fallback, actualValue))
     {
         LDi_addEvent(context, featureEvent);
 

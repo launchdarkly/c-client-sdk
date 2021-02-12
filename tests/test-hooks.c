@@ -15,7 +15,7 @@ hook(const char *const name, const int change)
 void
 testBasicHookUpsert(void)
 {
-    struct LDFlag flag;
+    struct LDFlag  flag;
     struct LDStore store;
 
     callCount = 0;

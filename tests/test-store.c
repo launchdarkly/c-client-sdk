@@ -6,7 +6,7 @@ static struct LDClient *
 makeTestClient()
 {
     struct LDConfig *config;
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
@@ -23,7 +23,7 @@ static void
 testRestoreAndSaveEmpty()
 {
     struct LDClient *client;
-    char *bundle;
+    char *           bundle;
 
     LD_ASSERT(client = makeTestClient());
 
@@ -39,8 +39,8 @@ static void
 testRestoreAndSaveBasic()
 {
     struct LDClient *client;
-    char *bundle1, *bundle2;
-    struct LDFlag flag;
+    char *           bundle1, *bundle2;
+    struct LDFlag    flag;
 
     LD_ASSERT(client = makeTestClient());
 

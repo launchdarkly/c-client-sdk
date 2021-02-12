@@ -3,14 +3,15 @@
  * @brief Public Client control and variations
  */
 
-
 #pragma once
 
-#include <launchdarkly/json.h>
+#include <stddef.h>
+
 #include <launchdarkly/boolean.h>
 #include <launchdarkly/config.h>
-#include <launchdarkly/user.h>
 #include <launchdarkly/export.h>
+#include <launchdarkly/json.h>
+#include <launchdarkly/user.h>
 
 /** @brief Opaque client object **/
 struct LDClient;
@@ -20,7 +21,8 @@ struct LDClient;
 #define LDPrimaryEnvironmentName "default"
 
 /** @brief Current status of the client */
-typedef enum {
+typedef enum
+{
     LDStatusInitializing = 0,
     LDStatusInitialized,
     LDStatusFailed,
@@ -33,8 +35,9 @@ typedef enum {
  *
  * The contents of `LDVariationDetails` must be freed with
  * `LDFreeDetailContents` when they are no longer needed. */
-typedef struct {
-    int variationIndex;
+typedef struct
+{
+    int            variationIndex;
     struct LDJSON *reason;
 } LDVariationDetails;
 
@@ -46,8 +49,7 @@ LD_EXPORT(struct LDClient *) LDClientGet();
  *
  * If the environment name does not exist this function
  * returns `NULL`. */
-LD_EXPORT(struct LDClient *) LDClientGetForMobileKey(
-    const char *const keyName);
+LD_EXPORT(struct LDClient *) LDClientGetForMobileKey(const char *const keyName);
 
 /** @brief Initialize the client with the config and user.
  * After this call,
@@ -64,23 +66,26 @@ LD_EXPORT(struct LDClient *) LDClientGetForMobileKey(
  * with `LDClientClose`. Should you initialize with `LDClientInit` while
  * another client exists `abort` will be called. Both `LDClientInit`, and
  * `LDClientClose` are not thread safe. */
-LD_EXPORT(struct LDClient *) LDClientInit(struct LDConfig *const config,
-    struct LDUser *const user, const unsigned int maxwaitmilli);
+LD_EXPORT(struct LDClient *)
+LDClientInit(
+    struct LDConfig *const config,
+    struct LDUser *const   user,
+    const unsigned int     maxwaitmilli);
 
 /** @brief Get JSON string containing all flags */
 LD_EXPORT(char *) LDClientSaveFlags(struct LDClient *const client);
 
 /** @brief Set flag store from JSON string */
-LD_EXPORT(LDBoolean) LDClientRestoreFlags(struct LDClient *const client,
-    const char *const data);
+LD_EXPORT(LDBoolean)
+LDClientRestoreFlags(struct LDClient *const client, const char *const data);
 
 /** @brief Update the client with a new user.
  *
  * The old user is freed. This will re-fetch feature flag settings from
  * LaunchDarkly. For performance reasons, user contexts should not be
  * changed frequently. */
-LD_EXPORT(void) LDClientIdentify(struct LDClient *const client,
-    struct LDUser *const user);
+LD_EXPORT(void)
+LDClientIdentify(struct LDClient *const client, struct LDUser *const user);
 
 /** @brief  Send any pending events to the server. They will normally be
  *
@@ -92,8 +97,9 @@ LD_EXPORT(void) LDClientFlush(struct LDClient *const client);
 LD_EXPORT(LDBoolean) LDClientIsInitialized(struct LDClient *const client);
 
 /** @brief Block until initialized up to timeout, returns true if initialized */
-LD_EXPORT(LDBoolean) LDClientAwaitInitialized(struct LDClient *const client,
-    const unsigned int timeoutmilli);
+LD_EXPORT(LDBoolean)
+LDClientAwaitInitialized(
+    struct LDClient *const client, const unsigned int timeoutmilli);
 
 /** @brief Returns the offline status of the client. */
 LD_EXPORT(LDBoolean) LDClientIsOffline(struct LDClient *const client);
@@ -105,8 +111,9 @@ LD_EXPORT(void) LDClientSetOffline(struct LDClient *const client);
 LD_EXPORT(void) LDClientSetOnline(struct LDClient *const client);
 
 /** @brief Enable or disable polling mode */
-LD_EXPORT(void) LDClientSetBackground(struct LDClient *const client,
-    const LDBoolean background);
+LD_EXPORT(void)
+LDClientSetBackground(
+    struct LDClient *const client, const LDBoolean background);
 
 /** @brief Close the client, free resources, and generally shut down.
  *
@@ -115,88 +122,135 @@ LD_EXPORT(void) LDClientSetBackground(struct LDClient *const client,
 LD_EXPORT(void) LDClientClose(struct LDClient *const client);
 
 /** @brief Add handler for when client status changes */
-LD_EXPORT(void) LDSetClientStatusCallback(void (callback)(int status));
+LD_EXPORT(void) LDSetClientStatusCallback(void(callback)(int status));
 
 /** @brief Record a alias event */
-LD_EXPORT(void) LDClientAlias(struct LDClient *const client,
+LD_EXPORT(void)
+LDClientAlias(
+    struct LDClient *const     client,
     const struct LDUser *const currentUser,
     const struct LDUser *const previousUser);
 
 /** @brief Record a custom event. */
-LD_EXPORT(void) LDClientTrack(struct LDClient *const client,
-    const char *const name);
+LD_EXPORT(void)
+LDClientTrack(struct LDClient *const client, const char *const name);
 
 /** @brief Record a custom event and include custom data. */
-LD_EXPORT(void) LDClientTrackData(struct LDClient *const client,
-    const char *const name, struct LDJSON *const data);
+LD_EXPORT(void)
+LDClientTrackData(
+    struct LDClient *const client,
+    const char *const      name,
+    struct LDJSON *const   data);
 
 /** @brief Record a custom event and include custom data / a metric. */
-LD_EXPORT(void) LDClientTrackMetric(struct LDClient *const client,
-    const char *const name, struct LDJSON *const data, const double metric);
+LD_EXPORT(void)
+LDClientTrackMetric(
+    struct LDClient *const client,
+    const char *const      name,
+    struct LDJSON *const   data,
+    const double           metric);
 
 /** @brief  Returns an object of all flags. This must be freed with
  * `LDJSONFree`. */
 LD_EXPORT(struct LDJSON *) LDAllFlags(struct LDClient *const client);
 
 /** @brief Evaluate Bool flag */
-LD_EXPORT(LDBoolean) LDBoolVariation(struct LDClient *const client,
-    const char *const featureKey, const LDBoolean fallback);
+LD_EXPORT(LDBoolean)
+LDBoolVariation(
+    struct LDClient *const client,
+    const char *const      featureKey,
+    const LDBoolean        fallback);
 
 /** @brief Evaluate Int flag
  *
  * If the flag value is actually a float the result is truncated. */
-LD_EXPORT(int) LDIntVariation(struct LDClient *const client,
-    const char *const featureKey, const int fallback);
+LD_EXPORT(int)
+LDIntVariation(
+    struct LDClient *const client,
+    const char *const      featureKey,
+    const int              fallback);
 
 /** @brief Evaluate Double flag */
-LD_EXPORT(double) LDDoubleVariation(struct LDClient *const client,
-    const char *const featureKey, const double fallback);
+LD_EXPORT(double)
+LDDoubleVariation(
+    struct LDClient *const client,
+    const char *const      featureKey,
+    const double           fallback);
 
 /** @brief Evaluate String flag */
-LD_EXPORT(char *) LDStringVariationAlloc(struct LDClient *const client,
-    const char *const featureKey, const char *const fallback);
+LD_EXPORT(char *)
+LDStringVariationAlloc(
+    struct LDClient *const client,
+    const char *const      featureKey,
+    const char *const      fallback);
 
 /** @brief Evaluate String flag into fixed buffer */
-LD_EXPORT(char *) LDStringVariation(struct LDClient *const client,
-    const char *const featureKey, const char *const fallback,
-    char *const resultBuffer, const size_t resultBufferSize);
+LD_EXPORT(char *)
+LDStringVariation(
+    struct LDClient *const client,
+    const char *const      featureKey,
+    const char *const      fallback,
+    char *const            resultBuffer,
+    const size_t           resultBufferSize);
 
 /** @brief Evaluate JSON flag */
-LD_EXPORT(struct LDJSON *) LDJSONVariation(struct LDClient *const client,
-    const char *const featureKey, const struct LDJSON *const fallback);
+LD_EXPORT(struct LDJSON *)
+LDJSONVariation(
+    struct LDClient *const     client,
+    const char *const          featureKey,
+    const struct LDJSON *const fallback);
 
 /** @brief Evaluate Bool flag with details */
-LD_EXPORT(LDBoolean) LDBoolVariationDetail(struct LDClient *const client,
-    const char *const featureKey, const LDBoolean fallback,
+LD_EXPORT(LDBoolean)
+LDBoolVariationDetail(
+    struct LDClient *const    client,
+    const char *const         featureKey,
+    const LDBoolean           fallback,
     LDVariationDetails *const details);
 
 /** @brief Evaluate Int flag with details
  *
  * If the flag value is actually a float the result is truncated. */
-LD_EXPORT(int) LDIntVariationDetail(struct LDClient *const client,
-    const char *const featureKey, const int fallback,
+LD_EXPORT(int)
+LDIntVariationDetail(
+    struct LDClient *const    client,
+    const char *const         featureKey,
+    const int                 fallback,
     LDVariationDetails *const details);
 
 /** @brief Evaluate Double flag with details */
-LD_EXPORT(double) LDDoubleVariationDetail(struct LDClient *const client,
-    const char *const featureKey, const double fallback,
+LD_EXPORT(double)
+LDDoubleVariationDetail(
+    struct LDClient *const    client,
+    const char *const         featureKey,
+    const double              fallback,
     LDVariationDetails *const details);
 
 /** @brief Evaluate String flag with details */
-LD_EXPORT(char *) LDStringVariationAllocDetail(struct LDClient *const client,
-    const char *const featureKey, const char *const fallback,
+LD_EXPORT(char *)
+LDStringVariationAllocDetail(
+    struct LDClient *const    client,
+    const char *const         featureKey,
+    const char *const         fallback,
     LDVariationDetails *const details);
 
 /** @brief Evaluate String flag into fixed buffer with details */
-LD_EXPORT(char *) LDStringVariationDetail(struct LDClient *const client,
-    const char *const featureKey, const char *const fallback,
-    char *const resultBuffer, const size_t resultBufferSize,
+LD_EXPORT(char *)
+LDStringVariationDetail(
+    struct LDClient *const    client,
+    const char *const         featureKey,
+    const char *const         fallback,
+    char *const               resultBuffer,
+    const size_t              resultBufferSize,
     LDVariationDetails *const details);
 
 /** @brief Evaluate JSON flag with details */
-LD_EXPORT(struct LDJSON *) LDJSONVariationDetail(
-    struct LDClient *const client, const char *const key,
-    const struct LDJSON *const fallback, LDVariationDetails *const details);
+LD_EXPORT(struct LDJSON *)
+LDJSONVariationDetail(
+    struct LDClient *const     client,
+    const char *const          key,
+    const struct LDJSON *const fallback,
+    LDVariationDetails *const  details);
 
 /** @brief Clear any memory associated with `LDVariationDetails`  */
 LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);
@@ -208,12 +262,16 @@ LD_EXPORT(void) LDFreeDetailContents(LDVariationDetails details);
 typedef void (*LDlistenerfn)(const char *const flagKey, const int status);
 
 /** @brief Register a callback for when a flag is updated. */
-LD_EXPORT(LDBoolean) LDClientRegisterFeatureFlagListener(
-  struct LDClient *const client, const char *const flagKey,
-  LDlistenerfn listener);
+LD_EXPORT(LDBoolean)
+LDClientRegisterFeatureFlagListener(
+    struct LDClient *const client,
+    const char *const      flagKey,
+    LDlistenerfn           listener);
 
 /** @brief Unregister a callback registered with
-* `LDClientRegisterFeatureFlagListener` */
-LD_EXPORT(void) LDClientUnregisterFeatureFlagListener(
-    struct LDClient *const client, const char *const flagKey,
-    LDlistenerfn listener);
+ * `LDClientRegisterFeatureFlagListener` */
+LD_EXPORT(void)
+LDClientUnregisterFeatureFlagListener(
+    struct LDClient *const client,
+    const char *const      flagKey,
+    LDlistenerfn           listener);

@@ -8,13 +8,12 @@
 void
 callback(int status)
 {
-
 }
 
 void
 testClientMisc()
 {
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDConfig *config;
     struct LDClient *client;
 
@@ -27,7 +26,7 @@ testClientMisc()
     LD_ASSERT(LDClientIsInitialized(client) == false);
 
     LD_ASSERT(client == LDClientGet());
-    
+
     LDClientSetBackground(client, true);
     LDClientSetBackground(client, false);
 

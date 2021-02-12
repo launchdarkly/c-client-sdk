@@ -6,10 +6,10 @@ struct LDUser *
 LDUserNew(const char *const key)
 {
     struct LDUser *user;
-    char fallback[32 + 1] = { 0 };
-    const char *actualKey;
-    char *deviceIdentifier;
-    LDBoolean anonymous;
+    char           fallback[32 + 1] = {0};
+    const char *   actualKey;
+    char *         deviceIdentifier;
+    LDBoolean      anonymous;
 
     deviceIdentifier = NULL;
 
@@ -21,7 +21,8 @@ LDUserNew(const char *const key)
         if (deviceIdentifier) {
             actualKey = deviceIdentifier;
         } else {
-            LD_LOG(LD_LOG_WARNING,
+            LD_LOG(
+                LD_LOG_WARNING,
                 "Failed to get device ID falling back to random ID");
 
             LDi_randomhex(fallback, sizeof(fallback) - 1);
@@ -51,4 +52,3 @@ LDUserNew(const char *const key)
 
     return user;
 }
-

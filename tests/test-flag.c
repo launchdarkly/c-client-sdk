@@ -5,24 +5,24 @@
 static void
 testParseAndSerializeAllFields()
 {
-    struct LDFlag flag;
-    char *flagString;
+    struct LDFlag  flag;
+    char *         flagString;
     struct LDJSON *flagJSON1, *flagJSON2;
 
     flagString =
         "{\n"
-            "\"key\": \"a\",\n"
-            "\"value\": 2,\n"
-            "\"version\": 53,\n"
-            "\"variation\": 3,\n"
-            "\"flagVersion\": 45,\n"
-            "\"trackEvents\": true,\n"
-            "\"reason\": {\n"
-                "\"kind\": \"ERROR\",\n"
-                "\"errorKind\": \"WRONG_TYPE\"\n"
-            "},\n"
-            "\"debugEventsUntilDate\": 5000,\n"
-            "\"deleted\": true\n"
+        "\"key\": \"a\",\n"
+        "\"value\": 2,\n"
+        "\"version\": 53,\n"
+        "\"variation\": 3,\n"
+        "\"flagVersion\": 45,\n"
+        "\"trackEvents\": true,\n"
+        "\"reason\": {\n"
+        "\"kind\": \"ERROR\",\n"
+        "\"errorKind\": \"WRONG_TYPE\"\n"
+        "},\n"
+        "\"debugEventsUntilDate\": 5000,\n"
+        "\"deleted\": true\n"
         "}";
 
     LD_ASSERT(flagJSON1 = LDJSONDeserialize(flagString));

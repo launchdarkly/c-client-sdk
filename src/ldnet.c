@@ -11,31 +11,34 @@
 #define LD_STREAMTIMEOUT 300
 #define LD_USER_AGENT_HEADER "User-Agent: CClient/" LD_SDK_VERSION
 
-struct MemoryStruct {
-    char *memory;
+struct MemoryStruct
+{
+    char * memory;
     size_t size;
 };
 
-struct streamdata {
+struct streamdata
+{
     struct MemoryStruct mem;
-    time_t lastdatatime;
-    double lastdataamt;
-    struct LDClient *client;
+    time_t              lastdatatime;
+    double              lastdataamt;
+    struct LDClient *   client;
     struct LDSSEParser *parser;
 };
 
-struct cbhandlecontext {
+struct cbhandlecontext
+{
     struct LDClient *client;
     void (*cb)(struct LDClient *, int);
 };
 
-typedef size_t (*WriteCB)(void*, size_t, size_t, void*);
+typedef size_t (*WriteCB)(void *, size_t, size_t, void *);
 
 static size_t
-WriteMemoryCallback(void *const contents, size_t size, size_t nmemb,
-    void *const rawContext)
+WriteMemoryCallback(
+    void *const contents, size_t size, size_t nmemb, void *const rawContext)
 {
-    size_t realSize;
+    size_t               realSize;
     struct MemoryStruct *mem;
 
     LD_ASSERT(rawContext);
@@ -59,10 +62,10 @@ WriteMemoryCallback(void *const contents, size_t size, size_t nmemb,
 }
 
 static size_t
-StreamWriteCallback(void *const contents, size_t size, size_t nmemb,
-    void *const rawContext)
+StreamWriteCallback(
+    void *const contents, size_t size, size_t nmemb, void *const rawContext)
 {
-    size_t realSize;
+    size_t             realSize;
     struct streamdata *context;
 
     LD_ASSERT(rawContext);
@@ -78,11 +81,13 @@ StreamWriteCallback(void *const contents, size_t size, size_t nmemb,
 }
 
 static curl_socket_t
-SocketCallback(void *const rawContext, curlsocktype socketType,
+SocketCallback(
+    void *const                 rawContext,
+    curlsocktype                socketType,
     struct curl_sockaddr *const addr)
 {
     struct cbhandlecontext *ctx;
-    curl_socket_t fd;
+    curl_socket_t           fd;
     (void)socketType;
 
     LD_ASSERT(rawContext);
@@ -101,13 +106,19 @@ SocketCallback(void *const rawContext, curlsocktype socketType,
 
 /* returns false on failure, results left in clean state */
 static bool
-prepareShared(const char *const url, const struct LDConfig *const config,
-    CURL **r_curl, struct curl_slist **r_headers, WriteCB headercb,
-    void *const headerdata, WriteCB datacb, void *const data,
+prepareShared(
+    const char *const            url,
+    const struct LDConfig *const config,
+    CURL **                      r_curl,
+    struct curl_slist **         r_headers,
+    WriteCB                      headercb,
+    void *const                  headerdata,
+    WriteCB                      datacb,
+    void *const                  data,
     const struct LDClient *const client)
 {
     struct curl_slist *headers, *headerstmp;
-    CURL *curl;
+    CURL *             curl;
 
     LD_ASSERT(url);
     LD_ASSERT(config);
@@ -117,21 +128,26 @@ prepareShared(const char *const url, const struct LDConfig *const config,
     headerstmp = NULL;
 
     if (!(curl = curl_easy_init())) {
-        LD_LOG(LD_LOG_CRITICAL, "curl_easy_init returned NULL"); goto error;
+        LD_LOG(LD_LOG_CRITICAL, "curl_easy_init returned NULL");
+        goto error;
     }
 
     if (curl_easy_setopt(curl, CURLOPT_URL, url) != CURLE_OK) {
-        LD_LOG_1(LD_LOG_CRITICAL,
-            "curl_easy_setopt CURLOPT_URL failed on: %s", url);
+        LD_LOG_1(
+            LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_URL failed on: %s", url);
 
         goto error;
     }
 
     char headerauth[256];
-    if (snprintf(headerauth, sizeof(headerauth), "Authorization: %s",
-        client->mobileKey) < 0)
+    if (snprintf(
+            headerauth,
+            sizeof(headerauth),
+            "Authorization: %s",
+            client->mobileKey) < 0)
     {
-        LD_LOG(LD_LOG_CRITICAL,
+        LD_LOG(
+            LD_LOG_CRITICAL,
             "snprintf during Authorization header creation failed");
 
         goto error;
@@ -152,8 +168,8 @@ prepareShared(const char *const url, const struct LDConfig *const config,
     headers = headerstmp;
 
     if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, headercb) != CURLE_OK) {
-        LD_LOG(LD_LOG_CRITICAL,
-            "curl_easy_setopt CURLOPT_HEADERFUNCTION failed");
+        LD_LOG(
+            LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_HEADERFUNCTION failed");
 
         goto error;
     }
@@ -165,8 +181,8 @@ prepareShared(const char *const url, const struct LDConfig *const config,
     }
 
     if (curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, datacb) != CURLE_OK) {
-        LD_LOG(LD_LOG_CRITICAL,
-            "curl_easy_setopt CURLOPT_WRITEFUNCTION failed");
+        LD_LOG(
+            LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_WRITEFUNCTION failed");
 
         goto error;
     }
@@ -178,49 +194,51 @@ prepareShared(const char *const url, const struct LDConfig *const config,
     }
 
     if (config->proxyURI) {
-        if (curl_easy_setopt(curl, CURLOPT_PROXY, config->proxyURI)
-            != CURLE_OK)
+        if (curl_easy_setopt(curl, CURLOPT_PROXY, config->proxyURI) != CURLE_OK)
         {
-          LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_PROXY failed");
+            LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_PROXY failed");
 
-          goto error;
+            goto error;
         }
     }
 
-    if (curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config->verifyPeer)
-        != CURLE_OK)
+    if (curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config->verifyPeer) !=
+        CURLE_OK)
     {
-        LD_LOG(LD_LOG_CRITICAL,
-            "curl_easy_setopt CURLOPT_SSL_VERIFYPEER failed");
+        LD_LOG(
+            LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_SSL_VERIFYPEER failed");
 
         goto error;
     }
 
     /* Added by external applications to set SSL certificate */
     if (config->certFile) {
-        if (curl_easy_setopt(curl, CURLOPT_CAINFO, config->certFile)
-            != CURLE_OK)
-        {
+        if (curl_easy_setopt(curl, CURLOPT_CAINFO, config->certFile) !=
+            CURLE_OK) {
             LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_CAINFO failed");
 
             goto error;
         }
     }
 
-    if (curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS,
-        (long)config->connectionTimeoutMillis) != CURLE_OK)
+    if (curl_easy_setopt(
+            curl,
+            CURLOPT_CONNECTTIMEOUT_MS,
+            (long)config->connectionTimeoutMillis) != CURLE_OK)
     {
-        LD_LOG(LD_LOG_CRITICAL,
+        LD_LOG(
+            LD_LOG_CRITICAL,
             "curl_easy_setopt CURLOPT_CONNECTTIMEOUT_MS failed");
 
         goto error;
     }
 
-    *r_curl = curl; *r_headers = headers;
+    *r_curl    = curl;
+    *r_headers = headers;
 
     return true;
 
-  error:
+error:
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
 
@@ -230,11 +248,11 @@ prepareShared(const char *const url, const struct LDConfig *const config,
 void
 LDi_cancelread(const int handle)
 {
-    #ifdef _WINDOWS
-        shutdown(handle, SD_BOTH);
-    #else
-        shutdown(handle, SHUT_RDWR);
-    #endif
+#ifdef _WINDOWS
+    shutdown(handle, SD_BOTH);
+#else
+    shutdown(handle, SHUT_RDWR);
+#endif
 }
 
 /*
@@ -242,16 +260,19 @@ LDi_cancelread(const int handle)
  * it doesn't return except after a disconnect. (or some other failure.)
  */
 void
-LDi_readstream(struct LDClient *const client, int *response,
-    struct LDSSEParser *const parser, void cbhandle(struct LDClient *, int))
+LDi_readstream(
+    struct LDClient *const    client,
+    int *                     response,
+    struct LDSSEParser *const parser,
+    void                      cbhandle(struct LDClient *, int))
 {
-    struct MemoryStruct headers;
-    struct streamdata streamdata;
+    struct MemoryStruct    headers;
+    struct streamdata      streamdata;
     struct cbhandlecontext handledata;
-    CURL *curl;
-    struct curl_slist *headerlist, *headertmp;
-    struct LDJSON *userJSON;
-    char *userJSONText;
+    CURL *                 curl;
+    struct curl_slist *    headerlist, *headertmp;
+    struct LDJSON *        userJSON;
+    char *                 userJSONText;
 
     LD_ASSERT(client);
     LD_ASSERT(response);
@@ -262,7 +283,8 @@ LDi_readstream(struct LDClient *const client, int *response,
     headerlist = NULL;
     headertmp  = NULL;
 
-    handledata.client = client; handledata.cb = cbhandle;
+    handledata.client = client;
+    handledata.cb     = cbhandle;
 
     memset(&headers, 0, sizeof(headers));
     memset(&streamdata, 0, sizeof(streamdata));
@@ -274,8 +296,8 @@ LDi_readstream(struct LDClient *const client, int *response,
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
 
-    userJSON = LDi_userToJSON(client->shared->sharedUser, LDBooleanFalse,
-        LDBooleanFalse, NULL);
+    userJSON = LDi_userToJSON(
+        client->shared->sharedUser, LDBooleanFalse, LDBooleanFalse, NULL);
 
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdunlock(&client->clientLock);
@@ -297,8 +319,11 @@ LDi_readstream(struct LDClient *const client, int *response,
 
     char url[4096];
     if (client->shared->sharedConfig->useReport) {
-        if (snprintf(url, sizeof(url), "%s/meval",
-            client->shared->sharedConfig->streamURI) < 0)
+        if (snprintf(
+                url,
+                sizeof(url),
+                "%s/meval",
+                client->shared->sharedConfig->streamURI) < 0)
         {
             LDFree(userJSONText);
 
@@ -307,9 +332,9 @@ LDi_readstream(struct LDClient *const client, int *response,
             return;
         }
     } else {
-        size_t b64len;
+        size_t               b64len;
         unsigned char *const b64text = LDi_base64_encode(
-            (unsigned char*)userJSONText, strlen(userJSONText), &b64len);
+            (unsigned char *)userJSONText, strlen(userJSONText), &b64len);
 
         if (!b64text) {
             LDFree(userJSONText);
@@ -319,8 +344,12 @@ LDi_readstream(struct LDClient *const client, int *response,
             return;
         }
 
-        const int status = snprintf(url, sizeof(url), "%s/meval/%s",
-            client->shared->sharedConfig->streamURI, b64text);
+        const int status = snprintf(
+            url,
+            sizeof(url),
+            "%s/meval/%s",
+            client->shared->sharedConfig->streamURI,
+            b64text);
 
         LDFree(b64text);
 
@@ -345,9 +374,16 @@ LDi_readstream(struct LDClient *const client, int *response,
         }
     }
 
-    if (!prepareShared(url, client->shared->sharedConfig, &curl, &headerlist,
-        &WriteMemoryCallback, &headers, &StreamWriteCallback,
-        &streamdata, client))
+    if (!prepareShared(
+            url,
+            client->shared->sharedConfig,
+            &curl,
+            &headerlist,
+            &WriteMemoryCallback,
+            &headers,
+            &StreamWriteCallback,
+            &streamdata,
+            client))
     {
         LDFree(userJSONText);
 
@@ -355,16 +391,16 @@ LDi_readstream(struct LDClient *const client, int *response,
     }
 
     if (client->shared->sharedConfig->useReport) {
-        if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT")
-            != CURLE_OK)
+        if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK)
         {
-            LD_LOG(LD_LOG_CRITICAL,
+            LD_LOG(
+                LD_LOG_CRITICAL,
                 "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed");
 
             goto cleanup;
         }
 
-        const char* const headermime = "Content-Type: application/json";
+        const char *const headermime = "Content-Type: application/json";
         if (!(headertmp = curl_slist_append(headerlist, headermime))) {
             LD_LOG(LD_LOG_CRITICAL, "curl_slist_append failed for headermime");
 
@@ -372,30 +408,29 @@ LDi_readstream(struct LDClient *const client, int *response,
         }
         headerlist = headertmp;
 
-        if (curl_easy_setopt(
-            curl, CURLOPT_POSTFIELDS, userJSONText) != CURLE_OK)
-        {
-            LD_LOG(LD_LOG_CRITICAL,
-                "curl_easy_setopt CURLOPT_POSTFIELDS failed");
+        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, userJSONText) !=
+            CURLE_OK) {
+            LD_LOG(
+                LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed");
 
             goto cleanup;
         }
     }
 
-    if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETFUNCTION, SocketCallback)
-        != CURLE_OK)
+    if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETFUNCTION, SocketCallback) !=
+        CURLE_OK)
     {
-        LD_LOG(LD_LOG_CRITICAL,
+        LD_LOG(
+            LD_LOG_CRITICAL,
             "curl_easy_setopt CURLOPT_OPENSOCKETFUNCTION failed");
 
         goto cleanup;
     }
 
-    if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETDATA, &handledata)
-        != CURLE_OK)
+    if (curl_easy_setopt(curl, CURLOPT_OPENSOCKETDATA, &handledata) != CURLE_OK)
     {
-        LD_LOG(LD_LOG_CRITICAL,
-            "curl_easy_setopt CURLOPT_OPENSOCKETDATA failed");
+        LD_LOG(
+            LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_OPENSOCKETDATA failed");
 
         goto cleanup;
     }
@@ -417,7 +452,7 @@ LDi_readstream(struct LDClient *const client, int *response,
         *response = -1;
     }
 
-  cleanup:
+cleanup:
     LDFree(streamdata.mem.memory);
     LDFree(headers.memory);
     LDFree(userJSONText);
@@ -431,18 +466,19 @@ char *
 LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 {
     struct MemoryStruct headers, data;
-    CURL *curl = NULL;
-    struct curl_slist *headerlist = NULL, *headertmp = NULL;
-    struct LDJSON *userJSON;
-    char *userJSONText;
+    CURL *              curl       = NULL;
+    struct curl_slist * headerlist = NULL, *headertmp = NULL;
+    struct LDJSON *     userJSON;
+    char *              userJSONText;
 
-    memset(&headers, 0, sizeof(headers)); memset(&data, 0, sizeof(data));
+    memset(&headers, 0, sizeof(headers));
+    memset(&data, 0, sizeof(data));
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
 
-    userJSON = LDi_userToJSON(client->shared->sharedUser, LDBooleanFalse,
-        LDBooleanFalse, NULL);
+    userJSON = LDi_userToJSON(
+        client->shared->sharedUser, LDBooleanFalse, LDBooleanFalse, NULL);
 
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdunlock(&client->clientLock);
@@ -464,8 +500,11 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 
     char url[4096];
     if (client->shared->sharedConfig->useReport) {
-        if (snprintf(url, sizeof(url), "%s/msdk/evalx/user",
-            client->shared->sharedConfig->appURI) < 0)
+        if (snprintf(
+                url,
+                sizeof(url),
+                "%s/msdk/evalx/user",
+                client->shared->sharedConfig->appURI) < 0)
         {
             LDFree(userJSONText);
 
@@ -473,23 +512,27 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 
             return NULL;
         }
-    }
-    else {
-        size_t b64len;
+    } else {
+        size_t               b64len;
         unsigned char *const b64text = LDi_base64_encode(
-            (unsigned char*)userJSONText, strlen(userJSONText), &b64len);
+            (unsigned char *)userJSONText, strlen(userJSONText), &b64len);
 
         if (!b64text) {
             LDFree(userJSONText);
 
-            LD_LOG(LD_LOG_CRITICAL,
+            LD_LOG(
+                LD_LOG_CRITICAL,
                 "LDi_base64_encode == NULL in LDi_fetchfeaturemap");
 
             return NULL;
         }
 
-        const int status = snprintf(url, sizeof(url), "%s/msdk/evalx/users/%s",
-            client->shared->sharedConfig->appURI, b64text);
+        const int status = snprintf(
+            url,
+            sizeof(url),
+            "%s/msdk/evalx/users/%s",
+            client->shared->sharedConfig->appURI,
+            b64text);
 
         LDFree(b64text);
 
@@ -513,8 +556,16 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         }
     }
 
-    if (!prepareShared(url, client->shared->sharedConfig, &curl, &headerlist,
-        &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data, client))
+    if (!prepareShared(
+            url,
+            client->shared->sharedConfig,
+            &curl,
+            &headerlist,
+            &WriteMemoryCallback,
+            &headers,
+            &WriteMemoryCallback,
+            &data,
+            client))
     {
         LDFree(userJSONText);
 
@@ -524,10 +575,10 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
     LDFree(userJSONText);
 
     if (client->shared->sharedConfig->useReport) {
-        if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT")
-            != CURLE_OK)
+        if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK)
         {
-            LD_LOG(LD_LOG_CRITICAL,
+            LD_LOG(
+                LD_LOG_CRITICAL,
                 "curl_easy_setopt CURLOPT_CUSTOMREQUEST failed");
 
             goto error;
@@ -541,11 +592,10 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         }
         headerlist = headertmp;
 
-        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS,
-            userJSONText) != CURLE_OK)
-        {
-            LD_LOG(LD_LOG_CRITICAL,
-                "curl_easy_setopt CURLOPT_POSTFIELDS failed");
+        if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, userJSONText) !=
+            CURLE_OK) {
+            LD_LOG(
+                LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed");
 
             goto error;
         }
@@ -572,7 +622,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 
     return data.memory;
 
-  error:
+error:
     LDFree(data.memory);
     LDFree(headers.memory);
 
@@ -584,27 +634,41 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 }
 
 void
-LDi_sendevents(struct LDClient *const client, const char *const eventdata,
-    const char *const payloadUUID, int *const response)
+LDi_sendevents(
+    struct LDClient *const client,
+    const char *const      eventdata,
+    const char *const      payloadUUID,
+    int *const             response)
 {
     struct MemoryStruct headers, data;
-    CURL *curl = NULL;
-    struct curl_slist *headerlist = NULL, *headertmp = NULL;
+    CURL *              curl       = NULL;
+    struct curl_slist * headerlist = NULL, *headertmp = NULL;
 
     memset(&headers, 0, sizeof(headers));
     memset(&data, 0, sizeof(data));
 
     char url[4096];
-    if (snprintf(url, sizeof(url), "%s/mobile",
-        client->shared->sharedConfig->eventsURI) < 0)
+    if (snprintf(
+            url,
+            sizeof(url),
+            "%s/mobile",
+            client->shared->sharedConfig->eventsURI) < 0)
     {
         LD_LOG(LD_LOG_CRITICAL, "snprintf config->eventsURI failed");
 
         return;
     }
 
-    if (!prepareShared(url, client->shared->sharedConfig, &curl, &headerlist,
-        &WriteMemoryCallback, &headers, &WriteMemoryCallback, &data, client))
+    if (!prepareShared(
+            url,
+            client->shared->sharedConfig,
+            &curl,
+            &headerlist,
+            &WriteMemoryCallback,
+            &headers,
+            &WriteMemoryCallback,
+            &data,
+            client))
     {
         return;
     }
@@ -625,17 +689,21 @@ LDi_sendevents(struct LDClient *const client, const char *const eventdata,
     }
     headerlist = headertmp;
 
-    /* This is done as a macro so that the string is a literal */
-    #define LD_PAYLOAD_ID_HEADER "X-LaunchDarkly-Payload-ID: "
+/* This is done as a macro so that the string is a literal */
+#define LD_PAYLOAD_ID_HEADER "X-LaunchDarkly-Payload-ID: "
 
     /* do not need to add space for null termination because of sizeof */
     char payloadIdHeader[sizeof(LD_PAYLOAD_ID_HEADER) + LD_UUID_SIZE];
 
-    LD_ASSERT(snprintf(payloadIdHeader, sizeof(payloadIdHeader),
-        "%s%s", LD_PAYLOAD_ID_HEADER, payloadUUID) ==
-        sizeof(payloadIdHeader) - 1);
+    LD_ASSERT(
+        snprintf(
+            payloadIdHeader,
+            sizeof(payloadIdHeader),
+            "%s%s",
+            LD_PAYLOAD_ID_HEADER,
+            payloadUUID) == sizeof(payloadIdHeader) - 1);
 
-    #undef LD_PAYLOAD_ID_HEADER
+#undef LD_PAYLOAD_ID_HEADER
 
     if (!(headertmp = curl_slist_append(headerlist, payloadIdHeader))) {
         goto cleanup;
@@ -662,7 +730,7 @@ LDi_sendevents(struct LDClient *const client, const char *const eventdata,
         *response = -1;
     }
 
-  cleanup:
+cleanup:
     LDFree(data.memory);
     LDFree(headers.memory);
 

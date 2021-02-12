@@ -21,8 +21,8 @@ testDeviceId()
 static void
 testConditionWaitTimeout()
 {
-    int start, end;
-    ld_cond_t condition;
+    int        start, end;
+    ld_cond_t  condition;
     ld_mutex_t lock;
 
     LDi_cond_init(&condition);

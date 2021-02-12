@@ -6,7 +6,7 @@ static struct LDClient *
 makeTestClient()
 {
     struct LDConfig *config;
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
@@ -23,8 +23,8 @@ static void
 testBasicAllFlags()
 {
     struct LDClient *client;
-    struct LDFlag flag;
-    struct LDJSON *expected, *actual;
+    struct LDFlag    flag;
+    struct LDJSON *  expected, *actual;
 
     LD_ASSERT(client = makeTestClient());
 
@@ -54,8 +54,8 @@ static void
 testAllFlagsEmpty()
 {
     struct LDClient *client;
-    struct LDFlag flag;
-    struct LDJSON *expected, *actual;
+    struct LDFlag    flag;
+    struct LDJSON *  expected, *actual;
 
     LD_ASSERT(client = makeTestClient());
 
