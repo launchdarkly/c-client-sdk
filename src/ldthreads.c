@@ -21,15 +21,19 @@ THREAD_RETURN
 LDi_bgeventsender(void *const v)
 {
     struct LDClient *const client     = v;
-    bool                   finalflush = false;
+    LDBoolean              finalflush = LDBooleanFalse;
 
-    while (true) {
+    while (LDBooleanTrue) {
         struct LDJSON *payloadJSON;
         char *         payloadSerialized;
+        LDStatus       status;
+        int            ms;
+        char           payloadId[LD_UUID_SIZE + 1];
+        LDBoolean      sendFailed;
 
         LDi_rwlock_wrlock(&client->clientLock);
 
-        const LDStatus status = client->status;
+        status = client->status;
 
         if (status == LDStatusFailed || finalflush) {
             LD_LOG(LD_LOG_TRACE, "killing thread LDi_bgeventsender");
@@ -37,7 +41,7 @@ LDi_bgeventsender(void *const v)
             return THREAD_RETURN_DEFAULT;
         }
 
-        const int ms = client->shared->sharedConfig->eventsFlushIntervalMillis;
+        ms = client->shared->sharedConfig->eventsFlushIntervalMillis;
 
         if (status != LDStatusShuttingdown) {
             LDi_mutex_lock(&client->condMtx);
@@ -52,7 +56,7 @@ LDi_bgeventsender(void *const v)
 
         LDi_rwlock_rdlock(&client->clientLock);
         if (client->status == LDStatusShuttingdown) {
-            finalflush = true;
+            finalflush = LDBooleanTrue;
         }
 
         if (client->offline) {
@@ -61,7 +65,6 @@ LDi_bgeventsender(void *const v)
         }
         LDi_rwlock_rdunlock(&client->clientLock);
 
-        char payloadId[LD_UUID_SIZE + 1];
         payloadId[LD_UUID_SIZE] = 0;
 
         if (!LDi_UUIDv4(payloadId)) {
@@ -94,8 +97,8 @@ LDi_bgeventsender(void *const v)
 
         LDJSONFree(payloadJSON);
 
-        bool sendFailed = false;
-        while (true) {
+        sendFailed = LDBooleanFalse;
+        while (LDBooleanTrue) {
             int response = 0;
 
             LDi_sendevents(client, payloadSerialized, payloadId, &response);
@@ -103,15 +106,15 @@ LDi_bgeventsender(void *const v)
             if (response == 200 || response == 202) {
                 LD_LOG(LD_LOG_TRACE, "successfuly sent event batch");
 
-                sendFailed = false;
+                sendFailed = LDBooleanFalse;
 
                 break;
             } else {
-                if (sendFailed == true) {
+                if (sendFailed == LDBooleanTrue) {
                     break;
                 }
 
-                sendFailed = true;
+                sendFailed = LDBooleanTrue;
 
                 if (response == 401 || response == 403) {
                     LDi_rwlock_wrlock(&client->clientLock);
@@ -148,7 +151,11 @@ LDi_bgfeaturepoller(void *const v)
 {
     struct LDClient *const client = v;
 
-    while (true) {
+    while (LDBooleanTrue) {
+        LDBoolean skippolling;
+        int       ms, response;
+        char *    data;
+
         LDi_rwlock_wrlock(&client->clientLock);
 
         if (client->status == LDStatusFailed ||
@@ -158,8 +165,8 @@ LDi_bgfeaturepoller(void *const v)
             return THREAD_RETURN_DEFAULT;
         }
 
-        bool skippolling = client->offline;
-        int  ms          = client->shared->sharedConfig->pollingIntervalMillis;
+        skippolling = client->offline;
+        ms          = client->shared->sharedConfig->pollingIntervalMillis;
         if (client->background) {
             ms = client->shared->sharedConfig->backgroundPollingIntervalMillis;
             skippolling =
@@ -197,8 +204,8 @@ LDi_bgfeaturepoller(void *const v)
         }
         LDi_rwlock_rdunlock(&client->clientLock);
 
-        int         response = 0;
-        char *const data     = LDi_fetchfeaturemap(client, &response);
+        response = 0;
+        data     = LDi_fetchfeaturemap(client, &response);
 
         if (response == 200) {
             if (!data) {
@@ -357,7 +364,8 @@ cleanup:
 }
 
 void
-LDi_startstopstreaming(struct LDClient *const client, const bool stopstreaming)
+LDi_startstopstreaming(
+    struct LDClient *const client, const LDBoolean stopstreaming)
 {
     client->shouldstopstreaming = stopstreaming;
     LDi_cond_signal(&client->pollCond);
@@ -446,7 +454,11 @@ LDi_bgfeaturestreamer(void *const v)
 
     int retries = 0;
 
-    while (true) {
+    while (LDBooleanTrue) {
+        time_t    startedOn;
+        int       response;
+        LDBoolean intentionallyClosed;
+
         /* Wait on any retry delays required. Status change such as shut down
         will cause a short circuit */
         if (retries) {
@@ -487,9 +499,7 @@ LDi_bgfeaturestreamer(void *const v)
 
         LDi_rwlock_wrunlock(&client->clientLock);
 
-        const time_t startedOn = time(NULL);
-
-        int response;
+        startedOn = time(NULL);
 
         {
             struct LDSSEParser parser;
@@ -503,18 +513,18 @@ LDi_bgfeaturestreamer(void *const v)
         }
 
         if (response >= 400 && response < 500) {
-            bool permanentFailure = false;
+            LDBoolean permanentFailure = LDBooleanFalse;
 
             if (response == 401 || response == 403) {
                 LD_LOG(
                     LD_LOG_ERROR,
                     "mobile key not authorized, streaming failed");
 
-                permanentFailure = true;
+                permanentFailure = LDBooleanTrue;
             } else if (response != 400 && response != 408 && response != 429) {
                 LD_LOG(LD_LOG_ERROR, "streaming unrecoverable response code");
 
-                permanentFailure = true;
+                permanentFailure = LDBooleanTrue;
             }
 
             if (permanentFailure) {
@@ -529,7 +539,7 @@ LDi_bgfeaturestreamer(void *const v)
         }
 
         LDi_rwlock_rdlock(&client->clientLock);
-        const bool intentionallyClosed = client->streamhandle == 0;
+        intentionallyClosed = client->streamhandle == 0;
         LDi_rwlock_rdunlock(&client->clientLock);
 
         if (intentionallyClosed) {

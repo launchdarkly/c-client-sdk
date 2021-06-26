@@ -31,10 +31,10 @@ makeMinimalFlag(const char *const key, struct LDJSON *const value)
     flag.version              = 3;
     flag.flagVersion          = 4;
     flag.variation            = 2;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(flagJSON = LDi_flag_to_json(&flag));
 
@@ -50,7 +50,7 @@ makeBasicPutBody()
 
     LD_ASSERT(payload = LDNewObject());
 
-    LD_ASSERT(value = LDNewBool(true));
+    LD_ASSERT(value = LDNewBool(LDBooleanTrue));
     LD_ASSERT(flag = makeMinimalFlag("flag1", value));
 
     LD_ASSERT(LDObjectSetKey(payload, "flag1", flag));
@@ -127,13 +127,13 @@ testBasicPoll()
     LD_ASSERT(snprintf(pollURL, 1024, "http://127.0.0.1:%d", acceptPort) > 0);
 
     LD_ASSERT(config = LDConfigNew("key"));
-    LDConfigSetStreaming(config, false);
+    LDConfigSetStreaming(config, LDBooleanFalse);
     LDConfigSetAppURI(config, pollURL);
 
     LD_ASSERT(user = LDUserNew("my-user"));
     LD_ASSERT(client = LDClientInit(config, user, 1000 * 10));
 
-    LD_ASSERT(LDBoolVariation(client, "flag1", false));
+    LD_ASSERT(LDBoolVariation(client, "flag1", LDBooleanFalse));
 
     LDClientClose(client);
     LDi_closeSocket(acceptFD);
@@ -216,7 +216,7 @@ testBasicStream()
     LD_ASSERT(user = LDUserNew("my-user"));
     LD_ASSERT(client = LDClientInit(config, user, 1000 * 10));
 
-    LD_ASSERT(LDBoolVariation(client, "flag1", false));
+    LD_ASSERT(LDBoolVariation(client, "flag1", LDBooleanFalse));
 
     LDClientClose(client);
     LDi_closeSocket(acceptFD);

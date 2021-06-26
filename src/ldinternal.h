@@ -58,7 +58,8 @@ LDi_sendevents(
 void
 LDi_reinitializeconnection(struct LDClient *const client);
 void
-LDi_startstopstreaming(struct LDClient *const client, const bool stopstreaming);
+LDi_startstopstreaming(
+    struct LDClient *const client, const LDBoolean stopstreaming);
 void
 LDi_onstreameventput(struct LDClient *const client, const char *const data);
 void
@@ -70,13 +71,13 @@ void
 LDi_millisleep(int ms);
 /* must be called exactly once before rng is used */
 void
-LDi_initializerng();
+LDi_initializerng(void);
 /* returns true on success, may leave buffer dirty */
-bool
+LDBoolean
 LDi_randomhex(char *const buffer, const size_t buffersize);
 /* returns a unique device identifier, returns NULL on failure */
 char *
-LDi_deviceid();
+LDi_deviceid(void);
 
 /* calls into the store interface */
 void
@@ -102,5 +103,11 @@ LDi_bgfeaturestreamer(void *const v);
 
 double
 LDi_calculateStreamDelay(const unsigned int retries);
+
+unsigned char *
+LDi_base64_encode(const unsigned char *src, size_t len, size_t *out_len);
+
+unsigned char *
+LDi_base64_decode(const unsigned char *src, size_t len, size_t *out_len);
 
 #endif /* C_CLIENT_LDINTERNAL_H */

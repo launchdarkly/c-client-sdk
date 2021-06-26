@@ -1,31 +1,29 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include <launchdarkly/boolean.h>
 #include <launchdarkly/json.h>
 
 struct LDConfig
 {
-    bool         allAttributesPrivate;
+    LDBoolean    allAttributesPrivate;
     int          backgroundPollingIntervalMillis;
     char *       appURI;
     int          connectionTimeoutMillis;
-    bool         disableBackgroundUpdating;
+    LDBoolean    disableBackgroundUpdating;
     unsigned int eventsCapacity;
     int          eventsFlushIntervalMillis;
     char *       eventsURI;
     char *       mobileKey;
-    bool         offline;
+    LDBoolean    offline;
     int          pollingIntervalMillis;
-    bool         streaming;
+    LDBoolean    streaming;
     char *       streamURI;
-    bool         useReport;
+    LDBoolean    useReport;
     char *       proxyURI;
-    bool         verifyPeer;
-    bool         useReasons;
+    LDBoolean    verifyPeer;
+    LDBoolean    useReasons;
     char *       certFile;
-    bool         inlineUsersInEvents;
+    LDBoolean    inlineUsersInEvents;
     LDBoolean    autoAliasOptOut;
     /* map of name -> key */
     struct LDJSON *secondaryMobileKeys;

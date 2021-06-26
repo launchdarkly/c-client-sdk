@@ -30,7 +30,7 @@ jobs:
 
   build-test-osx:
     macos:
-      xcode: "9.4.1"
+      xcode: "12.5.0"
     environment:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:

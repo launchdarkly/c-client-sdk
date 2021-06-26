@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
+#include <launchdarkly/boolean.h>
 
 #include "concurrency.h"
 
@@ -12,7 +12,7 @@ struct ld_rc_t
     ld_mutex_t lock;
 };
 
-bool
+LDBoolean
 LDi_rc_initialize(
     struct ld_rc_t *const rc,
     void *const           value,

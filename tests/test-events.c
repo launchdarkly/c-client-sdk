@@ -13,7 +13,7 @@ makeTestClient()
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
-    LDConfigSetOffline(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
 
     LD_ASSERT(user = LDUserNew("test-user"));
 
@@ -107,19 +107,19 @@ testBasicSummary()
     LD_ASSERT(client = makeTestClient());
 
     flag.key                  = LDStrDup("test");
-    flag.value                = LDNewBool(true);
+    flag.value                = LDNewBool(LDBooleanTrue);
     flag.version              = 2;
     flag.flagVersion          = -1;
     flag.variation            = 3;
-    flag.trackEvents          = true;
+    flag.trackEvents          = LDBooleanTrue;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(LDi_storeUpsert(&client->store, flag));
 
-    LD_ASSERT(LDBoolVariation(client, "test", false) == true);
-    LD_ASSERT(LDBoolVariation(client, "test", false) == true);
+    LD_ASSERT(LDBoolVariation(client, "test", LDBooleanFalse) == LDBooleanTrue);
+    LD_ASSERT(LDBoolVariation(client, "test", LDBooleanFalse) == LDBooleanTrue);
 
     LD_ASSERT(LDi_bundleEventPayload(client->eventProcessor, &payload));
     LD_ASSERT(LDCollectionGetSize(payload) == 4);
@@ -155,7 +155,8 @@ testBasicSummaryUnknown()
 
     LD_ASSERT(client = makeTestClient());
 
-    LD_ASSERT(LDBoolVariation(client, "test", false) == false);
+    LD_ASSERT(
+        LDBoolVariation(client, "test", LDBooleanFalse) == LDBooleanFalse);
 
     LD_ASSERT(LDi_bundleEventPayload(client->eventProcessor, &payload));
     LD_ASSERT(LDCollectionGetSize(payload) == 2);
@@ -192,8 +193,8 @@ testInlineUser()
     struct LDJSON *  payload, *event, *expected;
 
     LD_ASSERT(config = LDConfigNew("abc"));
-    LDConfigSetOffline(config, true);
-    LDConfigSetInlineUsersInEvents(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
+    LDConfigSetInlineUsersInEvents(config, LDBooleanTrue);
 
     LD_ASSERT(user = LDUserNew("my-user"));
 
@@ -224,7 +225,7 @@ testOnlyUserKey()
     struct LDJSON *  payload, *event, *expected;
 
     LD_ASSERT(config = LDConfigNew("abc"));
-    LDConfigSetOffline(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
 
     LD_ASSERT(user = LDUserNew("my-user"));
 
@@ -255,7 +256,7 @@ testConstructAliasEvent()
     LD_ASSERT(previous = LDUserNew("a"));
     LD_ASSERT(current = LDUserNew("b"));
 
-    LDUserSetAnonymous(previous, true);
+    LDUserSetAnonymous(previous, LDBooleanTrue);
 
     LD_ASSERT(result = LDi_newAliasEvent(current, previous, 52));
 

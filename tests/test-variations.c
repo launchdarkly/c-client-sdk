@@ -10,7 +10,7 @@ makeTestClient()
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
-    LDConfigSetOffline(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
 
     LD_ASSERT(user = LDUserNew("test-user"));
 
@@ -22,7 +22,8 @@ makeTestClient()
 static void
 testBoolVariationDefault(struct LDClient *const client)
 {
-    LD_ASSERT(LDBoolVariation(client, "test", false) == false);
+    LD_ASSERT(
+        LDBoolVariation(client, "test", LDBooleanFalse) == LDBooleanFalse);
 }
 
 static void
@@ -118,10 +119,10 @@ testWithClientAndFlagValue(
     flag.version              = 2;
     flag.flagVersion          = -1;
     flag.variation            = 3;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(LDi_storeUpsert(&client->store, flag));
 
@@ -133,7 +134,7 @@ testWithClientAndFlagValue(
 static void
 testBoolVariation(struct LDClient *const client)
 {
-    LD_ASSERT(LDBoolVariation(client, "test", false) == true);
+    LD_ASSERT(LDBoolVariation(client, "test", LDBooleanFalse) == LDBooleanTrue);
 }
 
 static void
@@ -193,7 +194,9 @@ static void
 testBoolVariationDetailDefault(
     struct LDClient *const client, LDVariationDetails *const details)
 {
-    LD_ASSERT(LDBoolVariationDetail(client, "test", false, details) == false);
+    LD_ASSERT(
+        LDBoolVariationDetail(client, "test", LDBooleanFalse, details) ==
+        LDBooleanFalse);
 }
 
 static void
@@ -289,7 +292,9 @@ static void
 testBoolVariationDetail(
     struct LDClient *const client, LDVariationDetails *const details)
 {
-    LD_ASSERT(LDBoolVariationDetail(client, "test", false, details) == true);
+    LD_ASSERT(
+        LDBoolVariationDetail(client, "test", LDBooleanFalse, details) ==
+        LDBooleanTrue);
 }
 
 static void
@@ -372,10 +377,10 @@ testWithClientAndDetailsAndValue(
     flag.version              = 2;
     flag.flagVersion          = -1;
     flag.variation            = 3;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(LDi_storeUpsert(&client->store, flag));
 
@@ -399,7 +404,7 @@ main()
     testWithClient(testStringVariationAllocDefault);
     testWithClient(testJSONVariationDefault);
 
-    testWithClientAndFlagValue(testBoolVariation, LDNewBool(true));
+    testWithClientAndFlagValue(testBoolVariation, LDNewBool(LDBooleanTrue));
     testWithClientAndFlagValue(testIntVariation, LDNewNumber(3));
     testWithClientAndFlagValue(testDoubleVariation, LDNewNumber(3.3));
     testWithClientAndFlagValue(testStringVariation, LDNewText("value"));
@@ -414,7 +419,8 @@ main()
     testWithClientAndDetails(testStringVariationAllocDetailDefault);
     testWithClientAndDetails(testJSONVariationDetailDefault);
 
-    testWithClientAndDetailsAndValue(testBoolVariationDetail, LDNewBool(true));
+    testWithClientAndDetailsAndValue(
+        testBoolVariationDetail, LDNewBool(LDBooleanTrue));
     testWithClientAndDetailsAndValue(testIntVariationDetail, LDNewNumber(6));
     testWithClientAndDetailsAndValue(
         testDoubleVariationDetail, LDNewNumber(9.1));

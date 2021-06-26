@@ -38,7 +38,7 @@ static ld_mutex_t   LDi_rngmtx;
 #endif
 
 void
-LDi_initializerng()
+LDi_initializerng(void)
 {
 #ifndef _WINDOWS
     LDi_mutex_init(&LDi_rngmtx);
@@ -46,21 +46,22 @@ LDi_initializerng()
 #endif
 }
 
-bool
+LDBoolean
 LDi_randomhex(char *const buffer, const size_t buffersize)
 {
+    size_t            i;
     const char *const alphabet = "0123456789ABCDEF";
 
-    for (size_t i = 0; i < buffersize; i++) {
+    for (i = 0; i < buffersize; i++) {
         unsigned int rng = 0;
         if (LDi_random(&rng)) {
             buffer[i] = alphabet[rng % 16];
         } else {
-            return false;
+            return LDBooleanFalse;
         }
     }
 
-    return true;
+    return LDBooleanTrue;
 }
 /*
  * some functions to help with threads.
@@ -83,6 +84,7 @@ LDi_once(ld_once_t *once, void (*fn)(void))
 }
 #endif
 
+#if defined(__linux__) || defined(__FreeBSD__)
 /* -1 on error, otherwise read size */
 static int
 readfile(
@@ -90,6 +92,8 @@ readfile(
     unsigned char *const buffer,
     size_t const         buffersize)
 {
+    long int filesize;
+
     FILE *const handle = fopen(path, "rb");
 
     if (!handle) {
@@ -101,7 +105,7 @@ readfile(
         return -1;
     }
 
-    const long int filesize = ftell(handle);
+    filesize = ftell(handle);
 
     if (filesize == -1) {
         fclose(handle);
@@ -127,14 +131,16 @@ readfile(
 
     return filesize;
 }
+#endif
 
 char *
-LDi_deviceid()
+LDi_deviceid(void)
 {
     char buffer[256];
-    memset(buffer, 0, sizeof(buffer));
 
 #ifdef __linux__
+    memset(buffer, 0, sizeof(buffer));
+
     if (readfile(
             "/var/lib/dbus/machine-id",
             (unsigned char *)buffer,
@@ -147,11 +153,14 @@ LDi_deviceid()
         return NULL;
     }
 #elif _WIN32
-    DWORD buffersize = sizeof(buffer) - 1;
-    HKEY  hkey;
-    DWORD regtype = REG_SZ;
+    DWORD   buffersize = sizeof(buffer) - 1;
+    HKEY    hkey;
+    DWORD   regtype = REG_SZ;
+    LSTATUS openstatus, querystatus;
 
-    const LSTATUS openstatus = RegOpenKeyExA(
+    memset(buffer, 0, sizeof(buffer));
+
+    openstatus = RegOpenKeyExA(
         HKEY_LOCAL_MACHINE,
         "SOFTWARE\\Microsoft\\Cryptography",
         0,
@@ -164,7 +173,7 @@ LDi_deviceid()
         return NULL;
     }
 
-    const LSTATUS querystatus = RegQueryValueExA(
+    querystatus = RegQueryValueExA(
         hkey,
         "MachineGuid",
         NULL,
@@ -182,8 +191,12 @@ LDi_deviceid()
 
     RegCloseKey(hkey);
 #elif __APPLE__
-    io_registry_entry_t entry =
-        IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+    io_registry_entry_t entry;
+    CFStringRef         uuid;
+
+    memset(buffer, 0, sizeof(buffer));
+
+    entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
 
     if (!entry) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryFromPath failed");
@@ -191,7 +204,7 @@ LDi_deviceid()
         return NULL;
     }
 
-    CFStringRef uuid = (CFStringRef)IORegistryEntryCreateCFProperty(
+    uuid = (CFStringRef)IORegistryEntryCreateCFProperty(
         entry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
 
     IOObjectRelease(entry);
@@ -214,6 +227,8 @@ LDi_deviceid()
 
     CFRelease(uuid);
 #elif __FreeBSD__
+    memset(buffer, 0, sizeof(buffer));
+
     if (readfile("/etc/hostid", (unsigned char *)buffer, sizeof(buffer) - 1) ==
         -1) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid failed to read /etc/hostid");

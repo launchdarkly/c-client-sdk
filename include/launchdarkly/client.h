@@ -42,7 +42,7 @@ typedef struct
 } LDVariationDetails;
 
 /** @brief Get a reference to the (single, global) client. */
-LD_EXPORT(struct LDClient *) LDClientGet();
+LD_EXPORT(struct LDClient *) LDClientGet(void);
 
 /** @brief Get a reference to a secondary environment established in the
  * configuration.

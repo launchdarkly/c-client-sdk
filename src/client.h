@@ -20,8 +20,8 @@ struct LDClient
     struct LDGlobal_i *    shared;
     char *                 mobileKey;
     ld_rwlock_t            clientLock;
-    bool                   offline;
-    bool                   background;
+    LDBoolean              offline;
+    LDBoolean              background;
     LDStatus               status;
     ld_thread_t            eventThread;
     ld_thread_t            pollingThread;
@@ -30,7 +30,7 @@ struct LDClient
     ld_cond_t              pollCond;
     ld_cond_t              streamCond;
     ld_mutex_t             condMtx;
-    bool                   shouldstopstreaming;
+    LDBoolean              shouldstopstreaming;
     int                    streamhandle;
     struct EventProcessor *eventProcessor;
     struct LDStore         store;

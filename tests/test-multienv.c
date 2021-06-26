@@ -15,7 +15,7 @@ main()
     LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLoggerThreadSafe);
 
     LD_ASSERT(config = LDConfigNew("my-primary-key"));
-    LDConfigSetOffline(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
     LD_ASSERT(
         LDConfigAddSecondaryMobileKey(config, "secondary", "my-secondary-key"));
     LD_ASSERT(user = LDUserNew("my-user"));

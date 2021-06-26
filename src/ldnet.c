@@ -104,8 +104,8 @@ SocketCallback(
     return fd;
 }
 
-/* returns false on failure, results left in clean state */
-static bool
+/* returns LDBooleanFalse on failure, results left in clean state */
+static LDBoolean
 prepareShared(
     const char *const            url,
     const struct LDConfig *const config,
@@ -117,6 +117,8 @@ prepareShared(
     void *const                  data,
     const struct LDClient *const client)
 {
+
+    char               headerauth[256];
     struct curl_slist *headers, *headerstmp;
     CURL *             curl;
 
@@ -139,7 +141,6 @@ prepareShared(
         goto error;
     }
 
-    char headerauth[256];
     if (snprintf(
             headerauth,
             sizeof(headerauth),
@@ -236,13 +237,13 @@ prepareShared(
     *r_curl    = curl;
     *r_headers = headers;
 
-    return true;
+    return LDBooleanTrue;
 
 error:
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
 
-    return false;
+    return LDBooleanFalse;
 }
 
 void
@@ -266,6 +267,7 @@ LDi_readstream(
     struct LDSSEParser *const parser,
     void                      cbhandle(struct LDClient *, int))
 {
+    CURLcode               res;
     struct MemoryStruct    headers;
     struct streamdata      streamdata;
     struct cbhandlecontext handledata;
@@ -273,6 +275,7 @@ LDi_readstream(
     struct curl_slist *    headerlist, *headertmp;
     struct LDJSON *        userJSON;
     char *                 userJSONText;
+    char                   url[4096];
 
     LD_ASSERT(client);
     LD_ASSERT(response);
@@ -317,7 +320,6 @@ LDi_readstream(
         return;
     }
 
-    char url[4096];
     if (client->shared->sharedConfig->useReport) {
         if (snprintf(
                 url,
@@ -332,6 +334,7 @@ LDi_readstream(
             return;
         }
     } else {
+        int                  status;
         size_t               b64len;
         unsigned char *const b64text = LDi_base64_encode(
             (unsigned char *)userJSONText, strlen(userJSONText), &b64len);
@@ -344,7 +347,7 @@ LDi_readstream(
             return;
         }
 
-        const int status = snprintf(
+        status = snprintf(
             url,
             sizeof(url),
             "%s/meval/%s",
@@ -365,7 +368,9 @@ LDi_readstream(
     if (client->shared->sharedConfig->useReasons) {
         const size_t len = strlen(url);
 
-        if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
+        if (snprintf(
+                url + len, sizeof(url) - len, "?withReasons=true") < 0)
+        {
             LDFree(userJSONText);
 
             LD_LOG(LD_LOG_ERROR, "snprintf useReason failed");
@@ -400,8 +405,9 @@ LDi_readstream(
             goto cleanup;
         }
 
-        const char *const headermime = "Content-Type: application/json";
-        if (!(headertmp = curl_slist_append(headerlist, headermime))) {
+        if (!(headertmp = curl_slist_append(
+                  headerlist, "Content-Type: application/json")))
+        {
             LD_LOG(LD_LOG_CRITICAL, "curl_slist_append failed for headermime");
 
             goto cleanup;
@@ -442,7 +448,7 @@ LDi_readstream(
     }
 
     LD_LOG_1(LD_LOG_INFO, "connecting to stream %s", url);
-    const CURLcode res = curl_easy_perform(curl);
+    res = curl_easy_perform(curl);
     if (res == CURLE_OK) {
         long response_code;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
@@ -470,6 +476,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
     struct curl_slist * headerlist = NULL, *headertmp = NULL;
     struct LDJSON *     userJSON;
     char *              userJSONText;
+    char                url[4096];
 
     memset(&headers, 0, sizeof(headers));
     memset(&data, 0, sizeof(data));
@@ -498,7 +505,6 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         return NULL;
     }
 
-    char url[4096];
     if (client->shared->sharedConfig->useReport) {
         if (snprintf(
                 url,
@@ -513,6 +519,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
             return NULL;
         }
     } else {
+        int                  status;
         size_t               b64len;
         unsigned char *const b64text = LDi_base64_encode(
             (unsigned char *)userJSONText, strlen(userJSONText), &b64len);
@@ -527,7 +534,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
             return NULL;
         }
 
-        const int status = snprintf(
+        status = snprintf(
             url,
             sizeof(url),
             "%s/msdk/evalx/users/%s",
@@ -547,7 +554,9 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
 
     if (client->shared->sharedConfig->useReasons) {
         const size_t len = strlen(url);
-        if (snprintf(url + len, sizeof(url) - len, "?withReasons=true") < 0) {
+        if (snprintf(
+                url + len, sizeof(url) - len, "?withReasons=true") < 0)
+        {
             LDFree(userJSONText);
 
             LD_LOG(LD_LOG_ERROR, "snprintf useReason failed");
@@ -584,8 +593,9 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
             goto error;
         }
 
-        const char *const headermime = "Content-Type: application/json";
-        if (!(headertmp = curl_slist_append(headerlist, headermime))) {
+        if (!(headertmp = curl_slist_append(
+                  headerlist, "Content-Type: application/json")))
+        {
             LD_LOG(LD_LOG_CRITICAL, "curl_slist_append failed for headermime");
 
             goto error;
@@ -643,11 +653,17 @@ LDi_sendevents(
     struct MemoryStruct headers, data;
     CURL *              curl       = NULL;
     struct curl_slist * headerlist = NULL, *headertmp = NULL;
+    char                url[4096];
+
+/* This is done as a macro so that the string is a literal */
+#define LD_PAYLOAD_ID_HEADER "X-LaunchDarkly-Payload-ID: "
+
+    /* do not need to add space for null termination because of sizeof */
+    char payloadIdHeader[sizeof(LD_PAYLOAD_ID_HEADER) + LD_UUID_SIZE];
 
     memset(&headers, 0, sizeof(headers));
     memset(&data, 0, sizeof(data));
 
-    char url[4096];
     if (snprintf(
             url,
             sizeof(url),
@@ -673,27 +689,23 @@ LDi_sendevents(
         return;
     }
 
-    const char *const headermime = "Content-Type: application/json";
-    if (!(headertmp = curl_slist_append(headerlist, headermime))) {
+    if (!(headertmp =
+              curl_slist_append(headerlist, "Content-Type: application/json")))
+    {
         LD_LOG(LD_LOG_CRITICAL, "curl_slist_append failed for headermime");
 
         goto cleanup;
     }
     headerlist = headertmp;
 
-    const char *const headerschema = "X-LaunchDarkly-Event-Schema: 3";
-    if (!(headertmp = curl_slist_append(headerlist, headerschema))) {
+    if (!(headertmp =
+              curl_slist_append(headerlist, "X-LaunchDarkly-Event-Schema: 3")))
+    {
         LD_LOG(LD_LOG_CRITICAL, "curl_slist_append failed for headerschema");
 
         goto cleanup;
     }
     headerlist = headertmp;
-
-/* This is done as a macro so that the string is a literal */
-#define LD_PAYLOAD_ID_HEADER "X-LaunchDarkly-Payload-ID: "
-
-    /* do not need to add space for null termination because of sizeof */
-    char payloadIdHeader[sizeof(LD_PAYLOAD_ID_HEADER) + LD_UUID_SIZE];
 
     LD_ASSERT(
         snprintf(

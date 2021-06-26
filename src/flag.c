@@ -3,7 +3,7 @@
 #include "assertion.h"
 #include "flag.h"
 
-bool
+LDBoolean
 LDi_flag_parse(
     struct LDFlag *const       result,
     const char *const          key,
@@ -17,7 +17,7 @@ LDi_flag_parse(
     result->key         = NULL;
     result->value       = NULL;
     result->reason      = NULL;
-    result->deleted     = false;
+    result->deleted     = LDBooleanFalse;
     result->version     = -1;
     result->flagVersion = -1;
 
@@ -117,7 +117,7 @@ LDi_flag_parse(
 
         result->trackEvents = LDGetBool(tmp);
     } else {
-        result->trackEvents = false;
+        result->trackEvents = LDBooleanFalse;
     }
 
     /* debugEventsUntilDate */
@@ -163,14 +163,14 @@ LDi_flag_parse(
         result->deleted = LDGetBool(tmp);
     }
 
-    return true;
+    return LDBooleanTrue;
 
 error:
     LDFree(result->key);
     LDJSONFree(result->value);
     LDJSONFree(result->reason);
 
-    return false;
+    return LDBooleanFalse;
 }
 
 struct LDJSON *
@@ -237,7 +237,7 @@ LDi_flag_to_json(struct LDFlag *const flag)
     tmp = NULL;
 
     if (flag->trackEvents) {
-        if (!(tmp = LDNewBool(true))) {
+        if (!(tmp = LDNewBool(LDBooleanTrue))) {
             goto error;
         }
 
@@ -270,7 +270,7 @@ LDi_flag_to_json(struct LDFlag *const flag)
     }
 
     if (flag->deleted) {
-        if (!(tmp = LDNewBool(true))) {
+        if (!(tmp = LDNewBool(LDBooleanTrue))) {
             goto error;
         }
 

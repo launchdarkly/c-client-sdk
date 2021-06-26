@@ -10,7 +10,7 @@ makeTestClient()
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
-    LDConfigSetOffline(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
 
     LD_ASSERT(user = LDUserNew("test-user"));
 
@@ -45,14 +45,14 @@ testRestoreAndSaveBasic()
     LD_ASSERT(client = makeTestClient());
 
     flag.key                  = LDStrDup("test");
-    flag.value                = LDNewBool(true);
+    flag.value                = LDNewBool(LDBooleanTrue);
     flag.version              = 2;
     flag.flagVersion          = -1;
     flag.variation            = 3;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(LDi_storeUpsert(&client->store, flag));
 

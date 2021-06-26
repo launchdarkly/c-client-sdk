@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
-
+#include <launchdarkly/boolean.h>
 #include <launchdarkly/json.h>
 
 #ifdef _WIN32
@@ -16,7 +15,7 @@
 #endif
 
 struct LDHTTPRequest {
-    bool done;
+    LDBoolean done;
     char *requestURL;
     char *requestMethod;
     char *requestBody;

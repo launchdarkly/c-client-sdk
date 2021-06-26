@@ -73,7 +73,7 @@ LDHTTPRequestInit(struct LDHTTPRequest *const request)
 {
     LD_ASSERT(request);
 
-    request->done            = false;
+    request->done            = LDBooleanFalse;
     request->requestURL      = NULL;
     request->requestMethod   = NULL;
     request->requestBody     = NULL;
@@ -240,7 +240,7 @@ LDi_onMessageComplete(http_parser *const parser)
     request = (struct LDHTTPRequest *)parser->data;
     LD_ASSERT(request);
 
-    request->done = true;
+    request->done = LDBooleanTrue;
 
     return 0;
 }

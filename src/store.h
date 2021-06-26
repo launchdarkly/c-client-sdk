@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include <launchdarkly/api.h>
 
 #include "concurrency.h"
@@ -27,26 +25,26 @@ struct LDStore
 {
     struct LDStoreNode *    flags;
     struct LDStoreListener *listeners;
-    bool                    initialized;
+    LDBoolean               initialized;
     ld_rwlock_t             lock;
 };
 
-bool
+LDBoolean
 LDi_storeInitialize(struct LDStore *const store);
 
 void
 LDi_storeDestroy(struct LDStore *const store);
 
-bool
+LDBoolean
 LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag);
 
-bool
+LDBoolean
 LDi_storePut(
     struct LDStore *const store,
     struct LDFlag *       flags,
     const unsigned int    flagCount);
 
-bool
+LDBoolean
 LDi_storeDelete(
     struct LDStore *const store,
     const char *const     key,
@@ -55,7 +53,7 @@ LDi_storeDelete(
 struct LDStoreNode *
 LDi_storeGet(struct LDStore *const store, const char *const key);
 
-bool
+LDBoolean
 LDi_storeGetAll(
     struct LDStore *const       store,
     struct LDStoreNode ***const flags,
@@ -64,7 +62,7 @@ LDi_storeGetAll(
 struct LDJSON *
 LDi_storeGetJSON(struct LDStore *const store);
 
-bool
+LDBoolean
 LDi_storeRegisterListener(
     struct LDStore *const store, const char *const flagKey, LDlistenerfn op);
 

@@ -1,7 +1,7 @@
 #include "reference_count.h"
 #include "assertion.h"
 
-bool
+LDBoolean
 LDi_rc_initialize(
     struct ld_rc_t *const rc,
     void *const           value,
@@ -12,14 +12,14 @@ LDi_rc_initialize(
     LD_ASSERT(destructor);
 
     if (!LDi_mutex_init(&rc->lock)) {
-        return false;
+        return LDBooleanFalse;
     }
 
     rc->count      = 1;
     rc->value      = value;
     rc->destructor = destructor;
 
-    return true;
+    return LDBooleanTrue;
 }
 
 void

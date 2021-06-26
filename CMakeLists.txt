@@ -105,6 +105,11 @@ else()
                 -pedantic
                 -Wall
                 -Wextra
+                -Werror
+                -Wstrict-prototypes
+                -Wmissing-prototypes
+                -Wmissing-declarations
+                -std=c89
     )
 endif(MSVC)
 

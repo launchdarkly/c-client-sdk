@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
-
+#include <launchdarkly/boolean.h>
 #include <launchdarkly/json.h>
 
 struct LDFlag
@@ -11,13 +10,13 @@ struct LDFlag
     int            version;
     int            flagVersion;
     int            variation;
-    bool           trackEvents;
+    LDBoolean      trackEvents;
     struct LDJSON *reason;
     double         debugEventsUntilDate;
-    bool           deleted;
+    LDBoolean      deleted;
 };
 
-bool
+LDBoolean
 LDi_flag_parse(
     struct LDFlag *const       result,
     const char *const          key,

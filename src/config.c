@@ -24,22 +24,22 @@ LDConfigNew(const char *const mobileKey)
         return NULL;
     }
 
-    config->allAttributesPrivate            = false;
+    config->allAttributesPrivate            = LDBooleanFalse;
     config->backgroundPollingIntervalMillis = 15 * 60 * 1000;
     config->connectionTimeoutMillis         = 10 * 1000;
-    config->disableBackgroundUpdating       = false;
+    config->disableBackgroundUpdating       = LDBooleanFalse;
     config->eventsCapacity                  = 100;
     config->eventsFlushIntervalMillis       = 30000;
-    config->offline                         = false;
+    config->offline                         = LDBooleanFalse;
     config->pollingIntervalMillis           = 30 * 1000;
     config->privateAttributeNames           = NULL;
-    config->streaming                       = true;
-    config->useReport                       = false;
-    config->useReasons                      = false;
+    config->streaming                       = LDBooleanTrue;
+    config->useReport                       = LDBooleanFalse;
+    config->useReasons                      = LDBooleanFalse;
     config->proxyURI                        = NULL;
-    config->verifyPeer                      = true;
+    config->verifyPeer                      = LDBooleanTrue;
     config->certFile                        = NULL;
-    config->inlineUsersInEvents             = false;
+    config->inlineUsersInEvents             = LDBooleanFalse;
     config->appURI                          = NULL;
     config->eventsURI                       = NULL;
     config->mobileKey                       = NULL;
@@ -130,13 +130,13 @@ LDConfigSetAppURI(struct LDConfig *const config, const char *const uri)
     if (config == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetAppURI NULL config");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (uri == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetAppURI NULL uri");
 
-        return false;
+        return LDBooleanFalse;
     }
 #endif
 
@@ -223,13 +223,13 @@ LDConfigSetEventsURI(struct LDConfig *const config, const char *const uri)
     if (config == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetEventsURI NULL config");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (uri == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetEventsURI NULL uri");
 
-        return false;
+        return LDBooleanFalse;
     }
 #endif
 
@@ -246,13 +246,13 @@ LDConfigSetMobileKey(struct LDConfig *const config, const char *const key)
     if (config == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetMobleKey NULL config");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (key == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetMobileKey NULL key");
 
-        return false;
+        return LDBooleanFalse;
     }
 #endif
 
@@ -326,13 +326,13 @@ LDConfigSetStreamURI(struct LDConfig *const config, const char *const uri)
     if (config == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetStreamURI NULL config");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (uri == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetStreamURI NULL uri");
 
-        return false;
+        return LDBooleanFalse;
     }
 #endif
 
@@ -382,13 +382,13 @@ LDConfigSetProxyURI(struct LDConfig *const config, const char *const uri)
     if (config == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetProxyURI NULL config");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (uri == NULL) {
         LD_LOG(LD_LOG_WARNING, "LDConfigSetProxyURI NULL uri");
 
-        return false;
+        return LDBooleanFalse;
     }
 #endif
 
@@ -422,14 +422,14 @@ LDConfigSetSSLCertificateAuthority(
         LD_LOG(
             LD_LOG_WARNING, "LDConfigSetSSLCertificateAuthority NULL config");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (certFile == NULL) {
         LD_LOG(
             LD_LOG_WARNING, "LDConfigSetSSLCertificateAuthority NULL certFile");
 
-        return false;
+        return LDBooleanFalse;
     }
 #endif
 
@@ -476,13 +476,13 @@ LDConfigAddSecondaryMobileKey(
             LD_LOG_ERROR,
             "Attempted use the primary environment name as secondary");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (strcmp(key, config->mobileKey) == 0) {
         LD_LOG(LD_LOG_ERROR, "Attempted to add primary key as secondary key");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     tmp = LDObjectLookup(config->secondaryMobileKeys, name);
@@ -490,7 +490,7 @@ LDConfigAddSecondaryMobileKey(
     if (tmp && strcmp(LDGetText(tmp), name) == 0) {
         LD_LOG(LD_LOG_ERROR, "Attempted to add secondary key twice");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (!(tmp = LDNewText(key))) {
@@ -498,7 +498,7 @@ LDConfigAddSecondaryMobileKey(
             LD_LOG_ERROR,
             "LDConfigAddSecondaryMobileKey failed to duplicate key");
 
-        return false;
+        return LDBooleanFalse;
     }
 
     if (!LDObjectSetKey(config->secondaryMobileKeys, name, tmp)) {
@@ -508,10 +508,10 @@ LDConfigAddSecondaryMobileKey(
             LD_LOG_ERROR,
             "LDConfigAddSecondaryMobileKey failed to add environment");
 
-        return false;
+        return LDBooleanFalse;
     }
 
-    return true;
+    return LDBooleanTrue;
 }
 
 void

@@ -23,21 +23,21 @@ testClientMisc()
     LD_ASSERT(config = LDConfigNew("b"));
     LD_ASSERT(client = LDClientInit(config, user, 0));
 
-    LD_ASSERT(LDClientIsInitialized(client) == false);
+    LD_ASSERT(LDClientIsInitialized(client) == LDBooleanFalse);
 
     LD_ASSERT(client == LDClientGet());
 
-    LDClientSetBackground(client, true);
-    LDClientSetBackground(client, false);
+    LDClientSetBackground(client, LDBooleanTrue);
+    LDClientSetBackground(client, LDBooleanFalse);
 
-    LD_ASSERT(client->offline == false);
-    LD_ASSERT(LDClientIsOffline(client) == false);
+    LD_ASSERT(client->offline == LDBooleanFalse);
+    LD_ASSERT(LDClientIsOffline(client) == LDBooleanFalse);
     LDClientSetOffline(client);
-    LD_ASSERT(LDClientIsOffline(client) == true);
-    LD_ASSERT(client->offline == true);
+    LD_ASSERT(LDClientIsOffline(client) == LDBooleanTrue);
+    LD_ASSERT(client->offline == LDBooleanTrue);
     LDClientSetOnline(client);
-    LD_ASSERT(LDClientIsOffline(client) == false);
-    LD_ASSERT(client->offline == false);
+    LD_ASSERT(LDClientIsOffline(client) == LDBooleanFalse);
+    LD_ASSERT(client->offline == LDBooleanFalse);
 
     LDClientClose(client);
 }
