@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.3.1] - 2021-07-09
+### Fixed:
+- Add more restrictive build flags and fix warnings
+
+
 ## [2.3.0] - 2021-01-26
 ### Added:
 - Added the `LDClientAlias` function. This can be used to associate two user objects for analytics purposes with an `alias` event.
