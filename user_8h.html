@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>C Client-Side SDK: include/launchdarkly/user.h File Reference</title>
+<title>C Client-Side SDK: c-sdk-common/include/launchdarkly/user.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -98,21 +98,21 @@ $(document).ready(function(){initNavTree('user_8h.html','');});
 
 <p>Public API Interface for User construction.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;<a class="el" href="json_8h_source.html">launchdarkly/json.h</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="boolean_8h_source.html">launchdarkly/boolean.h</a>&gt;</code><br />
+<div class="textblock"><code>#include &lt;<a class="el" href="boolean_8h_source.html">launchdarkly/boolean.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="export_8h_source.html">launchdarkly/export.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="json_8h_source.html">launchdarkly/json.h</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for user.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="user_8h__incl.png" border="0" usemap="#include_2launchdarkly_2user_8h" alt=""/></div>
-<map name="include_2launchdarkly_2user_8h" id="include_2launchdarkly_2user_8h">
+<div class="center"><img src="user_8h__incl.png" border="0" usemap="#c-sdk-common_2include_2launchdarkly_2user_8h" alt=""/></div>
+<map name="c-sdk-common_2include_2launchdarkly_2user_8h" id="c-sdk-common_2include_2launchdarkly_2user_8h">
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
-<div class="center"><img src="user_8h__dep__incl.png" border="0" usemap="#include_2launchdarkly_2user_8hdep" alt=""/></div>
-<map name="include_2launchdarkly_2user_8hdep" id="include_2launchdarkly_2user_8hdep">
+<div class="center"><img src="user_8h__dep__incl.png" border="0" usemap="#c-sdk-common_2include_2launchdarkly_2user_8hdep" alt=""/></div>
+<map name="c-sdk-common_2include_2launchdarkly_2user_8hdep" id="c-sdk-common_2include_2launchdarkly_2user_8hdep">
 </map>
 </div>
 </div>
@@ -120,59 +120,120 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a3c0db523b6dc37d3776ee3a445db95fc"><td class="memItemLeft" align="right" valign="top">struct LDUser *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a3c0db523b6dc37d3776ee3a445db95fc">LDUserNew</a> (const char *const key)</td></tr>
-<tr class="memdesc:a3c0db523b6dc37d3776ee3a445db95fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate a new user.  <a href="#a3c0db523b6dc37d3776ee3a445db95fc">More...</a><br /></td></tr>
+<tr class="memitem:a3c0db523b6dc37d3776ee3a445db95fc"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structLDUser.html">LDUser</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a3c0db523b6dc37d3776ee3a445db95fc">LDUserNew</a> (const char *const key)</td></tr>
+<tr class="memdesc:a3c0db523b6dc37d3776ee3a445db95fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate a new empty user Object.  <a href="#a3c0db523b6dc37d3776ee3a445db95fc">More...</a><br /></td></tr>
 <tr class="separator:a3c0db523b6dc37d3776ee3a445db95fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33cbe4b5ed3852acff3e59f361e5e476"><td class="memItemLeft" align="right" valign="top"><a id="a33cbe4b5ed3852acff3e59f361e5e476"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a33cbe4b5ed3852acff3e59f361e5e476">LDUserFree</a> (struct LDUser *const user)</td></tr>
-<tr class="memdesc:a33cbe4b5ed3852acff3e59f361e5e476"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free a user object. <br /></td></tr>
+<tr class="memitem:a33cbe4b5ed3852acff3e59f361e5e476"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a33cbe4b5ed3852acff3e59f361e5e476">LDUserFree</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user)</td></tr>
+<tr class="memdesc:a33cbe4b5ed3852acff3e59f361e5e476"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy an existing user object.  <a href="#a33cbe4b5ed3852acff3e59f361e5e476">More...</a><br /></td></tr>
 <tr class="separator:a33cbe4b5ed3852acff3e59f361e5e476"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f609f2e41bd6bf3fcba13bfe65facde"><td class="memItemLeft" align="right" valign="top"><a id="a9f609f2e41bd6bf3fcba13bfe65facde"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a9f609f2e41bd6bf3fcba13bfe65facde">LDUserSetAnonymous</a> (struct LDUser *const user, const LDBoolean anon)</td></tr>
-<tr class="memdesc:a9f609f2e41bd6bf3fcba13bfe65facde"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark the user as anonymous. <br /></td></tr>
+<tr class="memitem:a9f609f2e41bd6bf3fcba13bfe65facde"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a9f609f2e41bd6bf3fcba13bfe65facde">LDUserSetAnonymous</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const LDBoolean anon)</td></tr>
+<tr class="memdesc:a9f609f2e41bd6bf3fcba13bfe65facde"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark the user as anonymous.  <a href="#a9f609f2e41bd6bf3fcba13bfe65facde">More...</a><br /></td></tr>
 <tr class="separator:a9f609f2e41bd6bf3fcba13bfe65facde"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bbd2c7c0096b07b0a230466c395fbf7"><td class="memItemLeft" align="right" valign="top"><a id="a9bbd2c7c0096b07b0a230466c395fbf7"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a9bbd2c7c0096b07b0a230466c395fbf7">LDUserSetIP</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:a9bbd2c7c0096b07b0a230466c395fbf7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's IP. <br /></td></tr>
-<tr class="separator:a9bbd2c7c0096b07b0a230466c395fbf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05c2a1568a61840eb96c23597c256fa5"><td class="memItemLeft" align="right" valign="top"><a id="a05c2a1568a61840eb96c23597c256fa5"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a05c2a1568a61840eb96c23597c256fa5">LDUserSetFirstName</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:a05c2a1568a61840eb96c23597c256fa5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's first name. <br /></td></tr>
-<tr class="separator:a05c2a1568a61840eb96c23597c256fa5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfaea584f01100cd40c3f3f0de182199"><td class="memItemLeft" align="right" valign="top"><a id="acfaea584f01100cd40c3f3f0de182199"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#acfaea584f01100cd40c3f3f0de182199">LDUserSetLastName</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:acfaea584f01100cd40c3f3f0de182199"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's last name. <br /></td></tr>
-<tr class="separator:acfaea584f01100cd40c3f3f0de182199"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d3534193155b8010bf3daab4c7c0b31"><td class="memItemLeft" align="right" valign="top"><a id="a4d3534193155b8010bf3daab4c7c0b31"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a4d3534193155b8010bf3daab4c7c0b31">LDUserSetEmail</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:a4d3534193155b8010bf3daab4c7c0b31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's email. <br /></td></tr>
-<tr class="separator:a4d3534193155b8010bf3daab4c7c0b31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79305c6d7fcfaa977a89aa69acd9019c"><td class="memItemLeft" align="right" valign="top"><a id="a79305c6d7fcfaa977a89aa69acd9019c"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a79305c6d7fcfaa977a89aa69acd9019c">LDUserSetName</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:a79305c6d7fcfaa977a89aa69acd9019c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's name. <br /></td></tr>
-<tr class="separator:a79305c6d7fcfaa977a89aa69acd9019c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8975494686befd88bdb2ada279257eb"><td class="memItemLeft" align="right" valign="top"><a id="ac8975494686befd88bdb2ada279257eb"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#ac8975494686befd88bdb2ada279257eb">LDUserSetAvatar</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:ac8975494686befd88bdb2ada279257eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's avatar. <br /></td></tr>
-<tr class="separator:ac8975494686befd88bdb2ada279257eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45076c03bea1733074d3d3a1b4012231"><td class="memItemLeft" align="right" valign="top"><a id="a45076c03bea1733074d3d3a1b4012231"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a45076c03bea1733074d3d3a1b4012231">LDUserSetCountry</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:a45076c03bea1733074d3d3a1b4012231"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's country. <br /></td></tr>
-<tr class="separator:a45076c03bea1733074d3d3a1b4012231"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c29c86bef243a19ecc15bfe431b8dd4"><td class="memItemLeft" align="right" valign="top"><a id="a2c29c86bef243a19ecc15bfe431b8dd4"></a>
-LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a2c29c86bef243a19ecc15bfe431b8dd4">LDUserSetSecondary</a> (struct LDUser *const user, const char *const str)</td></tr>
-<tr class="memdesc:a2c29c86bef243a19ecc15bfe431b8dd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's secondary key. <br /></td></tr>
-<tr class="separator:a2c29c86bef243a19ecc15bfe431b8dd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21e824aac81d8412470b3bd373bd3c41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a21e824aac81d8412470b3bd373bd3c41">LDUserSetPrivateAttributes</a> (struct LDUser *const user, struct LDJSON *const privateAttributes)</td></tr>
+<tr class="memitem:ad03168d61e967e2566167a6293161593"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#ad03168d61e967e2566167a6293161593">LDUserSetIP</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const ip)</td></tr>
+<tr class="memdesc:ad03168d61e967e2566167a6293161593"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's IP.  <a href="#ad03168d61e967e2566167a6293161593">More...</a><br /></td></tr>
+<tr class="separator:ad03168d61e967e2566167a6293161593"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53aa182cb82b488490c9f021924f6bed"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a53aa182cb82b488490c9f021924f6bed">LDUserSetFirstName</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const firstName)</td></tr>
+<tr class="memdesc:a53aa182cb82b488490c9f021924f6bed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's first name.  <a href="#a53aa182cb82b488490c9f021924f6bed">More...</a><br /></td></tr>
+<tr class="separator:a53aa182cb82b488490c9f021924f6bed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2e9ac5e02b35852dd84830c5d247a20"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#ad2e9ac5e02b35852dd84830c5d247a20">LDUserSetLastName</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const lastName)</td></tr>
+<tr class="memdesc:ad2e9ac5e02b35852dd84830c5d247a20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's last name.  <a href="#ad2e9ac5e02b35852dd84830c5d247a20">More...</a><br /></td></tr>
+<tr class="separator:ad2e9ac5e02b35852dd84830c5d247a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cf6d460f6b6af53f0dc78567976b659"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a7cf6d460f6b6af53f0dc78567976b659">LDUserSetEmail</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const email)</td></tr>
+<tr class="memdesc:a7cf6d460f6b6af53f0dc78567976b659"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's email.  <a href="#a7cf6d460f6b6af53f0dc78567976b659">More...</a><br /></td></tr>
+<tr class="separator:a7cf6d460f6b6af53f0dc78567976b659"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29ba1a93944c6861c93aa9b76aa892d9"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a29ba1a93944c6861c93aa9b76aa892d9">LDUserSetName</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const name)</td></tr>
+<tr class="memdesc:a29ba1a93944c6861c93aa9b76aa892d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's name.  <a href="#a29ba1a93944c6861c93aa9b76aa892d9">More...</a><br /></td></tr>
+<tr class="separator:a29ba1a93944c6861c93aa9b76aa892d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9c729c1c26c560000bb33881919b6dc"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#ae9c729c1c26c560000bb33881919b6dc">LDUserSetAvatar</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const avatar)</td></tr>
+<tr class="memdesc:ae9c729c1c26c560000bb33881919b6dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's avatar.  <a href="#ae9c729c1c26c560000bb33881919b6dc">More...</a><br /></td></tr>
+<tr class="separator:ae9c729c1c26c560000bb33881919b6dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1fdca095ea8395ad8c70948d15a2361"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#ac1fdca095ea8395ad8c70948d15a2361">LDUserSetCountry</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const country)</td></tr>
+<tr class="memdesc:ac1fdca095ea8395ad8c70948d15a2361"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's country.  <a href="#ac1fdca095ea8395ad8c70948d15a2361">More...</a><br /></td></tr>
+<tr class="separator:ac1fdca095ea8395ad8c70948d15a2361"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19538317efdf5d21f69803e2132b3287"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a19538317efdf5d21f69803e2132b3287">LDUserSetSecondary</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const secondary)</td></tr>
+<tr class="memdesc:a19538317efdf5d21f69803e2132b3287"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's secondary key.  <a href="#a19538317efdf5d21f69803e2132b3287">More...</a><br /></td></tr>
+<tr class="separator:a19538317efdf5d21f69803e2132b3287"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e80b503f3749b5b2ad645a33f2e1e0b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a7e80b503f3749b5b2ad645a33f2e1e0b">LDUserSetCustom</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, struct LDJSON *const custom)</td></tr>
+<tr class="memdesc:a7e80b503f3749b5b2ad645a33f2e1e0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's custom JSON.  <a href="#a7e80b503f3749b5b2ad645a33f2e1e0b">More...</a><br /></td></tr>
+<tr class="separator:a7e80b503f3749b5b2ad645a33f2e1e0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7111b5b7057a73058421472d6e5fa818"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a7111b5b7057a73058421472d6e5fa818">LDUserAddPrivateAttribute</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, const char *const attribute)</td></tr>
+<tr class="memdesc:a7111b5b7057a73058421472d6e5fa818"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark an attribute as private.  <a href="#a7111b5b7057a73058421472d6e5fa818">More...</a><br /></td></tr>
+<tr class="separator:a7111b5b7057a73058421472d6e5fa818"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21e824aac81d8412470b3bd373bd3c41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#a21e824aac81d8412470b3bd373bd3c41">LDUserSetPrivateAttributes</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, struct LDJSON *const privateAttributes)</td></tr>
+<tr class="memdesc:a21e824aac81d8412470b3bd373bd3c41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark a set of attributes as private.  <a href="#a21e824aac81d8412470b3bd373bd3c41">More...</a><br /></td></tr>
 <tr class="separator:a21e824aac81d8412470b3bd373bd3c41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab49a09285783842e3e93801e5186168f"><td class="memItemLeft" align="right" valign="top"><a id="ab49a09285783842e3e93801e5186168f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#ab49a09285783842e3e93801e5186168f">LDUserSetCustomAttributesJSON</a> (struct LDUser *const user, struct LDJSON *const custom)</td></tr>
-<tr class="memdesc:ab49a09285783842e3e93801e5186168f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's custom field. <br /></td></tr>
+<tr class="memitem:ab49a09285783842e3e93801e5186168f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user_8h.html#ab49a09285783842e3e93801e5186168f">LDUserSetCustomAttributesJSON</a> (struct <a class="el" href="structLDUser.html">LDUser</a> *const user, struct LDJSON *const custom)</td></tr>
+<tr class="memdesc:ab49a09285783842e3e93801e5186168f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the user's custom field.  <a href="#ab49a09285783842e3e93801e5186168f">More...</a><br /></td></tr>
 <tr class="separator:ab49a09285783842e3e93801e5186168f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Public API Interface for User construction. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a7111b5b7057a73058421472d6e5fa818"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7111b5b7057a73058421472d6e5fa818">&#9670;&nbsp;</a></span>LDUserAddPrivateAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserAddPrivateAttribute </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>attribute</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Mark an attribute as private. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attribute</td><td>Attribute to mark as private. May not be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
+
+</div>
+</div>
+<a id="a33cbe4b5ed3852acff3e59f361e5e476"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33cbe4b5ed3852acff3e59f361e5e476">&#9670;&nbsp;</a></span>LDUserFree()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDUserFree </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destroy an existing user object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user free. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Void. </dd></dl>
+
+</div>
+</div>
 <a id="a3c0db523b6dc37d3776ee3a445db95fc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3c0db523b6dc37d3776ee3a445db95fc">&#9670;&nbsp;</a></span>LDUserNew()</h2>
 
@@ -180,7 +241,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">struct LDUser* LDUserNew </td>
+          <td class="memname">struct <a class="el" href="structLDUser.html">LDUser</a>* LDUserNew </td>
           <td>(</td>
           <td class="paramtype">const char *const&#160;</td>
           <td class="paramname"><em>key</em></td><td>)</td>
@@ -189,8 +250,387 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user
       </table>
 </div><div class="memdoc">
 
-<p>Allocate a new user. </p>
-<p>The user may be modified <em>until</em> it is passed to the <code>LDClientIdentify</code> or <code>LDClientInit</code>. The <code>key</code> argument is not required. When <code>key</code> is <code>NULL</code> then a device specific ID is used. If a device specific ID cannot be obtained then a random fallback is generated. </p>
+<p>Allocate a new empty user Object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">key</td><td>A string that identifies the user. For c-server-sdk this value may not be NULL. For c-client-sdk if a NULL key is provided the SDK will use a persistent platform identifier. If a identifier cannot be determined a non persistent fallback will be generated. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><code>NULL</code> on failure. </dd></dl>
+
+</div>
+</div>
+<a id="a9f609f2e41bd6bf3fcba13bfe65facde"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f609f2e41bd6bf3fcba13bfe65facde">&#9670;&nbsp;</a></span>LDUserSetAnonymous()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDUserSetAnonymous </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const LDBoolean&#160;</td>
+          <td class="paramname"><em>anon</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Mark the user as anonymous. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">anon</td><td>If the user should be anonymous or not. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Void. </dd></dl>
+
+</div>
+</div>
+<a id="ae9c729c1c26c560000bb33881919b6dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae9c729c1c26c560000bb33881919b6dc">&#9670;&nbsp;</a></span>LDUserSetAvatar()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetAvatar </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>avatar</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's avatar. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">avatar</td><td>The user's avatar. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
+
+</div>
+</div>
+<a id="ac1fdca095ea8395ad8c70948d15a2361"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1fdca095ea8395ad8c70948d15a2361">&#9670;&nbsp;</a></span>LDUserSetCountry()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetCountry </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>country</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's country. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">country</td><td>The user's country. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
+
+</div>
+</div>
+<a id="a7e80b503f3749b5b2ad645a33f2e1e0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e80b503f3749b5b2ad645a33f2e1e0b">&#9670;&nbsp;</a></span>LDUserSetCustom()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDUserSetCustom </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct LDJSON *const&#160;</td>
+          <td class="paramname"><em>custom</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's custom JSON. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">custom</td><td>Custom JSON for the user. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Void. </dd></dl>
+
+</div>
+</div>
+<a id="ab49a09285783842e3e93801e5186168f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab49a09285783842e3e93801e5186168f">&#9670;&nbsp;</a></span>LDUserSetCustomAttributesJSON()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDUserSetCustomAttributesJSON </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct LDJSON *const&#160;</td>
+          <td class="paramname"><em>custom</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's custom field. </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>This is deprecated in favor of <code>LDUserSetCustom</code>. </dd></dl>
+
+</div>
+</div>
+<a id="a7cf6d460f6b6af53f0dc78567976b659"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cf6d460f6b6af53f0dc78567976b659">&#9670;&nbsp;</a></span>LDUserSetEmail()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetEmail </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>email</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's email. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">email</td><td>The user's email. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
+
+</div>
+</div>
+<a id="a53aa182cb82b488490c9f021924f6bed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a53aa182cb82b488490c9f021924f6bed">&#9670;&nbsp;</a></span>LDUserSetFirstName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetFirstName </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>firstName</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's first name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">firstName</td><td>The user's first name. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
+
+</div>
+</div>
+<a id="ad03168d61e967e2566167a6293161593"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad03168d61e967e2566167a6293161593">&#9670;&nbsp;</a></span>LDUserSetIP()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetIP </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>ip</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's IP. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ip</td><td>The user's IP. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
+
+</div>
+</div>
+<a id="ad2e9ac5e02b35852dd84830c5d247a20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2e9ac5e02b35852dd84830c5d247a20">&#9670;&nbsp;</a></span>LDUserSetLastName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetLastName </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>lastName</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's last name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lastName</td><td>The user's last name. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
+
+</div>
+</div>
+<a id="a29ba1a93944c6861c93aa9b76aa892d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29ba1a93944c6861c93aa9b76aa892d9">&#9670;&nbsp;</a></span>LDUserSetName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetName </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>The user's name. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
 
 </div>
 </div>
@@ -203,7 +643,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user
         <tr>
           <td class="memname">void LDUserSetPrivateAttributes </td>
           <td>(</td>
-          <td class="paramtype">struct LDUser *const&#160;</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
           <td class="paramname"><em>user</em>, </td>
         </tr>
         <tr>
@@ -219,7 +659,54 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set the user's private fields, must be array of strings </p>
+
+<p>Mark a set of attributes as private. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attribute</td><td>The set of attributes to mark as private. Must be an array of strings. May not be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Void. </dd></dl>
+
+</div>
+</div>
+<a id="a19538317efdf5d21f69803e2132b3287"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19538317efdf5d21f69803e2132b3287">&#9670;&nbsp;</a></span>LDUserSetSecondary()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LDBoolean LDUserSetSecondary </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structLDUser.html">LDUser</a> *const&#160;</td>
+          <td class="paramname"><em>user</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *const&#160;</td>
+          <td class="paramname"><em>secondary</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the user's secondary key. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">user</td><td>The user to mutate. May not be <code>NULL</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">secondary</td><td>The user's secondary key. May be <code>NULL</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True on success, False on failure. </dd></dl>
 
 </div>
 </div>
@@ -228,7 +715,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_efe5b79025e5a9a1c6aba444011d94a7.html">launchdarkly</a></li><li class="navelem"><a class="el" href="user_8h.html">user.h</a></li>
+    <li class="navelem"><a class="el" href="dir_2baa2abe2a8541e88a77fd54574fc547.html">c-sdk-common</a></li><li class="navelem"><a class="el" href="dir_431872f0c593d22e60b93671af8c531f.html">include</a></li><li class="navelem"><a class="el" href="dir_d6de379f4146b247b94d58fd9285f8ab.html">launchdarkly</a></li><li class="navelem"><a class="el" href="user_8h.html">user.h</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>

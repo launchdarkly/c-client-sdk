@@ -17,7 +17,7 @@ var client_8h =
     [ "LDClientAwaitInitialized", "client_8h.html#a6ae5e33ce19de111c5a2650e70b4d38f", null ],
     [ "LDClientClose", "client_8h.html#ab7d00dbcd76715c1da55ba2469a0cc4f", null ],
     [ "LDClientFlush", "client_8h.html#a675adeb6d3c92b221bb806ecbdb73bb4", null ],
-    [ "LDClientGet", "client_8h.html#af4bfbd4777277c34c58dad23db47869e", null ],
+    [ "LDClientGet", "client_8h.html#a063621e6a7c8edeeb7b2e9ba823360e3", null ],
     [ "LDClientGetForMobileKey", "client_8h.html#ad9c174e7a41e923a27ade5dd1da66f52", null ],
     [ "LDClientIdentify", "client_8h.html#a7ee43b2353f00798979ba51cfebb1a53", null ],
     [ "LDClientInit", "client_8h.html#a6b7b432c0564720ddc5d0e902ba19e06", null ],

@@ -90,7 +90,8 @@ $(document).ready(function(){initNavTree('json_8h.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#enum-members">Enumerations</a>  </div>
+<a href="#enum-members">Enumerations</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">json.h File Reference</div>  </div>
 </div><!--header-->
@@ -98,8 +99,8 @@ $(document).ready(function(){initNavTree('json_8h.html','');});
 
 <p>Public API Interface for JSON usage.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;<a class="el" href="export_8h_source.html">launchdarkly/export.h</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="boolean_8h_source.html">launchdarkly/boolean.h</a>&gt;</code><br />
+<div class="textblock"><code>#include &lt;<a class="el" href="boolean_8h_source.html">launchdarkly/boolean.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="export_8h_source.html">launchdarkly/export.h</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for json.h:</div>
 <div class="dyncontent">
@@ -131,9 +132,6 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr><td colspan="2"><div class="groupHeader">Constructing values</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Routines for constructing values </p>
-</div></td></tr>
 <tr class="memitem:aa575c098417d81a159e95da8d899adf7"><td class="memItemLeft" align="right" valign="top">struct LDJSON *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#aa575c098417d81a159e95da8d899adf7">LDNewNull</a> (void)</td></tr>
 <tr class="memdesc:aa575c098417d81a159e95da8d899adf7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a JSON node of type <code>LDJSONNull</code>.  <a href="#aa575c098417d81a159e95da8d899adf7">More...</a><br /></td></tr>
 <tr class="separator:aa575c098417d81a159e95da8d899adf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,15 +150,9 @@ Functions</h2></td></tr>
 <tr class="memitem:abaeb396c738b1e297af985c7f946c2ec"><td class="memItemLeft" align="right" valign="top">struct LDJSON *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#abaeb396c738b1e297af985c7f946c2ec">LDNewArray</a> (void)</td></tr>
 <tr class="memdesc:abaeb396c738b1e297af985c7f946c2ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a JSON node of type <code>LDJSONArray</code>.  <a href="#abaeb396c738b1e297af985c7f946c2ec">More...</a><br /></td></tr>
 <tr class="separator:abaeb396c738b1e297af985c7f946c2ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Setting values</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Routines for setting values of existing nodes </p>
-</div></td></tr>
 <tr class="memitem:a747675630428e355a0af6e54d857ea4f"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a747675630428e355a0af6e54d857ea4f">LDSetNumber</a> (struct LDJSON *const node, const double number)</td></tr>
 <tr class="memdesc:a747675630428e355a0af6e54d857ea4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of an existing Number.  <a href="#a747675630428e355a0af6e54d857ea4f">More...</a><br /></td></tr>
 <tr class="separator:a747675630428e355a0af6e54d857ea4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Cleanup and Utility</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Miscellaneous Operations </p>
-</div></td></tr>
 <tr class="memitem:a1d220d5618a5a9daa41f38363333b234"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a1d220d5618a5a9daa41f38363333b234">LDJSONFree</a> (struct LDJSON *const json)</td></tr>
 <tr class="memdesc:a1d220d5618a5a9daa41f38363333b234"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frees any allocated JSON structure.  <a href="#a1d220d5618a5a9daa41f38363333b234">More...</a><br /></td></tr>
 <tr class="separator:a1d220d5618a5a9daa41f38363333b234"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -173,9 +165,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a06ee3b31ab0a5dd32104a36d624e87f9"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a06ee3b31ab0a5dd32104a36d624e87f9">LDJSONCompare</a> (const struct LDJSON *const left, const struct LDJSON *const right)</td></tr>
 <tr class="memdesc:a06ee3b31ab0a5dd32104a36d624e87f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deep compare to check if two JSON structures are equal.  <a href="#a06ee3b31ab0a5dd32104a36d624e87f9">More...</a><br /></td></tr>
 <tr class="separator:a06ee3b31ab0a5dd32104a36d624e87f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Reading Values</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Routines for reading values </p>
-</div></td></tr>
 <tr class="memitem:add28009e120907cbd395aa8360bec0c5"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#add28009e120907cbd395aa8360bec0c5">LDGetBool</a> (const struct LDJSON *const node)</td></tr>
 <tr class="memdesc:add28009e120907cbd395aa8360bec0c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value from a node of type <code>LDJSONBool</code>.  <a href="#add28009e120907cbd395aa8360bec0c5">More...</a><br /></td></tr>
 <tr class="separator:add28009e120907cbd395aa8360bec0c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -185,9 +174,6 @@ Functions</h2></td></tr>
 <tr class="memitem:ac218276afacd7df1c5f14a496f2a2c78"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#ac218276afacd7df1c5f14a496f2a2c78">LDGetText</a> (const struct LDJSON *const node)</td></tr>
 <tr class="memdesc:ac218276afacd7df1c5f14a496f2a2c78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value from a node of type <code>LDJSONText</code>.  <a href="#ac218276afacd7df1c5f14a496f2a2c78">More...</a><br /></td></tr>
 <tr class="separator:ac218276afacd7df1c5f14a496f2a2c78"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Iterator Operations</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Routines for working with collections (Objects, Arrays) </p>
-</div></td></tr>
 <tr class="memitem:a0f6aa910832ea98c39e1b08d496ba110"><td class="memItemLeft" align="right" valign="top">struct LDJSON *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a0f6aa910832ea98c39e1b08d496ba110">LDIterNext</a> (const struct LDJSON *const iter)</td></tr>
 <tr class="memdesc:a0f6aa910832ea98c39e1b08d496ba110"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the next item in the sequence.  <a href="#a0f6aa910832ea98c39e1b08d496ba110">More...</a><br /></td></tr>
 <tr class="separator:a0f6aa910832ea98c39e1b08d496ba110"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -203,9 +189,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a976ac649e1cf1d6deb2cc36c11aec509"><td class="memItemLeft" align="right" valign="top">struct LDJSON *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a976ac649e1cf1d6deb2cc36c11aec509">LDCollectionDetachIter</a> (struct LDJSON *const collection, struct LDJSON *const iter)</td></tr>
 <tr class="memdesc:a976ac649e1cf1d6deb2cc36c11aec509"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an iterator from a collection.  <a href="#a976ac649e1cf1d6deb2cc36c11aec509">More...</a><br /></td></tr>
 <tr class="separator:a976ac649e1cf1d6deb2cc36c11aec509"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Array Operations</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Routines for working with arrays </p>
-</div></td></tr>
 <tr class="memitem:a5dd0e8382ff995104f5051efb7b5858a"><td class="memItemLeft" align="right" valign="top">struct LDJSON *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a5dd0e8382ff995104f5051efb7b5858a">LDArrayLookup</a> (const struct LDJSON *const array, const unsigned int index)</td></tr>
 <tr class="memdesc:a5dd0e8382ff995104f5051efb7b5858a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lookup up the value of an index for a given array.  <a href="#a5dd0e8382ff995104f5051efb7b5858a">More...</a><br /></td></tr>
 <tr class="separator:a5dd0e8382ff995104f5051efb7b5858a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -215,9 +198,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a1c3ff89005964c0bd5c3fb771c361baf"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a1c3ff89005964c0bd5c3fb771c361baf">LDArrayAppend</a> (struct LDJSON *const prefix, const struct LDJSON *const suffix)</td></tr>
 <tr class="memdesc:a1c3ff89005964c0bd5c3fb771c361baf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Appends the array on the right to the array on the left.  <a href="#a1c3ff89005964c0bd5c3fb771c361baf">More...</a><br /></td></tr>
 <tr class="separator:a1c3ff89005964c0bd5c3fb771c361baf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Object Operations</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Routines for working with objects </p>
-</div></td></tr>
 <tr class="memitem:a4183e1e8dd0f6afb678f7ea0928e3376"><td class="memItemLeft" align="right" valign="top">struct LDJSON *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a4183e1e8dd0f6afb678f7ea0928e3376">LDObjectLookup</a> (const struct LDJSON *const object, const char *const key)</td></tr>
 <tr class="memdesc:a4183e1e8dd0f6afb678f7ea0928e3376"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lookup up the value of a key for a given object.  <a href="#a4183e1e8dd0f6afb678f7ea0928e3376">More...</a><br /></td></tr>
 <tr class="separator:a4183e1e8dd0f6afb678f7ea0928e3376"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -233,9 +213,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a60732d3ccc24bd1607906dc8e3d2c27b"><td class="memItemLeft" align="right" valign="top">LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a60732d3ccc24bd1607906dc8e3d2c27b">LDObjectMerge</a> (struct LDJSON *const to, const struct LDJSON *const from)</td></tr>
 <tr class="memdesc:a60732d3ccc24bd1607906dc8e3d2c27b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy keys from one object to another. If a key already exists it is overwritten by the new value.  <a href="#a60732d3ccc24bd1607906dc8e3d2c27b">More...</a><br /></td></tr>
 <tr class="separator:a60732d3ccc24bd1607906dc8e3d2c27b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Serialization / Deserialization</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Working with textual representations of JSON </p>
-</div></td></tr>
 <tr class="memitem:a9f2d02e2d6aca7208b9632a645299f8e"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="json_8h.html#a9f2d02e2d6aca7208b9632a645299f8e">LDJSONSerialize</a> (const struct LDJSON *const json)</td></tr>
 <tr class="memdesc:a9f2d02e2d6aca7208b9632a645299f8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serialize JSON structure into JSON text.  <a href="#a9f2d02e2d6aca7208b9632a645299f8e">More...</a><br /></td></tr>
 <tr class="separator:a9f2d02e2d6aca7208b9632a645299f8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
