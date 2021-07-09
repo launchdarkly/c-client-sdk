@@ -45,6 +45,7 @@ generate_product_version(
 set(LD_INCLUDE_PATHS
     "src"
     "include"
+    "third-party/include"
     "c-sdk-common/include"
     "c-sdk-common/src"
     ${CURL_INCLUDE_DIR}
@@ -55,7 +56,7 @@ if(APPLE)
     set(LD_PUBLIC_LIBRARIES "-framework CoreFoundation" "-framework IOKit")
 endif(APPLE)
 
-file(GLOB SOURCES "src/*" "c-sdk-common/src/*")
+file(GLOB SOURCES "src/*" "c-sdk-common/src/*" "third-party/src/*")
 
 if(DEFINED MSVC)
     list(APPEND SOURCES "${WindowsVersionInfo}")
@@ -104,6 +105,11 @@ else()
                 -pedantic
                 -Wall
                 -Wextra
+                -Werror
+                -Wstrict-prototypes
+                -Wmissing-prototypes
+                -Wmissing-declarations
+                -std=c89
     )
 endif(MSVC)
 

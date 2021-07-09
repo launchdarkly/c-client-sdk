@@ -1,0 +1,29 @@
+---
+ColumnLimit: 80
+IndentWidth: 4
+
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+
+BinPackArguments: false
+BinPackParameters: false 
+
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakAfterReturnType: All
+
+AlignConsecutiveAssignments: true
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveDeclarations: true
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+BreakStringLiterals: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: true
+  SplitEmptyFunction: true
+  AfterFunction: true
+  AfterControlStatement: MultiLine

@@ -6,11 +6,11 @@ static struct LDClient *
 makeTestClient()
 {
     struct LDConfig *config;
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
-    LDConfigSetOffline(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
 
     LD_ASSERT(user = LDUserNew("test-user"));
 
@@ -23,8 +23,8 @@ static void
 testBasicAllFlags()
 {
     struct LDClient *client;
-    struct LDFlag flag;
-    struct LDJSON *expected, *actual;
+    struct LDFlag    flag;
+    struct LDJSON *  expected, *actual;
 
     LD_ASSERT(client = makeTestClient());
 
@@ -32,10 +32,10 @@ testBasicAllFlags()
     flag.value                = LDNewText("alice");
     flag.version              = 2;
     flag.variation            = 3;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(LDi_storeUpsert(&client->store, flag));
 
@@ -54,8 +54,8 @@ static void
 testAllFlagsEmpty()
 {
     struct LDClient *client;
-    struct LDFlag flag;
-    struct LDJSON *expected, *actual;
+    struct LDFlag    flag;
+    struct LDJSON *  expected, *actual;
 
     LD_ASSERT(client = makeTestClient());
 

@@ -6,11 +6,11 @@ static struct LDClient *
 makeTestClient()
 {
     struct LDConfig *config;
-    struct LDUser *user;
+    struct LDUser *  user;
     struct LDClient *client;
 
     LD_ASSERT(config = LDConfigNew("abc"));
-    LDConfigSetOffline(config, true);
+    LDConfigSetOffline(config, LDBooleanTrue);
 
     LD_ASSERT(user = LDUserNew("test-user"));
 
@@ -23,7 +23,7 @@ static void
 testRestoreAndSaveEmpty()
 {
     struct LDClient *client;
-    char *bundle;
+    char *           bundle;
 
     LD_ASSERT(client = makeTestClient());
 
@@ -39,20 +39,20 @@ static void
 testRestoreAndSaveBasic()
 {
     struct LDClient *client;
-    char *bundle1, *bundle2;
-    struct LDFlag flag;
+    char *           bundle1, *bundle2;
+    struct LDFlag    flag;
 
     LD_ASSERT(client = makeTestClient());
 
     flag.key                  = LDStrDup("test");
-    flag.value                = LDNewBool(true);
+    flag.value                = LDNewBool(LDBooleanTrue);
     flag.version              = 2;
     flag.flagVersion          = -1;
     flag.variation            = 3;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(LDi_storeUpsert(&client->store, flag));
 

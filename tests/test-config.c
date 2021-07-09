@@ -15,22 +15,20 @@ void
 testSetters()
 {
     struct LDConfig *config;
-    struct LDJSON *attributes, *tmp;
+    struct LDJSON *  attributes, *tmp;
 
     LD_ASSERT(config = LDConfigNew("a"));
     LD_ASSERT(strcmp("a", config->mobileKey) == 0);
 
-    LDConfigSetAllAttributesPrivate(config, true);
-    LD_ASSERT(config->allAttributesPrivate == true);
+    LDConfigSetAllAttributesPrivate(config, LDBooleanTrue);
+    LD_ASSERT(config->allAttributesPrivate == LDBooleanTrue);
 
     /* respects minimum */
     LDConfigSetBackgroundPollingIntervalMillis(config, 5);
-    LD_ASSERT(config->backgroundPollingIntervalMillis ==
-      15 * 60 * 1000);
+    LD_ASSERT(config->backgroundPollingIntervalMillis == 15 * 60 * 1000);
 
     LDConfigSetBackgroundPollingIntervalMillis(config, 20 * 60 * 1000);
-    LD_ASSERT(config->backgroundPollingIntervalMillis ==
-        20 * 60 * 1000);
+    LD_ASSERT(config->backgroundPollingIntervalMillis == 20 * 60 * 1000);
 
     LD_ASSERT(LDConfigSetAppURI(config, "https://test1.com"));
     LD_ASSERT(strcmp("https://test1.com", config->appURI) == 0);
@@ -38,8 +36,8 @@ testSetters()
     LDConfigSetConnectionTimeoutMillies(config, 52);
     LD_ASSERT(config->connectionTimeoutMillis == 52);
 
-    LDConfigSetDisableBackgroundUpdating(config, true);
-    LD_ASSERT(config->disableBackgroundUpdating == true);
+    LDConfigSetDisableBackgroundUpdating(config, LDBooleanTrue);
+    LD_ASSERT(config->disableBackgroundUpdating == LDBooleanTrue);
 
     LDConfigSetEventsCapacity(config, 12);
     LD_ASSERT(config->eventsCapacity == 12);
@@ -53,11 +51,11 @@ testSetters()
     LD_ASSERT(LDConfigSetMobileKey(config, "key1"));
     LD_ASSERT(strcmp("key1", config->mobileKey) == 0);
 
-    LDConfigSetOffline(config, true);
-    LD_ASSERT(config->offline == true);
+    LDConfigSetOffline(config, LDBooleanTrue);
+    LD_ASSERT(config->offline == LDBooleanTrue);
 
-    LDConfigSetStreaming(config, false);
-    LD_ASSERT(config->streaming == false);
+    LDConfigSetStreaming(config, LDBooleanFalse);
+    LD_ASSERT(config->streaming == LDBooleanFalse);
 
     /* respects minimum */
     LDConfigSetPollingIntervalMillis(config, 5);
@@ -69,17 +67,17 @@ testSetters()
     LD_ASSERT(LDConfigSetStreamURI(config, "https://test3.com"));
     LD_ASSERT(strcmp("https://test3.com", config->streamURI) == 0);
 
-    LDConfigSetUseReport(config, true);
-    LD_ASSERT(config->useReport == true);
+    LDConfigSetUseReport(config, LDBooleanTrue);
+    LD_ASSERT(config->useReport == LDBooleanTrue);
 
-    LDConfigSetUseEvaluationReasons(config, true);
-    LD_ASSERT(config->useReasons == true);
+    LDConfigSetUseEvaluationReasons(config, LDBooleanTrue);
+    LD_ASSERT(config->useReasons == LDBooleanTrue);
 
     LD_ASSERT(LDConfigSetProxyURI(config, "https://test4.com"));
     LD_ASSERT(strcmp("https://test4.com", config->proxyURI) == 0);
 
-    LDConfigSetVerifyPeer(config, false);
-    LD_ASSERT(config->verifyPeer == false);
+    LDConfigSetVerifyPeer(config, LDBooleanFalse);
+    LD_ASSERT(config->verifyPeer == LDBooleanFalse);
 
     LD_ASSERT(LDConfigSetSSLCertificateAuthority(config, "/path"));
     LD_ASSERT(strcmp("/path", config->certFile) == 0);
@@ -91,8 +89,8 @@ testSetters()
     LD_ASSERT(LDArrayPush(attributes, tmp));
     LDConfigSetPrivateAttributes(config, attributes);
 
-    LDConfigSetInlineUsersInEvents(config, true);
-    LD_ASSERT(config->inlineUsersInEvents == true);
+    LDConfigSetInlineUsersInEvents(config, LDBooleanTrue);
+    LD_ASSERT(config->inlineUsersInEvents == LDBooleanTrue);
 
     LDConfigFree(config);
 }

@@ -16,13 +16,13 @@
 extern "C" {
 #endif
 
+#include <launchdarkly/client.h>
+#include <launchdarkly/config.h>
 #include <launchdarkly/export.h>
+#include <launchdarkly/json.h>
 #include <launchdarkly/logging.h>
 #include <launchdarkly/memory.h>
-#include <launchdarkly/json.h>
-#include <launchdarkly/config.h>
 #include <launchdarkly/user.h>
-#include <launchdarkly/client.h>
 
 #ifdef __cplusplus
 }

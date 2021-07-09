@@ -1,5 +1,3 @@
-#include <stdbool.h>
-
 #include "cJSON.h"
 
 #include <launchdarkly/json.h>
@@ -29,13 +27,13 @@ LDNewText(const char *const text)
 {
     LD_ASSERT_API(text);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (text == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDNewText NULL text");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (text == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDNewText NULL text");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return (struct LDJSON *)cJSON_CreateString(text);
 }
@@ -60,24 +58,23 @@ LDSetNumber(struct LDJSON *const rawNode, const double number)
     LD_ASSERT_API(node);
     LD_ASSERT_API(cJSON_IsNumber(node));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (rawNode == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDSetNumber NULL node");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (rawNode == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDSetNumber NULL node");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsNumber(node) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDSetNumber node is not a number");
+    if (cJSON_IsNumber(node) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDSetNumber node is not a number");
 
-            return false;
-        }
-    #endif
-
+        return LDBooleanFalse;
+    }
+#endif
 
     node->valuedouble = number;
 
-    return true;
+    return LDBooleanTrue;
 }
 
 void
@@ -91,15 +88,15 @@ LDJSONDuplicate(const struct LDJSON *const input)
 {
     LD_ASSERT_API(input);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (input == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDJSONDuplicate NULL input");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (input == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDJSONDuplicate NULL input");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
-    return (struct LDJSON *)cJSON_Duplicate((cJSON *)input, true);
+    return (struct LDJSON *)cJSON_Duplicate((cJSON *)input, LDBooleanTrue);
 }
 
 LDJSONType
@@ -109,13 +106,13 @@ LDJSONGetType(const struct LDJSON *const inputRaw)
 
     LD_ASSERT_API(input);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (input == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDJSONGetType NULL input");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (input == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDJSONGetType NULL input");
 
-            return LDNull;
-        }
-    #endif
+        return LDNull;
+    }
+#endif
 
     if (cJSON_IsBool(input)) {
         return LDBool;
@@ -133,20 +130,20 @@ LDJSONGetType(const struct LDJSON *const inputRaw)
 
     LD_LOG(LD_LOG_CRITICAL, "LDJSONGetType unknown");
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        LD_LOG(LD_LOG_WARNING, "LDJSONGetType unknown type");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    LD_LOG(LD_LOG_WARNING, "LDJSONGetType unknown type");
 
-        return LDNull;
-    #else
-        LD_ASSERT(false);
-    #endif
+    return LDNull;
+#else
+    LD_ASSERT(LDBooleanFalse);
+#endif
 }
 
 LDBoolean
 LDJSONCompare(const struct LDJSON *const left, const struct LDJSON *const right)
 {
-    return cJSON_Compare((const cJSON *)left,
-        (const cJSON *)right, true);
+    return cJSON_Compare(
+        (const cJSON *)left, (const cJSON *)right, LDBooleanTrue);
 }
 
 LDBoolean
@@ -157,19 +154,19 @@ LDGetBool(const struct LDJSON *const node)
     LD_ASSERT_API(json);
     LD_ASSERT_API(cJSON_IsBool(json));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (json == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDGetBool NULL node");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (json == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDGetBool NULL node");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsBool(json) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDGetBool not boolean");
+    if (cJSON_IsBool(json) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDGetBool not boolean");
 
-            return false;
-        }
-    #endif
+        return LDBooleanFalse;
+    }
+#endif
 
     return cJSON_IsTrue(json);
 }
@@ -182,19 +179,19 @@ LDGetNumber(const struct LDJSON *const node)
     LD_ASSERT_API(json);
     LD_ASSERT_API(cJSON_IsNumber(json));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (json == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDGetNumber NULL node");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (json == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDGetNumber NULL node");
 
-            return 0.0;
-        }
+        return 0.0;
+    }
 
-        if (cJSON_IsNumber(json) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDGetNumber not number");
+    if (cJSON_IsNumber(json) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDGetNumber not number");
 
-            return 0.0;
-        }
-    #endif
+        return 0.0;
+    }
+#endif
 
     return json->valuedouble;
 }
@@ -207,19 +204,19 @@ LDGetText(const struct LDJSON *const node)
     LD_ASSERT_API(json);
     LD_ASSERT_API(cJSON_IsString(json));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (json == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDGetText NULL node");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (json == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDGetText NULL node");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (cJSON_IsString(json) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDGetText not text");
+    if (cJSON_IsString(json) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDGetText not text");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return json->valuestring;
 }
@@ -232,19 +229,19 @@ LDGetIter(const struct LDJSON *const rawCollection)
     LD_ASSERT_API(collection);
     LD_ASSERT_API(cJSON_IsArray(collection) || cJSON_IsObject(collection));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (collection == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDGetIter NULL collection");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (collection == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDGetIter NULL collection");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (!cJSON_IsArray(collection) && !cJSON_IsObject(collection)) {
-            LD_LOG(LD_LOG_WARNING, "LDGetIter not Object or Array");
+    if (!cJSON_IsArray(collection) && !cJSON_IsObject(collection)) {
+        LD_LOG(LD_LOG_WARNING, "LDGetIter not Object or Array");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return (struct LDJSON *)collection->child;
 }
@@ -256,13 +253,13 @@ LDIterNext(const struct LDJSON *const rawIter)
 
     LD_ASSERT_API(iter);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (iter == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDIterNext NULL iter");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (iter == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDIterNext NULL iter");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return (struct LDJSON *)iter->next;
 }
@@ -274,13 +271,13 @@ LDIterKey(const struct LDJSON *const rawIter)
 
     LD_ASSERT_API(iter);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (iter == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDIterKey NULL iter");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (iter == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDIterKey NULL iter");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return iter->string;
 }
@@ -293,55 +290,54 @@ LDCollectionGetSize(const struct LDJSON *const rawCollection)
     LD_ASSERT_API(collection);
     LD_ASSERT_API(cJSON_IsArray(collection) || cJSON_IsObject(collection));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (collection == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDCollectionGetSize NULL collection");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (collection == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDCollectionGetSize NULL collection");
 
-            return 0;
-        }
+        return 0;
+    }
 
-        if (!cJSON_IsArray(collection) && !cJSON_IsObject(collection)) {
-            LD_LOG(LD_LOG_WARNING, "LDCollectionGetSize not Object or Array");
+    if (!cJSON_IsArray(collection) && !cJSON_IsObject(collection)) {
+        LD_LOG(LD_LOG_WARNING, "LDCollectionGetSize not Object or Array");
 
-            return 0;
-        }
-    #endif
+        return 0;
+    }
+#endif
 
     /* works for objects */
     return cJSON_GetArraySize(collection);
 }
 
 struct LDJSON *
-LDCollectionDetachIter(struct LDJSON *const rawCollection,
-    struct LDJSON *const rawIter)
+LDCollectionDetachIter(
+    struct LDJSON *const rawCollection, struct LDJSON *const rawIter)
 {
     cJSON *const collection = (cJSON *)rawCollection;
-    cJSON *const iter = (cJSON *)rawIter;
+    cJSON *const iter       = (cJSON *)rawIter;
 
     LD_ASSERT_API(collection);
     LD_ASSERT_API(cJSON_IsArray(collection) || cJSON_IsObject(collection));
     LD_ASSERT_API(iter);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (collection == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDCollectionDetachIter NULL collection");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (collection == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDCollectionDetachIter NULL collection");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (!cJSON_IsArray(collection) && !cJSON_IsObject(collection)) {
-            LD_LOG(LD_LOG_WARNING,
-                "LDCollectionDetachIter not Object or Array");
+    if (!cJSON_IsArray(collection) && !cJSON_IsObject(collection)) {
+        LD_LOG(LD_LOG_WARNING, "LDCollectionDetachIter not Object or Array");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (iter == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDCollectionDetachIter NULL iter");
+    if (iter == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDCollectionDetachIter NULL iter");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return (struct LDJSON *)cJSON_DetachItemViaPointer(collection, iter);
 }
@@ -354,19 +350,19 @@ LDArrayLookup(const struct LDJSON *const rawArray, const unsigned int index)
     LD_ASSERT_API(array);
     LD_ASSERT_API(cJSON_IsArray(array));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (array == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayLookup NULL array");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (array == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayLookup NULL array");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (cJSON_IsArray(array) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayLookup not array");
+    if (cJSON_IsArray(array) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayLookup not array");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return (struct LDJSON *)cJSON_GetArrayItem(array, index);
 }
@@ -380,37 +376,37 @@ LDArrayPush(struct LDJSON *const rawArray, struct LDJSON *const item)
     LD_ASSERT_API(cJSON_IsArray(array));
     LD_ASSERT_API(item);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (array == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL array");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (array == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL array");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsArray(array) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayPush not array");
+    if (cJSON_IsArray(array) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayPush not array");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (item == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL item");
+    if (item == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL item");
 
-            return false;
-        }
-    #endif
+        return LDBooleanFalse;
+    }
+#endif
 
     cJSON_AddItemToArray(array, (cJSON *)item);
 
-    return true;
+    return LDBooleanTrue;
 }
 
 LDBoolean
-LDArrayAppend(struct LDJSON *const rawPrefix,
-    const struct LDJSON *const rawSuffix)
+LDArrayAppend(
+    struct LDJSON *const rawPrefix, const struct LDJSON *const rawSuffix)
 {
-    cJSON *iter;
-    cJSON *const prefix = (cJSON *)rawPrefix;
+    cJSON *            iter;
+    cJSON *const       prefix = (cJSON *)rawPrefix;
     const cJSON *const suffix = (const cJSON *)rawSuffix;
 
     LD_ASSERT_API(prefix);
@@ -418,43 +414,43 @@ LDArrayAppend(struct LDJSON *const rawPrefix,
     LD_ASSERT_API(suffix);
     LD_ASSERT_API(cJSON_IsArray(suffix));
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (prefix == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL prefix");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (prefix == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL prefix");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsArray(prefix) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayPush prefix not array");
+    if (cJSON_IsArray(prefix) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayPush prefix not array");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (suffix == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL suffix");
+    if (suffix == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayPush NULL suffix");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsArray(suffix) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDArrayPush suffix not array");
+    if (cJSON_IsArray(suffix) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDArrayPush suffix not array");
 
-            return false;
-        }
-    #endif
+        return LDBooleanFalse;
+    }
+#endif
 
     for (iter = suffix->child; iter; iter = iter->next) {
         cJSON *dupe;
 
-        if (!(dupe = cJSON_Duplicate(iter, true))) {
-            return false;
+        if (!(dupe = cJSON_Duplicate(iter, LDBooleanTrue))) {
+            return LDBooleanFalse;
         }
 
         cJSON_AddItemToArray(prefix, dupe);
     }
 
-    return true;
+    return LDBooleanTrue;
 }
 
 struct LDJSON *
@@ -466,32 +462,34 @@ LDObjectLookup(const struct LDJSON *const rawObject, const char *const key)
     LD_ASSERT_API(cJSON_IsObject(object));
     LD_ASSERT_API(key);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (object == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectLookup NULL object");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (object == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectLookup NULL object");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (cJSON_IsObject(object) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectLookup not object");
+    if (cJSON_IsObject(object) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectLookup not object");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (key == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectLookup NULL key");
+    if (key == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectLookup NULL key");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return (struct LDJSON *)cJSON_GetObjectItemCaseSensitive(object, key);
 }
 
 LDBoolean
-LDObjectSetKey(struct LDJSON *const rawObject,
-    const char *const key, struct LDJSON *const item)
+LDObjectSetKey(
+    struct LDJSON *const rawObject,
+    const char *const    key,
+    struct LDJSON *const item)
 {
     cJSON *const object = (cJSON *)rawObject;
 
@@ -500,37 +498,37 @@ LDObjectSetKey(struct LDJSON *const rawObject,
     LD_ASSERT_API(key);
     LD_ASSERT_API(item);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (object == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectSetKey NULL object");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (object == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectSetKey NULL object");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsObject(object) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectSetKey not object");
+    if (cJSON_IsObject(object) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectSetKey not object");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (key == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectSetKey NULL key");
+    if (key == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectSetKey NULL key");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (item == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectSetKey NULL item");
+    if (item == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectSetKey NULL item");
 
-            return false;
-        }
-    #endif
+        return LDBooleanFalse;
+    }
+#endif
 
     cJSON_DeleteItemFromObjectCaseSensitive(object, key);
 
     cJSON_AddItemToObject(object, key, (cJSON *)item);
 
-    return true;
+    return LDBooleanTrue;
 }
 
 void
@@ -542,25 +540,25 @@ LDObjectDeleteKey(struct LDJSON *const rawObject, const char *const key)
     LD_ASSERT_API(cJSON_IsObject(object));
     LD_ASSERT_API(key);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (object == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectDeleteKey NULL object");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (object == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectDeleteKey NULL object");
 
-            return;
-        }
+        return;
+    }
 
-        if (cJSON_IsObject(object) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectDeleteKey not object");
+    if (cJSON_IsObject(object) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectDeleteKey not object");
 
-            return;
-        }
+        return;
+    }
 
-        if (key == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectDeleteKey NULL key");
+    if (key == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectDeleteKey NULL key");
 
-            return;
-        }
-    #endif
+        return;
+    }
+#endif
 
     cJSON_DeleteItemFromObjectCaseSensitive(object, key);
 }
@@ -574,28 +572,28 @@ LDObjectDetachKey(struct LDJSON *const rawObject, const char *const key)
     LD_ASSERT_API(cJSON_IsObject(object));
     LD_ASSERT_API(key);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (object == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectDetachKey NULL object");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (object == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectDetachKey NULL object");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (cJSON_IsObject(object) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectDetachKey not object");
+    if (cJSON_IsObject(object) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectDetachKey not object");
 
-            return NULL;
-        }
+        return NULL;
+    }
 
-        if (key == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectDetachKey NULL key");
+    if (key == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectDetachKey NULL key");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
-    return (struct LDJSON *)
-        cJSON_DetachItemFromObjectCaseSensitive(object, key);
+    return (struct LDJSON *)cJSON_DetachItemFromObjectCaseSensitive(
+        object, key);
 }
 
 LDBoolean
@@ -608,43 +606,43 @@ LDObjectMerge(struct LDJSON *const to, const struct LDJSON *const from)
     LD_ASSERT_API(from);
     LD_ASSERT_API(LDJSONGetType(from) == LDObject);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (to == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectMerge NULL to");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (to == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectMerge NULL to");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsObject((cJSON *)to) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectMerge to not object");
+    if (cJSON_IsObject((cJSON *)to) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectMerge to not object");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (from == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectMerge NULL from");
+    if (from == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectMerge NULL from");
 
-            return false;
-        }
+        return LDBooleanFalse;
+    }
 
-        if (cJSON_IsObject((const cJSON *)from) == false) {
-            LD_LOG(LD_LOG_WARNING, "LDObjectMerge from not object");
+    if (cJSON_IsObject((const cJSON *)from) == LDBooleanFalse) {
+        LD_LOG(LD_LOG_WARNING, "LDObjectMerge from not object");
 
-            return false;
-        }
-    #endif
+        return LDBooleanFalse;
+    }
+#endif
 
     for (iter = LDGetIter(from); iter; iter = LDIterNext(iter)) {
         struct LDJSON *duplicate;
 
         if (!(duplicate = LDJSONDuplicate(iter))) {
-            return false;
+            return LDBooleanFalse;
         }
 
         LDObjectSetKey(to, LDIterKey(iter), duplicate);
     }
 
-    return true;
+    return LDBooleanTrue;
 }
 
 char *
@@ -652,13 +650,13 @@ LDJSONSerialize(const struct LDJSON *const json)
 {
     LD_ASSERT_API(json);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (json == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDJSONSerialize NULL json");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (json == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDJSONSerialize NULL json");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return cJSON_PrintUnformatted((cJSON *)json);
 }
@@ -668,13 +666,13 @@ LDJSONDeserialize(const char *const text)
 {
     LD_ASSERT_API(text);
 
-    #ifdef LAUNCHDARKLY_DEFENSIVE
-        if (text == NULL) {
-            LD_LOG(LD_LOG_WARNING, "LDJSONDeserialize NULL text");
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (text == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDJSONDeserialize NULL text");
 
-            return NULL;
-        }
-    #endif
+        return NULL;
+    }
+#endif
 
     return (struct LDJSON *)cJSON_Parse(text);
 }

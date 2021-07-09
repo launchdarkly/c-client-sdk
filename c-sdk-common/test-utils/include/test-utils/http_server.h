@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdbool.h>
-
+#include <launchdarkly/boolean.h>
 #include <launchdarkly/json.h>
 
 #ifdef _WIN32
+    #define _WINSOCK_DEPRECATED_NO_WARNINGS
     #include <winsock2.h>
 #endif
 
@@ -15,7 +15,7 @@
 #endif
 
 struct LDHTTPRequest {
-    bool done;
+    LDBoolean done;
     char *requestURL;
     char *requestMethod;
     char *requestBody;

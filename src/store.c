@@ -1,8 +1,8 @@
 #include <launchdarkly/memory.h>
 
 #include "assertion.h"
-#include "uthash.h"
 #include "store.h"
+#include "uthash.h"
 
 static void
 LDi_destroyStoreNode(void *const nodeRaw)
@@ -18,12 +18,13 @@ LDi_destroyStoreNode(void *const nodeRaw)
     }
 }
 
-void
+static void
 LDi_storeFreeHash(struct LDStoreNode *flags)
 {
     struct LDStoreNode *node, *tmp;
 
-    HASH_ITER(hh, flags, node, tmp) {
+    HASH_ITER(hh, flags, node, tmp)
+    {
         HASH_DEL(flags, node);
 
         LDi_destroyStoreNode(node);
@@ -40,20 +41,20 @@ LDi_storeFreeFlags(struct LDStore *const store)
     store->flags = NULL;
 }
 
-bool
+LDBoolean
 LDi_storeInitialize(struct LDStore *const store)
 {
     LD_ASSERT(store);
 
     if (!LDi_rwlock_init(&store->lock)) {
-        return false;
+        return LDBooleanFalse;
     }
 
     store->flags       = NULL;
     store->listeners   = NULL;
-    store->initialized = false;
+    store->initialized = LDBooleanFalse;
 
-    return true;
+    return LDBooleanTrue;
 }
 
 void
@@ -98,8 +99,8 @@ LDi_allocateStoreNode(struct LDFlag flag)
 }
 
 static void
-LDi_fireListenersFor(struct LDStore *const store, const char *const key,
-    const bool deleted)
+LDi_fireListenersFor(
+    struct LDStore *const store, const char *const key, const LDBoolean deleted)
 {
     struct LDStoreListener *iter;
 
@@ -113,7 +114,7 @@ LDi_fireListenersFor(struct LDStore *const store, const char *const key,
     }
 }
 
-bool
+LDBoolean
 LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
 {
     struct LDStoreNode *existing, *replacement;
@@ -126,7 +127,7 @@ LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
     if (!(replacement = LDi_allocateStoreNode(flag))) {
         LDi_flag_destroy(&flag);
 
-        return false;
+        return LDBooleanFalse;
     }
 
     LDi_rwlock_wrlock(&store->lock);
@@ -139,8 +140,8 @@ LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
             LDi_rc_decrement(&existing->rc);
         }
 
-        HASH_ADD_KEYPTR(hh, store->flags, flag.key, strlen(flag.key),
-            replacement);
+        HASH_ADD_KEYPTR(
+            hh, store->flags, flag.key, strlen(flag.key), replacement);
 
         LDi_fireListenersFor(store, flag.key, flag.deleted);
     } else {
@@ -149,12 +150,11 @@ LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
 
     LDi_rwlock_wrunlock(&store->lock);
 
-    return true;
+    return LDBooleanTrue;
 }
 
 struct LDStoreNode *
-LDi_storeGet(struct LDStore *const store,
-    const char *const key)
+LDi_storeGet(struct LDStore *const store, const char *const key)
 {
     struct LDStoreNode *lookup;
 
@@ -178,9 +178,11 @@ LDi_storeGet(struct LDStore *const store,
     }
 }
 
-bool
-LDi_storeDelete(struct LDStore *const store, const char *const key,
-    const unsigned int version)
+LDBoolean
+LDi_storeDelete(
+    struct LDStore *const store,
+    const char *const     key,
+    const unsigned int    version)
 {
     struct LDFlag flag;
 
@@ -188,31 +190,33 @@ LDi_storeDelete(struct LDStore *const store, const char *const key,
     LD_ASSERT(key);
 
     if (!(flag.key = LDStrDup(key))) {
-        return false;
+        return LDBooleanFalse;
     }
 
     flag.value                = NULL;
     flag.version              = version;
     flag.variation            = 0;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = true;
+    flag.deleted              = LDBooleanTrue;
 
     return LDi_storeUpsert(store, flag);
 }
 
-bool
-LDi_storePut(struct LDStore *const store, struct LDFlag *flags,
-    const unsigned int flagCount)
+LDBoolean
+LDi_storePut(
+    struct LDStore *const store,
+    struct LDFlag *       flags,
+    const unsigned int    flagCount)
 {
-    size_t i;
-    bool failed;
+    size_t              i;
+    LDBoolean           failed;
     struct LDStoreNode *flagsHash, *oldHash;
 
     LD_ASSERT(store);
 
-    failed    = false;
+    failed    = LDBooleanFalse;
     flagsHash = NULL;
 
     for (i = 0; i < flagCount; i++) {
@@ -222,13 +226,13 @@ LDi_storePut(struct LDStore *const store, struct LDFlag *flags,
             struct LDStoreNode *node;
 
             if (!(node = LDi_allocateStoreNode(flags[i]))) {
-                failed = true;
+                failed = LDBooleanTrue;
 
                 continue;
             }
 
-            HASH_ADD_KEYPTR(hh, flagsHash, node->flag.key,
-                strlen(node->flag.key), node);
+            HASH_ADD_KEYPTR(
+                hh, flagsHash, node->flag.key, strlen(node->flag.key), node);
         }
     }
 
@@ -241,12 +245,13 @@ LDi_storePut(struct LDStore *const store, struct LDFlag *flags,
 
         LDi_rwlock_wrlock(&store->lock);
 
-        oldHash = store->flags;
-        store->flags = flagsHash;
-        store->initialized = true;
+        oldHash            = store->flags;
+        store->flags       = flagsHash;
+        store->initialized = LDBooleanTrue;
 
-        HASH_ITER(hh, store->flags, node, tmp) {
-            LDi_fireListenersFor(store, node->flag.key, false);
+        HASH_ITER(hh, store->flags, node, tmp)
+        {
+            LDi_fireListenersFor(store, node->flag.key, LDBooleanFalse);
         }
 
         LDi_rwlock_wrunlock(&store->lock);
@@ -257,11 +262,13 @@ LDi_storePut(struct LDStore *const store, struct LDFlag *flags,
     return !failed;
 }
 
-bool
-LDi_storeGetAll(struct LDStore *const store,
-    struct LDStoreNode ***const flags, unsigned int *const flagCount)
+LDBoolean
+LDi_storeGetAll(
+    struct LDStore *const       store,
+    struct LDStoreNode ***const flags,
+    unsigned int *const         flagCount)
 {
-    unsigned int count;
+    unsigned int        count;
     struct LDStoreNode *node, *tmp, **dupe, **iter;
 
     LD_ASSERT(store);
@@ -275,12 +282,13 @@ LDi_storeGetAll(struct LDStore *const store,
     if (!(dupe = LDAlloc(sizeof(struct LDStoreNode *) * count))) {
         LDi_rwlock_rdunlock(&store->lock);
 
-        return false;
+        return LDBooleanFalse;
     }
 
     iter = dupe;
 
-    HASH_ITER(hh, store->flags, node, tmp) {
+    HASH_ITER(hh, store->flags, node, tmp)
+    {
         *iter = node;
         LDi_rc_increment(&node->rc);
         iter++;
@@ -291,13 +299,13 @@ LDi_storeGetAll(struct LDStore *const store,
     *flags     = dupe;
     *flagCount = count;
 
-    return true;
+    return LDBooleanTrue;
 }
 
 struct LDJSON *
 LDi_storeGetJSON(struct LDStore *const store)
 {
-    struct LDJSON *result, *flag;
+    struct LDJSON *     result, *flag;
     struct LDStoreNode *node, *tmp;
 
     result = NULL;
@@ -313,7 +321,8 @@ LDi_storeGetJSON(struct LDStore *const store)
 
     LDi_rwlock_rdlock(&store->lock);
 
-    HASH_ITER(hh, store->flags, node, tmp) {
+    HASH_ITER(hh, store->flags, node, tmp)
+    {
         if (!(flag = LDi_flag_to_json(&node->flag))) {
             goto error;
         }
@@ -328,7 +337,7 @@ LDi_storeGetJSON(struct LDStore *const store)
 
     return result;
 
-  error:
+error:
     LDJSONFree(result);
     LDJSONFree(flag);
 
@@ -337,9 +346,9 @@ LDi_storeGetJSON(struct LDStore *const store)
     return NULL;
 }
 
-bool
-LDi_storeRegisterListener(struct LDStore *const store,
-    const char *const flagKey, LDlistenerfn op)
+LDBoolean
+LDi_storeRegisterListener(
+    struct LDStore *const store, const char *const flagKey, LDlistenerfn op)
 {
     struct LDStoreListener *listener;
 
@@ -348,7 +357,7 @@ LDi_storeRegisterListener(struct LDStore *const store,
     LD_ASSERT(op);
 
     if (!(listener = LDAlloc(sizeof(*listener)))) {
-        return false;
+        return LDBooleanFalse;
     }
 
     listener->key = LDStrDup(flagKey);
@@ -356,7 +365,7 @@ LDi_storeRegisterListener(struct LDStore *const store,
     if (!listener->key) {
         LDFree(listener);
 
-        return false;
+        return LDBooleanFalse;
     }
 
     listener->fn = op;
@@ -368,12 +377,12 @@ LDi_storeRegisterListener(struct LDStore *const store,
 
     LDi_rwlock_wrunlock(&store->lock);
 
-    return true;
+    return LDBooleanTrue;
 }
 
 void
-LDi_storeUnregisterListener(struct LDStore *const store,
-    const char *const flagKey, LDlistenerfn op)
+LDi_storeUnregisterListener(
+    struct LDStore *const store, const char *const flagKey, LDlistenerfn op)
 {
     struct LDStoreListener *listener, *previous;
 

@@ -3,8 +3,10 @@
 #include "assertion.h"
 #include "flag.h"
 
-bool
-LDi_flag_parse(struct LDFlag *const result, const char *const key,
+LDBoolean
+LDi_flag_parse(
+    struct LDFlag *const       result,
+    const char *const          key,
     const struct LDJSON *const raw)
 {
     const struct LDJSON *tmp;
@@ -15,7 +17,7 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
     result->key         = NULL;
     result->value       = NULL;
     result->reason      = NULL;
-    result->deleted     = false;
+    result->deleted     = LDBooleanFalse;
     result->version     = -1;
     result->flagVersion = -1;
 
@@ -99,8 +101,8 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
     } else if (LDJSONGetType(tmp) == LDNull) {
         result->variation = -1;
     } else {
-        LD_LOG(LD_LOG_ERROR,
-            "LDi_flag_parse variation is not a number or null");
+        LD_LOG(
+            LD_LOG_ERROR, "LDi_flag_parse variation is not a number or null");
 
         goto error;
     }
@@ -115,13 +117,14 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
 
         result->trackEvents = LDGetBool(tmp);
     } else {
-        result->trackEvents = false;
+        result->trackEvents = LDBooleanFalse;
     }
 
     /* debugEventsUntilDate */
     if ((tmp = LDObjectLookup(raw, "debugEventsUntilDate"))) {
         if (LDJSONGetType(tmp) != LDNumber) {
-            LD_LOG(LD_LOG_ERROR,
+            LD_LOG(
+                LD_LOG_ERROR,
                 "LDi_flag_parse debugEventsUntilDate not a number");
 
             goto error;
@@ -160,14 +163,14 @@ LDi_flag_parse(struct LDFlag *const result, const char *const key,
         result->deleted = LDGetBool(tmp);
     }
 
-    return true;
+    return LDBooleanTrue;
 
-  error:
+error:
     LDFree(result->key);
     LDJSONFree(result->value);
     LDJSONFree(result->reason);
 
-    return false;
+    return LDBooleanFalse;
 }
 
 struct LDJSON *
@@ -234,7 +237,7 @@ LDi_flag_to_json(struct LDFlag *const flag)
     tmp = NULL;
 
     if (flag->trackEvents) {
-        if (!(tmp = LDNewBool(true))) {
+        if (!(tmp = LDNewBool(LDBooleanTrue))) {
             goto error;
         }
 
@@ -267,7 +270,7 @@ LDi_flag_to_json(struct LDFlag *const flag)
     }
 
     if (flag->deleted) {
-        if (!(tmp = LDNewBool(true))) {
+        if (!(tmp = LDNewBool(LDBooleanTrue))) {
             goto error;
         }
 
@@ -279,7 +282,7 @@ LDi_flag_to_json(struct LDFlag *const flag)
 
     return result;
 
-  error:
+error:
     LDJSONFree(result);
     LDJSONFree(tmp);
 

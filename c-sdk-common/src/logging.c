@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <launchdarkly/logging.h>
 
@@ -14,13 +14,27 @@ const char *
 LDLogLevelToString(const LDLogLevel level)
 {
     switch (level) {
-        case LD_LOG_FATAL:    return "LD_LOG_FATAL";    break;
-        case LD_LOG_CRITICAL: return "LD_LOG_CRITICAL"; break;
-        case LD_LOG_ERROR:    return "LD_LOG_ERROR";    break;
-        case LD_LOG_WARNING:  return "LD_LOG_WARNING";  break;
-        case LD_LOG_INFO:     return "LD_LOG_INFO";     break;
-        case LD_LOG_DEBUG:    return "LD_LOG_DEBUG";    break;
-        case LD_LOG_TRACE:    return "LD_LOG_TRACE";    break;
+    case LD_LOG_FATAL:
+        return "LD_LOG_FATAL";
+        break;
+    case LD_LOG_CRITICAL:
+        return "LD_LOG_CRITICAL";
+        break;
+    case LD_LOG_ERROR:
+        return "LD_LOG_ERROR";
+        break;
+    case LD_LOG_WARNING:
+        return "LD_LOG_WARNING";
+        break;
+    case LD_LOG_INFO:
+        return "LD_LOG_INFO";
+        break;
+    case LD_LOG_DEBUG:
+        return "LD_LOG_DEBUG";
+        break;
+    case LD_LOG_TRACE:
+        return "LD_LOG_TRACE";
+        break;
     }
 
     return NULL;
@@ -46,7 +60,7 @@ LDBasicLoggerThreadSafe(const LDLogLevel level, const char *const text)
     }
 
     printf("[%s] %s\n", LDLogLevelToString(level), text);
-    
+
     LDi_mutex_nl_unlock(&basicLoggerLock);
 }
 
@@ -57,17 +71,18 @@ LDBasicLoggerThreadSafeShutdown(void)
 }
 
 void
-LDConfigureGlobalLogger(const LDLogLevel level,
+LDConfigureGlobalLogger(
+    const LDLogLevel level,
     void (*logger)(const LDLogLevel level, const char *const text))
 {
-    sdklogger = logger;
+    sdklogger      = logger;
     sdkloggerlevel = level;
 }
 
 void
 LDi_log(const LDLogLevel level, const char *const format, ...)
 {
-    char buffer[4096];
+    char    buffer[4096];
     va_list va;
 
     if (!format || !sdklogger || level > sdkloggerlevel) {

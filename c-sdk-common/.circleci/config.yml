@@ -1,10 +1,16 @@
 version: 2.1
 
+orbs:
+   win: circleci/windows@1.0.0
+
 workflows:
   version: 2
   build_and_test_all:
     jobs:
       - build-test-linux
+      - build-test-osx
+      - build-test-windows
+
 jobs:
   build-test-linux:
     docker:
@@ -13,8 +19,39 @@ jobs:
       - checkout
       - run:
           name: Build
-          command: |
-            mkdir -p build
-            cd build
-            cmake ..
-            make
+          command: mkdir -p build && cd build && cmake .. && make
+      - run:
+          name: Test
+          command: cd build && make test
+
+  build-test-osx:
+    macos:
+      xcode: "9.4.1"
+    environment:
+      CTEST_OUTPUT_ON_FAILURE: 1
+    steps:
+      - checkout
+      - run:
+          name: Install prerequisites
+          command: HOMEBREW_NO_AUTO_UPDATE=1 brew install cmake
+      - run:
+          name: Build
+          command: mkdir -p build && cd build && cmake .. && make
+      - run:
+          name: Test
+          command: cd build && make test
+
+  build-test-windows:
+    executor:
+      name: win/vs2019
+      shell: powershell.exe
+    environment:
+      CTEST_OUTPUT_ON_FAILURE: 1
+    steps:
+      - checkout
+      - run:
+          name: build
+          command: ./scripts/build.ps1
+      - run:
+          name: Test
+          command: ./scripts/test.ps1

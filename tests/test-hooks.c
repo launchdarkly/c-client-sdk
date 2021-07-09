@@ -4,7 +4,7 @@
 
 #include "ldinternal.h"
 
-bool callCount;
+LDBoolean callCount;
 
 void
 hook(const char *const name, const int change)
@@ -15,7 +15,7 @@ hook(const char *const name, const int change)
 void
 testBasicHookUpsert(void)
 {
-    struct LDFlag flag;
+    struct LDFlag  flag;
     struct LDStore store;
 
     callCount = 0;
@@ -24,13 +24,13 @@ testBasicHookUpsert(void)
     LD_ASSERT(LDi_storeRegisterListener(&store, "test", hook));
 
     flag.key                  = LDStrDup("test");
-    flag.value                = LDNewBool(true);
+    flag.value                = LDNewBool(LDBooleanTrue);
     flag.version              = 2;
     flag.variation            = 3;
-    flag.trackEvents          = false;
+    flag.trackEvents          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
-    flag.deleted              = false;
+    flag.deleted              = LDBooleanFalse;
 
     LD_ASSERT(flag.key);
     LD_ASSERT(flag.value);
@@ -56,13 +56,13 @@ testBasicHookPut(void)
     LD_ASSERT(LDi_storeRegisterListener(&store, "test", hook));
 
     flag->key                  = LDStrDup("test");
-    flag->value                = LDNewBool(true);
+    flag->value                = LDNewBool(LDBooleanTrue);
     flag->version              = 2;
     flag->variation            = 3;
-    flag->trackEvents          = false;
+    flag->trackEvents          = LDBooleanFalse;
     flag->reason               = NULL;
     flag->debugEventsUntilDate = 0;
-    flag->deleted              = false;
+    flag->deleted              = LDBooleanFalse;
 
     LD_ASSERT(flag->key);
     LD_ASSERT(flag->value);
