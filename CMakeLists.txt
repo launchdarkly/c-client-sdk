@@ -23,7 +23,7 @@ include(CTest)
 if(BUILD_TESTING)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     configure_file(CMakeLists.txt.in
-            googletest-download/CMakeLists.txt)
+            ${CMAKE_BINARY_DIR}/googletest-download/CMakeLists.txt)
     execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
     execute_process(COMMAND ${CMAKE_COMMAND} --build .
