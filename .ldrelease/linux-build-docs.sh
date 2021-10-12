@@ -8,6 +8,4 @@ PROJECT_DIR=$(pwd)
 
 doxygen
 
-mkdir -p $PROJECT_DIR/artifacts
-cd $PROJECT_DIR/docs/build/html
-zip -r $PROJECT_DIR/artifacts/docs.zip *
+cp -r ${PROJECT_DIR}/docs/build/html/* ${LD_RELEASE_DOCS_DIR}

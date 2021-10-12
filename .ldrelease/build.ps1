@@ -2,6 +2,14 @@
 
 $ErrorActionPreference = "Stop"
 
+$global:ProgressPreference = "SilentlyContinue"  # prevents console errors from CircleCI host
+
+# The built in powershell zip seems to be horribly broken when working with nested directories.
+# We only need this if we're doing a release as opposed to just building in CI
+if ("${env:LD_RELEASE_ARTIFACTS_DIR}" -ne "") {
+    choco install zip    
+}
+
 Import-Module ".\.ldrelease\helpers.psm1" -Force
 
 SetupVSToolsEnv -architecture amd64
@@ -86,3 +94,29 @@ ExecuteOrFail {
 ExecuteOrFail { cmake --build . --config Debug }
 ExecuteOrFail { cmake --build . --target install --config Debug }
 Pop-Location
+
+# Copy the binary archives to the artifacts directory; Releaser will find them
+# there and attach them to the release (this also makes the artifacts available
+# in dry-run mode)
+
+# Check if the Releaser variable exists because this script could also be called
+# from CI
+if ("${env:LD_RELEASE_ARTIFACTS_DIR}" -ne "") {
+    $prefix = $env:LD_LIBRARY_FILE_PREFIX  # set in .ldrelease/config.yml
+
+    cd "build-static-release/artifacts"
+    zip -r "${env:LD_RELEASE_ARTIFACTS_DIR}/${prefix}-static-release.zip" *
+    cd ../..
+
+    cd "build-dynamic-release/artifacts"
+    zip -r "${env:LD_RELEASE_ARTIFACTS_DIR}/${prefix}-dynamic-release.zip" *
+    cd ../..
+
+    cd "build-static-debug/artifacts"
+    zip -r "${env:LD_RELEASE_ARTIFACTS_DIR}/${prefix}-static-debug.zip" *
+    cd ../..
+
+    cd "build-dynamic-debug/artifacts"
+    zip -r "${env:LD_RELEASE_ARTIFACTS_DIR}/${prefix}-dynamic-debug.zip" *
+    cd ../..
+}
