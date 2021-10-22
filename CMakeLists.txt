@@ -31,7 +31,7 @@ if(BUILD_TESTING)
 
 
     add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
-            ${CMAKE_BINARY_DIR}/googletest-build)
+            ${CMAKE_BINARY_DIR}/googletest-build EXCLUDE_FROM_ALL)
 
     enable_testing()
     add_subdirectory(tests)
