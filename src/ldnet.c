@@ -8,8 +8,9 @@
 
 #include "ldinternal.h"
 
-#define LD_STREAMTIMEOUT 300
+#define LD_STREAMTIMEOUT_MS 300000
 #define LD_USER_AGENT_HEADER "User-Agent: CClient/" LD_SDK_VERSION
+#define UNUSED(x) (void)(x)
 
 struct MemoryStruct
 {
@@ -20,8 +21,8 @@ struct MemoryStruct
 struct streamdata
 {
     struct MemoryStruct mem;
-    time_t              lastdatatime;
-    double              lastdataamt;
+    double              lastdatatime;
+    curl_off_t          lastdataamt;
     struct LDClient *   client;
     struct LDSSEParser *parser;
 };
@@ -75,6 +76,48 @@ StreamWriteCallback(
 
     if (LDSSEParserProcess(context->parser, contents, realSize)) {
         return realSize;
+    }
+
+    return 0;
+}
+
+/*
+ * Handle progress from CURL. If there is no increase in transferred data for
+ * more than LD_STREAMTIMEOUT_MS, then return 1, which will cause
+ * CURL to abort the connection. When the pending CURL operation returns,
+ * then the reconnect logic activates.
+ */
+static int
+ProgressCallback(void *clientp,
+                 curl_off_t dltotal, /* Total expected download. */
+                 curl_off_t dlnow,   /* Total downloaded so far. */
+                 curl_off_t ultotal, /* Total expected upload. */
+                 curl_off_t ulnow)   /* The total uploaded so far. */
+{
+    struct streamdata *context;
+    double currentTime;
+    double elapsedTime;
+
+    /* These are a required part of the callback interface,
+     * but we don't need them. */
+    UNUSED(dltotal);
+    UNUSED(ultotal);
+    UNUSED(ulnow);
+
+    LD_ASSERT(clientp);
+    context  = (struct streamdata *)clientp;
+
+    if (context->lastdataamt == dlnow) {
+        LDi_getMonotonicMilliseconds(&currentTime);
+
+        elapsedTime = currentTime - context->lastdatatime;
+        if (elapsedTime > LD_STREAMTIMEOUT_MS) {
+            /* Returning non-zero will cause CURL to abort the request. */
+            return 1;
+        }
+    } else {
+        LDi_getMonotonicMilliseconds(&context->lastdatatime);
+        context->lastdataamt = dlnow;
     }
 
     return 0;
@@ -293,8 +336,10 @@ LDi_readstream(
     memset(&streamdata, 0, sizeof(streamdata));
 
     streamdata.parser       = parser;
-    streamdata.lastdatatime = time(NULL);
+    streamdata.lastdataamt  = 0;
     streamdata.client       = client;
+
+    LDi_getMonotonicMilliseconds(&streamdata.lastdatatime);
 
     LDi_rwlock_rdlock(&client->clientLock);
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
@@ -443,6 +488,28 @@ LDi_readstream(
 
     if (curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist) != CURLE_OK) {
         LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_HTTPHEADER failed");
+
+        goto cleanup;
+    }
+
+    /* This needs set or progress callbacks will not be made. */
+    if (curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0)) {
+        LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_NOPROGRESS failed");
+
+        goto cleanup;
+    }
+
+    /* Expose the data to the progress callback so it can track the last time
+     * that data was received. */
+    if (curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &streamdata) != CURLE_OK) {
+        LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_XFERINFODATA failed");
+
+        goto cleanup;
+    }
+
+    if (curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION,
+                        ProgressCallback)) {
+        LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_XFERINFOFUNCTION failed");
 
         goto cleanup;
     }
@@ -616,6 +683,12 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         goto error;
     }
 
+    if (curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)client->shared->sharedConfig->requestTimeoutMillis)) {
+        LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_TIMEOUT_MS failed");
+
+        goto error;
+    }
+
     if (curl_easy_perform(curl) == CURLE_OK) {
         long response_code;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
@@ -730,6 +803,12 @@ LDi_sendevents(
 
     if (curl_easy_setopt(curl, CURLOPT_POSTFIELDS, eventdata) != CURLE_OK) {
         LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_POSTFIELDS failed");
+
+        goto cleanup;
+    }
+
+    if (curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)client->shared->sharedConfig->requestTimeoutMillis)) {
+        LD_LOG(LD_LOG_CRITICAL, "curl_easy_setopt CURLOPT_TIMEOUT_MS failed");
 
         goto cleanup;
     }

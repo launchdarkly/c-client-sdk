@@ -34,10 +34,17 @@ LDConfigSetBackgroundPollingIntervalMillis(
 LD_EXPORT(LDBoolean)
 LDConfigSetAppURI(struct LDConfig *const config, const char *const uri);
 
-/** @brief Sets the timeout in milliseconds when connecting to LaunchDarkly. */
+/** @brief Sets the timeout in milliseconds when connecting to LaunchDarkly.
+ * @deprecated This is deprecated in favor of LDConfigSetConnectionTimeoutMillis.
+ * */
 LD_EXPORT(void)
 LDConfigSetConnectionTimeoutMillies(
     struct LDConfig *const config, const int millis);
+
+/** @brief Sets the timeout in milliseconds when connecting to LaunchDarkly. */
+LD_EXPORT(void)
+LDConfigSetConnectionTimeoutMillis(
+        struct LDConfig *const config, const int millis);
 
 /** @brief Enable or disable background updating */
 LD_EXPORT(void)
@@ -157,6 +164,12 @@ LDConfigSetInlineUsersInEvents(
  * Defaults to false. */
 LD_EXPORT(void)
 LDConfigAutoAliasOptOut(struct LDConfig *const config, const LDBoolean optOut);
+
+/** @brief Sets the timeout, in milliseconds, for requests to LaunchDarkly.
+ *  Applies to polling requests and sending events. A value of 0 specifies
+ *  that the request will never timeout. Defaults to 30000. */
+LD_EXPORT(void)
+LDConfigSetRequestTimeoutMillis(struct LDConfig *const config, const int millis);
 
 /** @brief Free an existing `LDConfig` instance.
  *
