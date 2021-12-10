@@ -2,6 +2,20 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.0] - 2021-12-10
+### Added:
+- Added a new configuration for request timeouts. Use `LDConfigSetRequestTimeoutMillis` to set the timeout for non-streaming requests. The default timeout is 30 seconds. This includes the total time for the request including connection.
+- Added a new method for configuring connection timeouts. `LDConfigSetConnectionTimeoutMillis`.
+
+### Changed:
+- Unit tests have been converted to use googletest.
+
+### Fixed:
+- Fixed an issue where inactive stream connections could remain open indefinitely. Now streams will be closed after 5 minutes of inactivity and the SDK will attempt to establish a new connection.
+
+### Deprecated:
+- Deprecated `LDConfigSetConnectionTimeoutMillies`. The `LDConfigSetConnectionTimeoutMillis` method should be used instead.
+
 ## [2.3.1] - 2021-07-09
 ### Fixed:
 - Add more restrictive build flags and fix warnings
