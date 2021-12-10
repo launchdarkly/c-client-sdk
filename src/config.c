@@ -27,6 +27,7 @@ LDConfigNew(const char *const mobileKey)
     config->allAttributesPrivate            = LDBooleanFalse;
     config->backgroundPollingIntervalMillis = 15 * 60 * 1000;
     config->connectionTimeoutMillis         = 10 * 1000;
+    config->requestTimeoutMillis            = 30 * 1000;
     config->disableBackgroundUpdating       = LDBooleanFalse;
     config->eventsCapacity                  = 100;
     config->eventsFlushIntervalMillis       = 30000;
@@ -144,7 +145,7 @@ LDConfigSetAppURI(struct LDConfig *const config, const char *const uri)
 }
 
 void
-LDConfigSetConnectionTimeoutMillies(
+LDConfigSetConnectionTimeoutMillis(
     struct LDConfig *const config, const int millis)
 {
     LD_ASSERT_API(config);
@@ -159,6 +160,31 @@ LDConfigSetConnectionTimeoutMillies(
 #endif
 
     config->connectionTimeoutMillis = millis;
+}
+
+void
+LDConfigSetConnectionTimeoutMillies(
+    struct LDConfig *const config, const int millis)
+{
+    LDConfigSetConnectionTimeoutMillis(config, millis);
+}
+
+void
+LDConfigSetRequestTimeoutMillis(
+        struct LDConfig *const config, const int millis)
+{
+    LD_ASSERT_API(config);
+
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (config == NULL) {
+        LD_LOG(
+                LD_LOG_WARNING, "LDConfigSetRequestTimeoutMillis NULL config");
+
+        return;
+    }
+#endif
+
+    config->requestTimeoutMillis = millis;
 }
 
 void

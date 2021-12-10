@@ -9,6 +9,7 @@ struct LDConfig
     int          backgroundPollingIntervalMillis;
     char *       appURI;
     int          connectionTimeoutMillis;
+    int          requestTimeoutMillis;
     LDBoolean    disableBackgroundUpdating;
     unsigned int eventsCapacity;
     int          eventsFlushIntervalMillis;

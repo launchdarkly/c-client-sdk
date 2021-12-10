@@ -20,13 +20,19 @@ jobs:
     steps:
       - checkout
       - run:
+            name: Install prerequisites
+            command: |
+              apt-get update -y && apt-get install -y git
+      - run:
           name: Build
           command: ./.ldrelease/build.sh
       - run:
           name: Unit test with memcheck
           command: |
             cd build-static
-            ctest -T memcheck
+            GTEST_OUTPUT="xml:$(pwd)/../reports/" ctest -T memcheck
+      - store_test_results:
+          path: reports
 
   build-test-osx:
     macos:
@@ -44,6 +50,8 @@ jobs:
       - run:
           name: Test
           command: ./.ldrelease/test.sh
+      - store_test_results:
+          path: reports
 
   build-test-windows:
     executor:
@@ -59,3 +67,5 @@ jobs:
       - run:
           name: Test
           command: ./.ldrelease/test.ps1
+      - store_test_results:
+          path: reports
