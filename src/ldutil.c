@@ -191,12 +191,18 @@ LDi_deviceid(void)
 
     RegCloseKey(hkey);
 #elif __APPLE__
+
+    /* Before macOS 12 Monterey, this was named Master instead of Main. */
+    #if (MAC_OS_X_VERSION_MAX_ALLOWED < 120000)
+        #define kIOMainPortDefault kIOMasterPortDefault
+    #endif
+
     io_registry_entry_t entry;
     CFStringRef         uuid;
 
     memset(buffer, 0, sizeof(buffer));
 
-    entry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+    entry = IORegistryEntryFromPath(kIOMainPortDefault, "IOService:/");
 
     if (!entry) {
         LD_LOG(LD_LOG_ERROR, "LDi_deviceid IORegistryEntryFromPath failed");
