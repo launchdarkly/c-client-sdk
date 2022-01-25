@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.1] - 2022-01-25
+### Fixed:
+- Fixed build issue on MacOS Monterey 12.1 due to deprecation of a symbol.
+
 ## [2.4.0] - 2021-12-10
 ### Added:
 - Added a new configuration for request timeouts. Use `LDConfigSetRequestTimeoutMillis` to set the timeout for non-streaming requests. The default timeout is 30 seconds. This includes the total time for the request including connection.

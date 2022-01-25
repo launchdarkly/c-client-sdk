@@ -8,7 +8,7 @@
 
 /** @brief The current SDK version string. This value adheres to semantic
  * versioning and is included in the HTTP user agent sent to LaunchDarkly. */
-#define LD_SDK_VERSION "2.4.0"
+#define LD_SDK_VERSION "2.4.1"
 
 #ifdef __cplusplus
 #include <string>
