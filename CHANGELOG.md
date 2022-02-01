@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.2] - 2022-02-01
+### Fixed:
+- Allow macOS 11 build target to compile successfully using macOS 12 host.
+
 ## [2.4.1] - 2022-01-25
 ### Fixed:
 - Fixed build issue on MacOS Monterey 12.1 due to deprecation of a symbol.
