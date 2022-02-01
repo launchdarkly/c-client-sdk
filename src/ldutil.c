@@ -193,7 +193,7 @@ LDi_deviceid(void)
 #elif __APPLE__
 
     /* Before macOS 12 Monterey, this was named Master instead of Main. */
-    #if (MAC_OS_X_VERSION_MAX_ALLOWED < 120000)
+    #if (MAC_OS_X_VERSION_MIN_REQUIRED < 120000)
         #define kIOMainPortDefault kIOMasterPortDefault
     #endif
 
