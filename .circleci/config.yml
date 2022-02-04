@@ -36,7 +36,8 @@ jobs:
 
   build-test-osx:
     macos:
-      xcode: "12.5.0"
+      xcode: "12.5.1"
+    resource_class: macos.x86.medium.gen2
     environment:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
