@@ -2,6 +2,17 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.3] - 2022-02-16
+### Fixed:
+- Fixed `uninitialized variable` compiler errors when compiled at `-O3`.
+- Fixed streaming connection retry behavior when SDK was unable to resolve remote hostname.
+
+### Added:
+- Added new CircleCI job to validate `-O3` build.
+
+### Changed:
+- Changed CircleCI macOS executors to Gen2 resource class.
+
 ## [2.4.2] - 2022-02-01
 ### Fixed:
 - Allow macOS 11 build target to compile successfully using macOS 12 host.
