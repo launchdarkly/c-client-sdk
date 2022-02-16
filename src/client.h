@@ -5,6 +5,7 @@
 #include "config.h"
 #include "store.h"
 #include "user.h"
+#include "socket.h"
 
 struct LDGlobal_i
 {
@@ -31,7 +32,7 @@ struct LDClient
     ld_cond_t              streamCond;
     ld_mutex_t             condMtx;
     LDBoolean              shouldstopstreaming;
-    int                    streamhandle;
+    struct ld_socket_state streamhandle;
     struct EventProcessor *eventProcessor;
     struct LDStore         store;
     ld_cond_t              initCond;

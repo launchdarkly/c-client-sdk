@@ -44,7 +44,7 @@ LDi_fetchfeaturemap(struct LDClient *client, int *response);
 void
 LDi_readstream(
     struct LDClient *const    client,
-    int *                     response,
+    long *                     response,
     struct LDSSEParser *const parser,
     void                      cbhandle(struct LDClient *client, int handle));
 

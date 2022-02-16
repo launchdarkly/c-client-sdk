@@ -711,7 +711,7 @@ LDi_bundleEventPayload(
 struct LDJSON *
 LDi_valueToJSON(const void *const value, const LDJSONType valueType)
 {
-    struct LDJSON *tmp;
+    struct LDJSON *tmp = NULL;
 
     LD_ASSERT(value);
 

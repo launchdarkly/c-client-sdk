@@ -306,7 +306,7 @@ LDi_cancelread(const int handle)
 void
 LDi_readstream(
     struct LDClient *const    client,
-    int *                     response,
+    long *                     response,
     struct LDSSEParser *const parser,
     void                      cbhandle(struct LDClient *, int))
 {
@@ -516,13 +516,15 @@ LDi_readstream(
 
     LD_LOG_1(LD_LOG_INFO, "connecting to stream %s", url);
     res = curl_easy_perform(curl);
+
+    /* CURL_LAST = 99 so the union of curl responses + http response codes should have no overlap. */
     if (res == CURLE_OK) {
         long response_code;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
         LD_LOG_1(LD_LOG_DEBUG, "curl response code %d", (int)response_code);
         *response = response_code;
     } else {
-        *response = -1;
+        *response = res;
     }
 
 cleanup:
