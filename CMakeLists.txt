@@ -118,6 +118,8 @@ else()
                 -D _GNU_SOURCE
     )
 
+    message(STATUS "Extra compile options: ${EXTRA_COMPILE_OPTIONS}")
+
     target_compile_options(ldclientapi
         PRIVATE -fno-omit-frame-pointer
                 -pedantic
@@ -128,6 +130,7 @@ else()
                 -Wmissing-prototypes
                 -Wmissing-declarations
                 -std=c89
+                ${EXTRA_COMPILE_OPTIONS}
     )
 endif(MSVC)
 

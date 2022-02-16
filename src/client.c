@@ -955,9 +955,9 @@ LDStringVariationDetail(
     const size_t              bufferSize,
     LDVariationDetails *const details)
 {
-    size_t              resultLength;
-    char *              value;
-    struct LDStoreNode *selected;
+    size_t resultLength;
+    char *value = NULL;
+    struct LDStoreNode *selected = NULL;
 
     LD_ASSERT_API(client);
     LD_ASSERT_API(key);
@@ -986,7 +986,7 @@ LDStringVariation(
     const size_t           bufferSize)
 {
     size_t resultLength;
-    char * value;
+    char *value = NULL;
 
     LD_ASSERT_API(client);
     LD_ASSERT_API(key);
@@ -1009,8 +1009,8 @@ LDStringVariationAllocDetail(
     const char *const         fallback,
     LDVariationDetails *const details)
 {
-    char *              value;
-    struct LDStoreNode *selected;
+    char *value = NULL;
+    struct LDStoreNode *selected = NULL;
 
     LD_ASSERT_API(client);
     LD_ASSERT_API(key);
@@ -1032,7 +1032,7 @@ LDStringVariationAlloc(
     const char *const      key,
     const char *const      fallback)
 {
-    char *value;
+    char *value = NULL;
 
     LD_ASSERT_API(client);
     LD_ASSERT_API(key);

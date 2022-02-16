@@ -12,7 +12,12 @@ base=$(pwd)
 
 mkdir -p build-static && cd build-static
 mkdir -p release
-cmake -D CMAKE_INSTALL_PREFIX=./release ..
+
+if [ $# -ge 1 ] && [ -n "$1" ]; then
+  cmake -D EXTRA_COMPILE_OPTIONS="$1" -D CMAKE_INSTALL_PREFIX=./release ..
+else
+  cmake -D CMAKE_INSTALL_PREFIX=./release ..
+fi
 cmake --build .
 cmake --build . --target install
 cd ..

@@ -8,6 +8,7 @@ workflows:
   build_and_test_all:
     jobs:
       - build-test-linux
+      - build-linux-o3
       - build-test-osx
       - build-test-windows
 
@@ -33,6 +34,19 @@ jobs:
             GTEST_OUTPUT="xml:$(pwd)/../reports/" ctest -T memcheck
       - store_test_results:
           path: reports
+
+  build-linux-o3:
+    docker:
+      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
+    steps:
+      - checkout
+      - run:
+          name: Install prerequisites
+          command: |
+            apt-get update -y && apt-get install -y git
+      - run:
+          name: Build
+          command: ./.ldrelease/build.sh -O3
 
   build-test-osx:
     macos:
