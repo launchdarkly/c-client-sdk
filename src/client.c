@@ -87,7 +87,8 @@ LDi_clientInitIsolated(
     client->background          = LDBooleanFalse;
     client->status              = LDStatusInitializing;
     client->shouldstopstreaming = LDBooleanFalse;
-    client->streamhandle        = 0;
+
+    LDi_initSocket(&client->streamhandle);
 
     if (!LDSetString(&client->mobileKey, mobileKey)) {
         goto err1;

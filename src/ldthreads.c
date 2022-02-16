@@ -9,6 +9,8 @@
 #include <launchdarkly/api.h>
 #include <launchdarkly/json.h>
 
+#include <curl/curl.h>
+
 #include "flag.h"
 #include "ldinternal.h"
 
@@ -376,16 +378,21 @@ static void
 LDi_updatehandle(struct LDClient *const client, const int handle)
 {
     LDi_rwlock_wrlock(&client->clientLock);
-    client->streamhandle = handle;
+    LDi_socketStore(&client->streamhandle, handle);
     LDi_rwlock_wrunlock(&client->clientLock);
 }
 
 void
 LDi_reinitializeconnection(struct LDClient *const client)
 {
-    if (client->streamhandle) {
-        LDi_cancelread(client->streamhandle);
-        client->streamhandle = 0;
+    LDBoolean socketOpen;
+    int socketHandle;
+
+    socketOpen = LDi_socketLoad(&client->streamhandle, &socketHandle);
+
+    if (socketOpen) {
+        LDi_cancelread(socketHandle);
+        LDi_socketClose(&client->streamhandle);
     }
     LDi_cond_signal(&client->pollCond);
     LDi_cond_signal(&client->streamCond);
@@ -456,7 +463,7 @@ LDi_bgfeaturestreamer(void *const v)
 
     while (LDBooleanTrue) {
         time_t    startedOn;
-        int       response;
+        long       response;
         LDBoolean intentionallyClosed;
 
         /* Wait on any retry delays required. Status change such as shut down
@@ -512,7 +519,10 @@ LDi_bgfeaturestreamer(void *const v)
             LDSSEParserDestroy(&parser);
         }
 
-        if (response >= 400 && response < 500) {
+        if (response == CURLE_COULDNT_RESOLVE_HOST) {
+            LD_LOG(LD_LOG_ERROR, "couldn't resolve host for streaming endpoint");
+
+        } else if (response >= 400 && response < 500) {
             LDBoolean permanentFailure = LDBooleanFalse;
 
             if (response == 401 || response == 403) {
@@ -539,7 +549,7 @@ LDi_bgfeaturestreamer(void *const v)
         }
 
         LDi_rwlock_rdlock(&client->clientLock);
-        intentionallyClosed = client->streamhandle == 0;
+        intentionallyClosed = LDi_socketClosed(&client->streamhandle);
         LDi_rwlock_rdunlock(&client->clientLock);
 
         if (intentionallyClosed) {
