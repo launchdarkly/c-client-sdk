@@ -1,0 +1,107 @@
+{
+   The object is not a mutex (drd)
+   drd:MutexErr
+   fun:pthread_mutex_destroy
+   obj:/usr/lib/x86_64-linux-gnu/libp11-kit.so.0.3.0
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+   fun:(below main)
+}
+{
+   The object is not a mutex (drd)
+   drd:MutexErr
+   fun:pthread_mutex_destroy
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+   fun:(below main)
+}
+
+{
+   Potentially unprotected condvar
+   drd:CondRaceErr
+   fun:pthread_cond_broadcast@*
+   fun:LDi_cond_signal_imp
+   fun:LDi_reinitializeconnection
+   fun:clientCloseIsolated
+   fun:LDClientClose
+   fun:_ZN25AllFlagsWithClientFixture8TearDownEv
+   fun:_ZN7testing8internal38HandleSehExceptionsInMethodIfSupportedINS_4TestEvEET0_PT_MS4_FS3_vEPKc
+   fun:_ZN7testing8internal35HandleExceptionsInMethodIfSupportedINS_4TestEvEET0_PT_MS4_FS3_vEPKc
+   fun:_ZN7testing4Test3RunEv
+   fun:_ZN7testing8TestInfo3RunEv
+   fun:_ZN7testing9TestSuite3RunEv
+   fun:_ZN7testing8internal12UnitTestImpl11RunAllTestsEv
+}
+{
+   Potentially unprotected condvar
+   drd:CondRaceErr
+   fun:pthread_cond_broadcast@*
+   fun:LDi_cond_signal_imp
+   fun:LDi_startstopstreaming
+   fun:LDClientSetBackground
+   fun:_ZN29ClientFixture_ClientMisc_Test8TestBodyEv
+   fun:_ZN7testing8internal38HandleSehExceptionsInMethodIfSupportedINS_4TestEvEET0_PT_MS4_FS3_vEPKc
+   fun:_ZN7testing8internal35HandleExceptionsInMethodIfSupportedINS_4TestEvEET0_PT_MS4_FS3_vEPKc
+   fun:_ZN7testing4Test3RunEv
+   fun:_ZN7testing8TestInfo3RunEv
+   fun:_ZN7testing9TestSuite3RunEv
+   fun:_ZN7testing8internal12UnitTestImpl11RunAllTestsEv
+   fun:_ZN7testing8internal38HandleSehExceptionsInMethodIfSupportedINS0_12UnitTestImplEbEET0_PT_MS4_FS3_vEPKc
+}
+{
+   Potentially unprotected condvar
+   drd:CondRaceErr
+   fun:pthread_cond_broadcast@*
+   fun:LDi_cond_signal_imp
+   fun:LDi_updatestatus
+   fun:LDi_onstreameventput
+   fun:LDi_bgfeaturepoller
+   obj:/usr/lib/x86_64-linux-gnu/valgrind/vgpreload_drd-amd64-linux.so
+   fun:start_thread
+   fun:clone
+}
+{
+   Conflicting load within getaddrinfo
+   drd:ConflictingAccess
+   ...
+   fun:getaddrinfo
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/valgrind/vgpreload_drd-amd64-linux.so
+   fun:start_thread
+   ...
+}
+{
+   Conflicting load in curl
+   drd:ConflictingAccess
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   fun:curl_multi_perform
+   fun:curl_easy_perform
+   fun:LDi_sendevents
+   fun:LDi_bgeventsender
+   obj:/usr/lib/x86_64-linux-gnu/valgrind/vgpreload_drd-amd64-linux.so
+}
+{
+   Conflicting load in curl
+   drd:ConflictingAccess
+   ...
+   fun:SSL_CTX_new
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
+   fun:curl_multi_perform
+   fun:curl_easy_perform
+   ...
+}

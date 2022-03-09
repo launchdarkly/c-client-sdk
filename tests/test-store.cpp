@@ -14,6 +14,8 @@ protected:
     struct LDClient *client;
 
     void SetUp() override {
+        CommonFixture::SetUp();
+
         struct LDConfig *config;
         struct LDUser *user;
 
@@ -23,7 +25,6 @@ protected:
         LD_ASSERT(user = LDUserNew("test-user"));
 
         LD_ASSERT(client = LDClientInit(config, user, 0));
-        CommonFixture::SetUp();
     }
 
     void TearDown() override {
