@@ -51,8 +51,9 @@ LDi_storeInitialize(struct LDStore *const store)
     }
 
     store->flags       = NULL;
-    store->listeners   = NULL;
     store->initialized = LDBooleanFalse;
+
+    LDi_initListeners(&store->listeners);
 
     return LDBooleanTrue;
 }
@@ -61,20 +62,9 @@ void
 LDi_storeDestroy(struct LDStore *const store)
 {
     if (store) {
-        struct LDStoreListener *iter;
-
         LDi_storeFreeHash(store->flags);
         LDi_rwlock_destroy(&store->lock);
-
-        iter = store->listeners;
-
-        while (iter) {
-            /* must record next to make delete safe */
-            struct LDStoreListener *const next = iter->next;
-            LDFree(iter->key);
-            LDFree(iter);
-            iter = next;
-        }
+        LDi_freeListeners(&store->listeners);
     }
 }
 
@@ -102,16 +92,10 @@ static void
 LDi_fireListenersFor(
     struct LDStore *const store, const char *const key, const LDBoolean deleted)
 {
-    struct LDStoreListener *iter;
-
     LD_ASSERT(store);
     LD_ASSERT(key);
 
-    for (iter = store->listeners; iter; iter = iter->next) {
-        if (strcmp(key, iter->key) == 0) {
-            iter->fn(key, deleted);
-        }
-    }
+    LDi_listenersDispatch(store->listeners, key, deleted);
 }
 
 LDBoolean
@@ -346,68 +330,33 @@ error:
     return NULL;
 }
 
+/* Registers a listener callback for a given flag, returning true on success or if the combination of flag key and listener
+ * callback is already registered. */
 LDBoolean
-LDi_storeRegisterListener(
-    struct LDStore *const store, const char *const flagKey, LDlistenerfn op)
+LDi_storeRegisterListener(struct LDStore *const store, const char *const flagKey, LDlistenerfn op)
 {
-    struct LDStoreListener *listener;
+    LDBoolean status;
 
     LD_ASSERT(store);
     LD_ASSERT(flagKey);
     LD_ASSERT(op);
 
-    if (!(listener = LDAlloc(sizeof(*listener)))) {
-        return LDBooleanFalse;
-    }
-
-    listener->key = LDStrDup(flagKey);
-
-    if (!listener->key) {
-        LDFree(listener);
-
-        return LDBooleanFalse;
-    }
-
-    listener->fn = op;
-
     LDi_rwlock_wrlock(&store->lock);
-
-    listener->next   = store->listeners;
-    store->listeners = listener;
-
+    status = LDi_listenerAdd(&store->listeners, flagKey, op);
     LDi_rwlock_wrunlock(&store->lock);
 
-    return LDBooleanTrue;
+    return status;
 }
 
 void
-LDi_storeUnregisterListener(
-    struct LDStore *const store, const char *const flagKey, LDlistenerfn op)
+LDi_storeUnregisterListener(struct LDStore *const store, const char *const flagKey, LDlistenerfn op)
 {
-    struct LDStoreListener *listener, *previous;
 
     LD_ASSERT(store);
     LD_ASSERT(flagKey);
     LD_ASSERT(op);
 
-    previous = NULL;
-
     LDi_rwlock_wrlock(&store->lock);
-
-    for (listener = store->listeners; listener; listener = listener->next) {
-        if (listener->fn == op && strcmp(flagKey, listener->key) == 0) {
-            if (previous) {
-                previous->next = listener->next;
-            } else {
-                store->listeners = listener->next;
-            }
-
-            LDFree(listener->key);
-            LDFree(listener);
-        } else {
-            previous = listener;
-        }
-    }
-
+    LDi_listenerRemove(&store->listeners, flagKey, op);
     LDi_rwlock_wrunlock(&store->lock);
 }

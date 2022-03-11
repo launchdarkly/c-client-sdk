@@ -77,6 +77,7 @@
 {
    Conflicting load in curl
    drd:ConflictingAccess
+   ...
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
@@ -87,14 +88,12 @@
    fun:curl_multi_perform
    fun:curl_easy_perform
    fun:LDi_sendevents
-   fun:LDi_bgeventsender
-   obj:/usr/lib/x86_64-linux-gnu/valgrind/vgpreload_drd-amd64-linux.so
+   ...
 }
 {
    Conflicting load in curl
    drd:ConflictingAccess
    ...
-   fun:SSL_CTX_new
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
