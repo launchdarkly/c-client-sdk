@@ -79,28 +79,5 @@
    drd:ConflictingAccess
    ...
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   fun:curl_multi_perform
-   fun:curl_easy_perform
-   fun:LDi_sendevents
-   ...
-}
-{
-   Conflicting load in curl
-   drd:ConflictingAccess
-   ...
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
-   fun:curl_multi_perform
-   fun:curl_easy_perform
    ...
 }
