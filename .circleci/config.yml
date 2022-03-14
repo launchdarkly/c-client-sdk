@@ -11,8 +11,50 @@ workflows:
       - build-linux-o3
       - build-test-osx
       - build-test-windows
+      - build-test-linux-valgrind:
+          requires:
+            - build-test-linux
+      - build-test-linux-drd:
+          requires:
+            - build-test-linux
 
 jobs:
+  build-test-linux-valgrind:
+    docker:
+      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
+      - image: redis
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get update -y && apt-get install -y git
+      - run:
+          name: Build
+          command: ./.ldrelease/build.sh
+      - run:
+          name: Unit test with valgrind
+          command: |
+            cd build-static
+            valgrind --error-exitcode=100 --leak-check=full ./tests/google_tests
+  build-test-linux-drd:
+    docker:
+      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
+      - image: redis
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get update -y && apt-get install -y git
+      - run:
+          name: Build
+          command: ./.ldrelease/build.sh
+      - run:
+          name: Unit test with drd
+          command: |
+            cd build-static
+            valgrind --tool=drd --suppressions=../valgrind-suppressions.txt --error-exitcode=100 --gen-suppressions=all ./tests/google_tests
   build-test-linux:
     docker:
       - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
@@ -21,17 +63,17 @@ jobs:
     steps:
       - checkout
       - run:
-            name: Install prerequisites
-            command: |
-              apt-get update -y && apt-get install -y git
+          name: Install prerequisites
+          command: |
+            apt-get update -y && apt-get install -y git
       - run:
           name: Build
           command: ./.ldrelease/build.sh
       - run:
-          name: Unit test with memcheck
+          name: Unit test
           command: |
             cd build-static
-            GTEST_OUTPUT="xml:$(pwd)/../reports/" ctest -T memcheck
+            GTEST_OUTPUT="xml:$(pwd)/../reports/" make test
       - store_test_results:
           path: reports
 

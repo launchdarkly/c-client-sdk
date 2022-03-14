@@ -6,13 +6,7 @@
 #include "flag.h"
 #include "reference_count.h"
 #include "uthash.h"
-
-struct LDStoreListener
-{
-    LDlistenerfn            fn;
-    char *                  key;
-    struct LDStoreListener *next;
-};
+#include "flag_change_listener.h"
 
 struct LDStoreNode
 {
@@ -23,8 +17,8 @@ struct LDStoreNode
 
 struct LDStore
 {
-    struct LDStoreNode *    flags;
-    struct LDStoreListener *listeners;
+    struct LDStoreNode     *flags;
+    struct ChangeListener  *listeners;
     LDBoolean               initialized;
     ld_rwlock_t             lock;
 };
