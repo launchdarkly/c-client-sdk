@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.4] - 2022-03-14
+### Changed:
+- Updated CircleCI configuration with new valgrind/drd jobs.
+
+### Fixed:
+- Fixed Use-After-Free bug within `LDClientUnregisterFeatureFlagListener`
+
 ## [2.4.3] - 2022-02-16
 ### Fixed:
 - Fixed `uninitialized variable` compiler errors when compiled at `-O3`.
