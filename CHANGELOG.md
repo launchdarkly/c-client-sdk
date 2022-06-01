@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.5] - 2022-05-31
+### Fixed:
+- Fixed deadlock triggered by interaction between LDClientIdentify and background threads. (Thank you, @juancampa.)
+
 ## [2.4.4] - 2022-03-14
 ### Changed:
 - Updated CircleCI configuration with new valgrind/drd jobs.
