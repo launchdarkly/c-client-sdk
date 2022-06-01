@@ -341,14 +341,14 @@ LDi_readstream(
 
     LDi_getMonotonicMilliseconds(&streamdata.lastdatatime);
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->clientLock);
 
     userJSON = LDi_userToJSON(
         client->shared->sharedUser, LDBooleanFalse, LDBooleanFalse, NULL);
 
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (userJSON == NULL) {
         LD_LOG(LD_LOG_CRITICAL, "failed to convert user to user");
@@ -550,14 +550,14 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
     memset(&headers, 0, sizeof(headers));
     memset(&data, 0, sizeof(data));
 
-    LDi_rwlock_rdlock(&client->clientLock);
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
+    LDi_rwlock_rdlock(&client->clientLock);
 
     userJSON = LDi_userToJSON(
         client->shared->sharedUser, LDBooleanFalse, LDBooleanFalse, NULL);
 
-    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdunlock(&client->clientLock);
+    LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
 
     if (userJSON == NULL) {
         LD_LOG(LD_LOG_CRITICAL, "failed to convert user to user");
