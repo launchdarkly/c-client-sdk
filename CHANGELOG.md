@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.6] - 2022-06-03
+### Added:
+- Added documentation to C++ bindings, available in source and via Doxygen.
+
+### Removed:
+- Removed redundant `const` qualifiers in C++ bindings.
+
 ## [2.4.5] - 2022-05-31
 ### Fixed:
 - Fixed deadlock triggered by interaction between LDClientIdentify and background threads. (Thank you, @juancampa.)
