@@ -7,5 +7,7 @@ digraph "include/launchdarkly/config.h"
   Node5 [label="include/launchdarkly\l/client.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$client_8h.html",tooltip="Public Client control and variations. "];
   Node5 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node6 [label="include/launchdarkly\l/api.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$api_8h.html",tooltip="Public API. Include this for every public operation. "];
+  Node6 -> Node7 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 [label="cpp/include/launchdarkly\l/api.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$api_8hpp.html",tooltip="Public C++ bindings for the LaunchDarkly Client Side C/C++ SDK. "];
   Node4 -> Node6 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
 }

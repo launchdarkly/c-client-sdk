@@ -1,0 +1,11 @@
+digraph "cpp/include/launchdarkly" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_07f37e320deb3031a60f4b23b9c60eb5 {
+    graph [ bgcolor="#ddddee", pencolor="black", label="include" fontname="Helvetica", fontsize="10", URL="dir_07f37e320deb3031a60f4b23b9c60eb5.html"]
+  dir_99970d4fe565efff1cb44deace282069 [shape=box, label="launchdarkly", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_99970d4fe565efff1cb44deace282069.html"];
+  }
+  dir_d44c64559bbebec7f509842c48db8b23 [shape=box label="include" fillcolor="white" style="filled" color="red" URL="dir_d44c64559bbebec7f509842c48db8b23.html"];
+  dir_99970d4fe565efff1cb44deace282069->dir_d44c64559bbebec7f509842c48db8b23 [headlabel="1", labeldistance=1.5 headhref="dir_000005_000006.html"];
+}

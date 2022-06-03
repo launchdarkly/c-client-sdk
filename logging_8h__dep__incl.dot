@@ -5,4 +5,6 @@ digraph "c-sdk-common/include/launchdarkly/logging.h"
   Node2 [label="c-sdk-common/include\l/launchdarkly/logging.h",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
   Node2 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
   Node3 [label="include/launchdarkly\l/api.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$api_8h.html",tooltip="Public API. Include this for every public operation. "];
+  Node3 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node4 [label="cpp/include/launchdarkly\l/api.hpp",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$api_8hpp.html",tooltip="Public C++ bindings for the LaunchDarkly Client Side C/C++ SDK. "];
 }
