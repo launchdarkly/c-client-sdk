@@ -782,13 +782,17 @@ LDi_sendevents(
     }
     headerlist = headertmp;
 
-    LD_ASSERT(
-        snprintf(
+    {
+        int len;
+        len = snprintf(
             payloadIdHeader,
             sizeof(payloadIdHeader),
             "%s%s",
             LD_PAYLOAD_ID_HEADER,
-            payloadUUID) == sizeof(payloadIdHeader) - 1);
+            payloadUUID);
+
+        LD_ASSERT(len == sizeof(payloadIdHeader) - 1);
+    }
 
 #undef LD_PAYLOAD_ID_HEADER
 
