@@ -524,6 +524,7 @@ LDi_readstream(
         LD_LOG_1(LD_LOG_DEBUG, "curl response code %d", (int)response_code);
         *response = response_code;
     } else {
+        LD_LOG_1(LD_LOG_DEBUG, "curl_easy_perform returned error code %d", (int)res);
         *response = res;
     }
 
