@@ -782,13 +782,21 @@ LDi_sendevents(
     }
     headerlist = headertmp;
 
-    LD_ASSERT(
-        snprintf(
+    {
+        int len;
+
+        len = snprintf(
             payloadIdHeader,
             sizeof(payloadIdHeader),
             "%s%s",
             LD_PAYLOAD_ID_HEADER,
-            payloadUUID) == sizeof(payloadIdHeader) - 1);
+            payloadUUID);
+
+        if (len != sizeof(payloadIdHeader) - 1) {
+            LD_LOG(LD_LOG_CRITICAL, "unable to generate payload ID header");
+            goto cleanup;
+        }
+    }
 
 #undef LD_PAYLOAD_ID_HEADER
 
