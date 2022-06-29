@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.7] - 2022-06-29
+### Fixed:
+- Fixed generation of event payload ID header when assertions are disabled.
+
 ## [2.4.6] - 2022-06-03
 ### Added:
 - Added documentation to C++ bindings, available in source and via Doxygen.
