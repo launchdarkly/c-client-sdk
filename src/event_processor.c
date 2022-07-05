@@ -826,7 +826,19 @@ LDi_newFeatureRequestEvent(
             tmp = NULL;
         }
 
-        if (detailed && node->flag.reason) {
+        /* Evaluation reasons are not included in feature events by default to save bandwidth.
+         * They are included if either of two conditions are met:
+         *
+         * 1) The flag was evaluated with a detail method.
+         *    By using a detail method, a developer expresses interest in the evaluation reason,
+         *    and so it is added to events.
+         *
+         * 2) The flag's trackReason attribute is true.
+         *    This closes the loop on experimentation, allowing LD to
+         *    receive the reason even if (1) doesn't happen.
+         **/
+
+        if (node->flag.reason && (detailed || node->flag.trackReason)) {
             if (!(tmp = LDJSONDuplicate(node->flag.reason))) {
                 return NULL;
             }

@@ -32,6 +32,7 @@ TEST_F(HooksFixture, BasicHookUpsert) {
     flag.version = 2;
     flag.variation = 3;
     flag.trackEvents = LDBooleanFalse;
+    flag.trackReason = LDBooleanFalse;
     flag.reason = NULL;
     flag.debugEventsUntilDate = 0;
     flag.deleted = LDBooleanFalse;
@@ -67,6 +68,7 @@ TEST_F(HooksFixture, BasicHookPut) {
     flag->version = 2;
     flag->variation = 3;
     flag->trackEvents = LDBooleanFalse;
+    flag->trackReason = LDBooleanFalse;
     flag->reason = NULL;
     flag->debugEventsUntilDate = 0;
     flag->deleted = LDBooleanFalse;

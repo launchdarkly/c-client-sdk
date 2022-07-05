@@ -42,6 +42,7 @@ TEST_F(AllFlagsWithClientFixture, BasicAllFlags) {
     flag.version = 2;
     flag.variation = 3;
     flag.trackEvents = LDBooleanFalse;
+    flag.trackReason = LDBooleanFalse;
     flag.reason = NULL;
     flag.debugEventsUntilDate = 0;
     flag.deleted = LDBooleanFalse;

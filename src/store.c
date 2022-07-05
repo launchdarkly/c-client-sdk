@@ -181,6 +181,7 @@ LDi_storeDelete(
     flag.version              = version;
     flag.variation            = 0;
     flag.trackEvents          = LDBooleanFalse;
+    flag.trackReason          = LDBooleanFalse;
     flag.reason               = NULL;
     flag.debugEventsUntilDate = 0;
     flag.deleted              = LDBooleanTrue;

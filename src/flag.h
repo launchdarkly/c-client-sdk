@@ -11,6 +11,7 @@ struct LDFlag
     int            flagVersion;
     int            variation;
     LDBoolean      trackEvents;
+    LDBoolean      trackReason;
     struct LDJSON *reason;
     double         debugEventsUntilDate;
     LDBoolean      deleted;

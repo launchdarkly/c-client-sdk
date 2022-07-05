@@ -105,6 +105,7 @@ static LDFlag &fillFlag(LDJSON *const value, LDFlag &flag) {
     flag.flagVersion = -1;
     flag.variation = 3;
     flag.trackEvents = LDBooleanFalse;
+    flag.trackReason = LDBooleanFalse;
     flag.reason = NULL;
     flag.debugEventsUntilDate = 0;
     flag.deleted = LDBooleanFalse;
