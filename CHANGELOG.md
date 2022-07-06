@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.8] - 2022-07-06
+### Fixed:
+- Fixes experimentation functionality. If an experiment is running, the SDK should now properly report flag evaluation reasons to the LaunchDarkly backend.
+
 ## [2.4.7] - 2022-06-29
 ### Fixed:
 - Fixed generation of event payload ID header when assertions are disabled.
