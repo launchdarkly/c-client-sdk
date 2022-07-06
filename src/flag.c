@@ -89,7 +89,7 @@ LDi_flag_parse(
         result->version = LDGetNumber(tmp);
     }
 
-    /* variaton */
+    /* variation */
     if (!(tmp = LDObjectLookup(raw, "variation"))) {
         LD_LOG(LD_LOG_ERROR, "LDi_flag_parse expected variation");
 
@@ -118,6 +118,20 @@ LDi_flag_parse(
         result->trackEvents = LDGetBool(tmp);
     } else {
         result->trackEvents = LDBooleanFalse;
+    }
+
+
+    /* trackReason */
+    if ((tmp = LDObjectLookup(raw, "trackReason"))) {
+        if (LDJSONGetType(tmp) != LDBool) {
+            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse trackReason is not boolean");
+
+            goto error;
+        }
+
+        result->trackReason = LDGetBool(tmp);
+    } else {
+        result->trackReason = LDBooleanFalse;
     }
 
     /* debugEventsUntilDate */
@@ -242,6 +256,17 @@ LDi_flag_to_json(struct LDFlag *const flag)
         }
 
         if (!LDObjectSetKey(result, "trackEvents", tmp)) {
+            goto error;
+        }
+        tmp = NULL;
+    }
+
+    if (flag->trackReason) {
+        if (!(tmp = LDNewBool(LDBooleanTrue))) {
+            goto error;
+        }
+
+        if (!LDObjectSetKey(result, "trackReason", tmp)) {
             goto error;
         }
         tmp = NULL;

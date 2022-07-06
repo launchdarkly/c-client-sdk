@@ -107,6 +107,7 @@ TEST_F(EventsWithClientFixture, BasicSummary) {
     flag.flagVersion = -1;
     flag.variation = 3;
     flag.trackEvents = LDBooleanTrue;
+    flag.trackReason = LDBooleanFalse;
     flag.reason = NULL;
     flag.debugEventsUntilDate = 0;
     flag.deleted = LDBooleanFalse;
@@ -256,4 +257,81 @@ TEST_F(EventsFixture, ConstructAliasEvent) {
     LDJSONFree(result);
     LDUserFree(previous);
     LDUserFree(current);
+}
+
+TEST_F(EventsWithClientFixture, VariationSendsFeatureEventWithReasonIfTrackReasonIsTrue) {
+    struct LDFlag flag;
+    struct LDJSON *payload, *event, *expected, *creationDate;
+
+    flag.key = LDStrDup("flag");
+    flag.value = LDNewBool(LDBooleanTrue);
+    flag.version = 1000;
+    flag.flagVersion = -1;
+    flag.variation = 3;
+    flag.trackEvents = LDBooleanTrue;
+    flag.trackReason = LDBooleanTrue;
+    flag.reason = LDNewText("OFF");
+    flag.debugEventsUntilDate = 0;
+    flag.deleted = LDBooleanFalse;
+
+    ASSERT_TRUE(LDi_storeUpsert(&client->store, flag));
+
+    ASSERT_TRUE(LDBoolVariation(client, "flag", LDBooleanFalse));
+
+    ASSERT_TRUE(LDi_bundleEventPayload(client->eventProcessor, &payload));
+
+    ASSERT_EQ(LDCollectionGetSize(payload), 3);
+    ASSERT_TRUE(event = LDArrayLookup(payload, 1));
+
+    ASSERT_TRUE(creationDate = LDObjectLookup(event, "creationDate"));
+    ASSERT_EQ(LDJSONGetType(creationDate), LDNumber);
+    LDObjectDeleteKey(event, "creationDate");
+
+    ASSERT_TRUE(
+            expected = LDJSONDeserialize(
+                    "{\"kind\":\"feature\",\"userKey\":\"test-user\",\"key\":\"flag\",\"value\":true,\"default\":false,\"variation\":3,\"version\":1000,\"reason\":\"OFF\"}"));
+
+    ASSERT_TRUE(LDJSONCompare(event, expected));
+
+    LDJSONFree(expected);
+    LDJSONFree(payload);
+}
+
+
+TEST_F(EventsWithClientFixture, VariationSendsFeatureEventWithoutReasonIfTrackReasonIsFalse) {
+    struct LDFlag flag;
+    struct LDJSON *payload, *event, *expected, *creationDate;
+
+    flag.key = LDStrDup("flag");
+    flag.value = LDNewBool(LDBooleanTrue);
+    flag.version = 1000;
+    flag.flagVersion = -1;
+    flag.variation = 3;
+    flag.trackEvents = LDBooleanTrue;
+    flag.trackReason = LDBooleanFalse;
+    flag.reason = LDNewText("OFF");
+    flag.debugEventsUntilDate = 0;
+    flag.deleted = LDBooleanFalse;
+
+    ASSERT_TRUE(LDi_storeUpsert(&client->store, flag));
+
+    ASSERT_TRUE(LDBoolVariation(client, "flag", LDBooleanFalse));
+
+    ASSERT_TRUE(LDi_bundleEventPayload(client->eventProcessor, &payload));
+
+    ASSERT_EQ(LDCollectionGetSize(payload), 3);
+    ASSERT_TRUE(event = LDArrayLookup(payload, 1));
+
+    ASSERT_TRUE(creationDate = LDObjectLookup(event, "creationDate"));
+    ASSERT_EQ(LDJSONGetType(creationDate), LDNumber);
+    LDObjectDeleteKey(event, "creationDate");
+
+    ASSERT_TRUE(
+            expected = LDJSONDeserialize(
+                    "{\"kind\":\"feature\",\"userKey\":\"test-user\",\"key\":\"flag\",\"value\":true,\"default\":false,\"variation\":3,\"version\":1000}"));
+
+    ASSERT_TRUE(LDJSONCompare(event, expected));
+
+    LDJSONFree(expected);
+    LDJSONFree(payload);
 }

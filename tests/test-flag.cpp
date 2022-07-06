@@ -25,6 +25,7 @@ TEST_F(FlagFixture, ParseAndSerializeAllFields) {
             "\"variation\": 3,\n"
             "\"flagVersion\": 45,\n"
             "\"trackEvents\": true,\n"
+            "\"trackReason\": true,\n"
             "\"reason\": {\n"
             "\"kind\": \"ERROR\",\n"
             "\"errorKind\": \"WRONG_TYPE\"\n"

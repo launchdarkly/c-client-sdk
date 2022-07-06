@@ -52,6 +52,7 @@ makeMinimalFlag(const char *const key, struct LDJSON *const value) {
     flag.flagVersion = 4;
     flag.variation = 2;
     flag.trackEvents = LDBooleanFalse;
+    flag.trackReason = LDBooleanFalse;
     flag.reason = NULL;
     flag.debugEventsUntilDate = 0;
     flag.deleted = LDBooleanFalse;
