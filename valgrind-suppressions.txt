@@ -81,3 +81,10 @@
    obj:/usr/lib/x86_64-linux-gnu/libcurl.so.4.6.0
    ...
 }
+{
+   Conflicting access in libssl
+   drd:ConflictingAccess
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/libssl.so.1.1
+   ...
+}
