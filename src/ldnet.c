@@ -521,9 +521,10 @@ LDi_readstream(
     if (res == CURLE_OK) {
         long response_code;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-        LD_LOG_1(LD_LOG_DEBUG, "curl response code %d", (int)response_code);
+        LD_LOG_1(LD_LOG_DEBUG, "curl response code %ld", response_code);
         *response = response_code;
     } else {
+        LD_LOG_1(LD_LOG_DEBUG, "curl_easy_perform returned error code %d", res);
         *response = res;
     }
 
@@ -538,8 +539,9 @@ cleanup:
 }
 
 char *
-LDi_fetchfeaturemap(struct LDClient *const client, int *response)
+LDi_fetchfeaturemap(struct LDClient *const client, long *response)
 {
+    CURLcode            res;
     struct MemoryStruct headers, data;
     CURL *              curl       = NULL;
     struct curl_slist * headerlist = NULL, *headertmp = NULL;
@@ -691,11 +693,14 @@ LDi_fetchfeaturemap(struct LDClient *const client, int *response)
         goto error;
     }
 
-    if (curl_easy_perform(curl) == CURLE_OK) {
+    res = curl_easy_perform(curl);
+
+    if (res == CURLE_OK) {
         long response_code;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
         *response = response_code;
     } else {
+        LD_LOG_1(LD_LOG_DEBUG, "curl_easy_perform returned error code %d", res);
         *response = -1;
     }
 
@@ -723,8 +728,9 @@ LDi_sendevents(
     struct LDClient *const client,
     const char *const      eventdata,
     const char *const      payloadUUID,
-    int *const             response)
+    long *const             response)
 {
+    CURLcode            res;
     struct MemoryStruct headers, data;
     CURL *              curl       = NULL;
     struct curl_slist * headerlist = NULL, *headertmp = NULL;
@@ -823,11 +829,14 @@ LDi_sendevents(
         goto cleanup;
     }
 
-    if (curl_easy_perform(curl) == CURLE_OK) {
+    res = curl_easy_perform(curl);
+
+    if (res == CURLE_OK) {
         long response_code;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
         *response = response_code;
     } else {
+        LD_LOG_1(LD_LOG_DEBUG, "curl_easy_perform returned error code %d", res);
         *response = -1;
     }
 
