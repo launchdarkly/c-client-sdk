@@ -39,7 +39,7 @@ LDi_base64_encode(const unsigned char *src, size_t len, size_t *out_len);
 void
 LDi_cancelread(const int handle);
 char *
-LDi_fetchfeaturemap(struct LDClient *client, int *response);
+LDi_fetchfeaturemap(struct LDClient *client, long *response);
 
 void
 LDi_readstream(
@@ -53,7 +53,7 @@ LDi_sendevents(
     struct LDClient *const client,
     const char *const      eventdata,
     const char *const      payloadUUID,
-    int *const             response);
+    long *const             response);
 
 void
 LDi_reinitializeconnection(struct LDClient *const client);

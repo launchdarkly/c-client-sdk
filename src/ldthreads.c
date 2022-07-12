@@ -101,7 +101,7 @@ LDi_bgeventsender(void *const v)
 
         sendFailed = LDBooleanFalse;
         while (LDBooleanTrue) {
-            int response = 0;
+            long response = 0;
 
             LDi_sendevents(client, payloadSerialized, payloadId, &response);
 
@@ -155,7 +155,8 @@ LDi_bgfeaturepoller(void *const v)
 
     while (LDBooleanTrue) {
         LDBoolean skippolling;
-        int       ms, response;
+        int       ms;
+        long      response;
         char *    data;
 
         LDi_rwlock_wrlock(&client->clientLock);
