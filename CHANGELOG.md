@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.9] - 2022-07-12
+### Added:
+- Added extra debug logging for CURL status codes when network requests fail.
+
 ## [2.4.8] - 2022-07-06
 ### Fixed:
 - Fixes experimentation functionality. If an experiment is running, the SDK should now properly report flag evaluation reasons to the LaunchDarkly backend.
