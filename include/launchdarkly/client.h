@@ -79,11 +79,23 @@ LD_EXPORT(char *) LDClientSaveFlags(struct LDClient *const client);
 LD_EXPORT(LDBoolean)
 LDClientRestoreFlags(struct LDClient *const client, const char *const data);
 
-/** @brief Update the client with a new user.
+/** @brief Asynchronously update the client with a new user.
  *
  * The old user is freed. This will re-fetch feature flag settings from
- * LaunchDarkly. For performance reasons, user contexts should not be
- * changed frequently. */
+ * LaunchDarkly in the background. For performance reasons, user contexts should not be
+ * changed frequently.
+ *
+ * Since this is an asynchronous network operation, flag evaluations immediately after LDClientIdentify
+ * will likely be evaluated in the context of the previous user.
+ *
+ * There are multiple ways to ensure flags are evaluated in the context of the new user:
+ * 1) Call LDClientAwaitInitialized, allowing the client to block the calling thread for a specified duration.
+ *      The client is initialized if the return value is true.
+ * 2) Call LDClientIsInitialized, which doesn't block.
+ *      The client is initialized if the return value is true.
+ * 3) Monitor the client status via LDSetClientStatusCallback.
+ *      The client is initialized if the status parameter is equal to LDStatusInitialized.
+ * */
 LD_EXPORT(void)
 LDClientIdentify(struct LDClient *const client, struct LDUser *const user);
 
