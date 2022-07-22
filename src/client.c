@@ -1325,6 +1325,76 @@ LDClientUnregisterFeatureFlagListener(
     LDi_storeUnregisterListener(&client->store, key, fn);
 }
 
+LDBoolean
+LDClientRegisterFeatureFlagListenerUserData(
+    struct LDClient *const client, const char *const key, LDlistenerUserDatafn fn, void *const userData)
+{
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fn);
+
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (client == NULL) {
+        LD_LOG(
+            LD_LOG_WARNING, "LDClientRegisterFeatureFlagListenerUserData NULL client");
+
+        return LDBooleanFalse;
+    }
+
+    if (key == NULL) {
+        LD_LOG(LD_LOG_WARNING, "LDClientRegisterFeatureFlagListenerUserData NULL key");
+
+        return LDBooleanFalse;
+    }
+
+    if (fn == NULL) {
+        LD_LOG(
+            LD_LOG_WARNING,
+            "LDClientRegisterFeatureFlagListenerUserData NULL listener");
+
+        return LDBooleanFalse;
+    }
+#endif
+
+    return LDi_storeRegisterListenerUserData(&client->store, key, fn, userData);
+}
+
+void
+LDClientUnregisterFeatureFlagListenerUserData(
+    struct LDClient *const client, const char *const key, LDlistenerUserDatafn fn)
+{
+    LD_ASSERT_API(client);
+    LD_ASSERT_API(key);
+    LD_ASSERT_API(fn);
+
+#ifdef LAUNCHDARKLY_DEFENSIVE
+    if (client == NULL) {
+        LD_LOG(
+            LD_LOG_WARNING,
+            "LDClientUnregisterFeatureFlagListener NULL client");
+
+        return;
+    }
+
+    if (key == NULL) {
+        LD_LOG(
+            LD_LOG_WARNING, "LDClientUnregisterFeatureFlagListener NULL key");
+
+        return;
+    }
+
+    if (fn == NULL) {
+        LD_LOG(
+            LD_LOG_WARNING,
+            "LDClientUnregisterFeatureFlagListener NULL listener");
+
+        return;
+    }
+#endif
+
+    LDi_storeUnregisterListenerUserData(&client->store, key, fn);
+}
+
 void
 LDi_updatestatus(struct LDClient *const client, const LDStatus status)
 {

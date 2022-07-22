@@ -64,5 +64,13 @@ void
 LDi_storeUnregisterListener(
     struct LDStore *const store, const char *const flagKey, LDlistenerfn op);
 
+LDBoolean
+LDi_storeRegisterListenerUserData(
+    struct LDStore *const store, const char *const flagKey, LDlistenerUserDatafn op, void *const userData);
+
+void
+LDi_storeUnregisterListenerUserData(
+    struct LDStore *const store, const char *const flagKey, LDlistenerUserDatafn op);
+
 void
 LDi_storeFreeFlags(struct LDStore *const store);

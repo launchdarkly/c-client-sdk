@@ -31,6 +31,16 @@ LDi_listenerAdd(struct ChangeListener** listeners, const char* flag, LDlistenerf
 void
 LDi_listenerRemove(struct ChangeListener** listeners, const char* flag, LDlistenerfn callback);
 
+/* Insert a new listener with user data.
+ * If the combination of (flag, function pointer) already exists, no new listener is created.
+ * If allocation fails, returns false. */
+LDBoolean
+LDi_listenerUserDataAdd(struct ChangeListener** listeners, const char* flag, LDlistenerUserDatafn callback, void* const userData);
+
+/* Deletes a listener with user data from the list. */
+void
+LDi_listenerUserDataRemove(struct ChangeListener** listeners, const char* flag, LDlistenerUserDatafn callback);
+
 /* Dispatches an event for a given flag to all registered listeners. */
 void
 LDi_listenersDispatch(struct ChangeListener* listeners, const char *flag, LDBoolean status);

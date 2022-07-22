@@ -17,7 +17,8 @@ extern "C" {
 struct call {
     std::string flag;
     int status;
-    call(std::string flag, int status): flag(std::move(flag)), status(status) {}
+    void *userData;
+    call(std::string flag, int status, void* userData = NULL): flag(std::move(flag)), status(status), userData(userData) {}
 };
 
 struct callbackSpy {
@@ -26,8 +27,8 @@ struct callbackSpy {
 
     // Record a callback for a unit test name. Meant to be called from within
     // a registered callback.
-    void record(const char* test, const char* flagKey, int status) {
-        cbs[test].emplace_back(flagKey, status);
+    void record(const char* test, const char* flagKey, int status, void* userData = NULL) {
+        cbs[test].emplace_back(flagKey, status, userData);
     }
 
     // Retrieve the callback data associated with a given unit test.
@@ -39,6 +40,8 @@ struct callbackSpy {
 // Helper to define a callback function for a particular unit test.
 #define DEFINE_TEST_CALLBACK(name) \
 static void name(const char* const flagKey, const int status) { spy.record(#name, flagKey, status); }
+#define DEFINE_TEST_CALLBACK_USER_DATA(name) \
+static void name(const char* const flagKey, const int status, void *const userData) { spy.record(#name, flagKey, status, userData); }
 
 static callbackSpy spy;
 
@@ -208,7 +211,60 @@ TEST_F(FlagListenerFixture, TestListenerRemovedIgnoresCallback) {
 
 }
 
+DEFINE_TEST_CALLBACK_USER_DATA(listenerUserDataAdded)
+
+TEST_F(FlagListenerFixture, TestListenerUserDataAddedReceivesCallbacks) {
+    int userData = 123;
+    LDClientRegisterFeatureFlagListenerUserData(client, "flag1", listenerUserDataAdded, &userData);
+
+    LDFlag flag = makeFlag("flag1");
+
+    ASSERT_TRUE(LDi_storeUpsert(&client->store, flag));
+    ASSERT_TRUE(LDi_storeDelete(&client->store, flag.key, flag.version));
+
+    LDClientUnregisterFeatureFlagListenerUserData(client, "flag1", listenerUserDataAdded);
+
+    auto& calls = spy.test("listenerUserDataAdded");
+
+    // Upsert and delete flag should result in two callback invocations: one for addition
+    // of the flag, and the other for deletion.
+
+    ASSERT_EQ(calls.size(), 2);
+    EXPECT_EQ(calls.at(0).flag, "flag1");
+    ASSERT_EQ(calls.at(0).status, 0);
+    ASSERT_EQ(calls.at(0).userData, &userData);
+    EXPECT_EQ(calls.at(1).flag, "flag1");
+    ASSERT_EQ(calls.at(1).status, 1);
+    ASSERT_EQ(calls.at(1).userData, &userData);
+
+}
+
+DEFINE_TEST_CALLBACK_USER_DATA(listenerUserDataRemoved);
+
+TEST_F(FlagListenerFixture, TestListenerUserDataRemovedIgnoresCallback) {
+    int userData = 123;
+    LDClientRegisterFeatureFlagListenerUserData(client, "flag1", listenerUserDataRemoved, &userData);
+
+    LDFlag flag = makeFlag("flag1");
+    ASSERT_TRUE(LDi_storeUpsert(&client->store, flag));
+
+    LDClientUnregisterFeatureFlagListenerUserData(client, "flag1", listenerUserDataRemoved);
+
+    ASSERT_TRUE(LDi_storeDelete(&client->store, "flag1", 2));
+
+    auto& calls = spy.test("listenerUserDataRemoved");
+
+    // Since the listener was removed before the storeDelete, it should only have received
+    // one callback.
+    ASSERT_EQ(calls.size(), 1);
+    EXPECT_EQ(calls.at(0).flag, "flag1");
+    ASSERT_EQ(calls.at(0).status, 0);
+    ASSERT_EQ(calls.at(0).userData, &userData);
+
+}
+
 DEFINE_TEST_CALLBACK(enforceUniqueness);
+DEFINE_TEST_CALLBACK_USER_DATA(enforceUniquenessUserData);
 
 // Tests that a particular callback can only be registered for a particular flag once.
 TEST_F(FlagListenerFixture, TestListenerUniqueness) {
@@ -217,9 +273,18 @@ TEST_F(FlagListenerFixture, TestListenerUniqueness) {
     ASSERT_TRUE(LDClientRegisterFeatureFlagListener(client, "flag1", enforceUniqueness));
     ASSERT_TRUE(LDClientRegisterFeatureFlagListener(client, "flag1", enforceUniqueness));
 
+    int userData = 123;
+    ASSERT_TRUE(LDClientRegisterFeatureFlagListenerUserData(client, "flag1", enforceUniquenessUserData, &userData));
+    ASSERT_TRUE(LDClientRegisterFeatureFlagListenerUserData(client, "flag1", enforceUniquenessUserData, &userData));
+    ASSERT_TRUE(LDClientRegisterFeatureFlagListenerUserData(client, "flag1", enforceUniquenessUserData, &userData));
+
     ASSERT_TRUE(LDi_storeUpsert(&client->store, makeFlag("flag1")));
 
     auto& calls = spy.test("enforceUniqueness");
 
     ASSERT_EQ(calls.size(), 1);
+
+    auto& callsUserData = spy.test("enforceUniquenessUserData");
+
+    ASSERT_EQ(callsUserData.size(), 1);
 }

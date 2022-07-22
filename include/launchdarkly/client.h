@@ -275,3 +275,25 @@ LDClientUnregisterFeatureFlagListener(
     struct LDClient *const client,
     const char *const      flagKey,
     LDlistenerfn           listener);
+
+/** @brief Feature flag listener callback type with user data. Callbacks are
+ * not reentrant safe.
+ *
+ * Status 0 for new or updated, 1 for deleted. */
+typedef void (*LDlistenerUserDatafn)(const char *const flagKey, const int status, void *const userData);
+
+/** @brief Register a callback that takes a user data argument for when a flag is updated. */
+LD_EXPORT(LDBoolean)
+LDClientRegisterFeatureFlagListenerUserData(
+    struct LDClient *const client,
+    const char *const      flagKey,
+    LDlistenerUserDatafn   listener,
+    void *const            userData);
+
+/** @brief Unregister a callback registered with
+ * `LDClientRegisterFeatureFlagListenerUserData` */
+LD_EXPORT(void)
+LDClientUnregisterFeatureFlagListenerUserData(
+    struct LDClient *const client,
+    const char *const      flagKey,
+    LDlistenerUserDatafn   listener);

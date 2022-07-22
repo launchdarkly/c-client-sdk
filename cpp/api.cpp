@@ -206,3 +206,17 @@ LDClientCPP::unregisterFeatureFlagListener(const std::string &name,
 {
     LDClientUnregisterFeatureFlagListener(this->client, name.c_str(), fn);
 }
+
+bool
+LDClientCPP::registerFeatureFlagListenerUserData(const std::string &name,
+    LDlistenerUserDatafn fn, void *const userdata)
+{
+    return LDClientRegisterFeatureFlagListenerUserData(this->client, name.c_str(), fn, userdata);
+}
+
+void
+LDClientCPP::unregisterFeatureFlagListenerUserData(const std::string &name,
+    LDlistenerUserDatafn fn)
+{
+    LDClientUnregisterFeatureFlagListenerUserData(this->client, name.c_str(), fn);
+}

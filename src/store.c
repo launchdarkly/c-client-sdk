@@ -361,3 +361,34 @@ LDi_storeUnregisterListener(struct LDStore *const store, const char *const flagK
     LDi_listenerRemove(&store->listeners, flagKey, op);
     LDi_rwlock_wrunlock(&store->lock);
 }
+
+/* Registers a listener callback for a given flag, returning true on success or if the combination of flag key and listener
+ * callback is already registered. */
+LDBoolean
+LDi_storeRegisterListenerUserData(struct LDStore *const store, const char *const flagKey, LDlistenerUserDatafn op, void *const userData)
+{
+    LDBoolean status;
+
+    LD_ASSERT(store);
+    LD_ASSERT(flagKey);
+    LD_ASSERT(op);
+
+    LDi_rwlock_wrlock(&store->lock);
+    status = LDi_listenerUserDataAdd(&store->listeners, flagKey, op, userData);
+    LDi_rwlock_wrunlock(&store->lock);
+
+    return status;
+}
+
+void
+LDi_storeUnregisterListenerUserData(struct LDStore *const store, const char *const flagKey, LDlistenerUserDatafn op)
+{
+
+    LD_ASSERT(store);
+    LD_ASSERT(flagKey);
+    LD_ASSERT(op);
+
+    LDi_rwlock_wrlock(&store->lock);
+    LDi_listenerUserDataRemove(&store->listeners, flagKey, op);
+    LDi_rwlock_wrunlock(&store->lock);
+}
