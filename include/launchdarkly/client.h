@@ -27,6 +27,9 @@ typedef enum
     LDStatusInitialized,
     LDStatusFailed,
     LDStatusShuttingdown,
+    /**
+     * @deprecated Unused.
+     */
     LDStatusShutdown
 } LDStatus;
 
@@ -93,7 +96,7 @@ LDClientRestoreFlags(struct LDClient *const client, const char *const data);
  *      The client is initialized if the return value is true.
  * 2) Call LDClientIsInitialized, which doesn't block.
  *      The client is initialized if the return value is true.
- * 3) Monitor the client status via LDSetClientStatusCallback.
+ * 3) Monitor the client status via LDSetClientStatusCallbackUserData.
  *      The client is initialized if the status parameter is equal to LDStatusInitialized.
  * */
 LD_EXPORT(void)
@@ -133,8 +136,34 @@ LDClientSetBackground(
  * manage secondary environments directly. */
 LD_EXPORT(void) LDClientClose(struct LDClient *const client);
 
-/** @brief Add handler for when client status changes */
+/**
+ * @deprecated This function does not allow for forwarding a user data parameter.
+ * See LDSetClientStatusCallbackUserData instead.
+ *
+ * @brief Add callback for client status changes, replacing any existing callback (including any
+ * set with LDSetClientStatusCallbackUserData.)
+ *
+ * @param callback Callback function to invoke when client status changes, or NULL to unset any callback.
+ * */
 LD_EXPORT(void) LDSetClientStatusCallback(void(callback)(int status));
+
+
+/** @brief Status callback type.
+ *
+ * The callback's userData parameter is forwarded from the initial call to LDSetClientStatusCallbackUserData.
+ */
+typedef void (*LDstatusfn)(LDStatus status, void *userData);
+
+
+/** @brief Add callback for client status changes, replacing any existing callback (including any
+ * set with LDSetClientStatusCallback.)
+ *
+ * The callback is invoked with the supplied userData parameter.
+ *
+ * @param callback Callback function to invoke when client status changes, or NULL to unset any callback.
+ * @param userData Parameter that will be forwarded to the supplied callback; may be NULL.
+ */
+LD_EXPORT(void) LDSetClientStatusCallbackUserData(LDstatusfn callback, void *userData);
 
 /** @brief Record a alias event */
 LD_EXPORT(void)

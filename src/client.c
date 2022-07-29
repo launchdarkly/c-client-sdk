@@ -14,11 +14,32 @@
 #include "ldinternal.h"
 #include "uthash.h"
 
+#define UNUSED(x) (void)(x)
+
 static struct LDGlobal_i globalContext;
 
 ld_once_t LDi_earlyonce = LD_ONCE_INIT;
 
+/** Support for non-userdata LDSetClientStatusCallback function. */
 static void (*LDi_statuscallback)(int) = NULL;
+
+/** Support for userdata-accepting LDSetClientStatusCallbackUserData function. */
+struct status_callback_closure {
+    LDstatusfn callback;
+    void *userData;
+};
+
+/** Allows the deprecated non-userdata accepting callback to be treated as one accepting userdata. */
+static void status_callback_wrapper(LDStatus status, void *userData) {
+    UNUSED(userData);
+    LDi_statuscallback(status);
+}
+
+/** Stores a userdata-accepting status callback, along with the userdata payload itself. */
+static struct status_callback_closure LDi_statuscallback_closure = {
+        NULL,
+        NULL
+};
 
 void
 LDi_earlyinit(void)
@@ -552,8 +573,21 @@ LDClientAwaitInitialized(
 void
 LDSetClientStatusCallback(void(callback)(int))
 {
-    LDi_statuscallback = callback;
+    if (callback == NULL) {
+        LDSetClientStatusCallbackUserData(NULL, NULL);
+    } else {
+        LDi_statuscallback = callback;
+        LDSetClientStatusCallbackUserData(status_callback_wrapper, NULL);
+    }
 }
+
+void
+LDSetClientStatusCallbackUserData(LDstatusfn callback, void *userData)
+{
+    LDi_statuscallback_closure.callback = callback;
+    LDi_statuscallback_closure.userData = userData;
+}
+
 
 char *
 LDClientSaveFlags(struct LDClient *const client)
@@ -1330,9 +1364,9 @@ LDi_updatestatus(struct LDClient *const client, const LDStatus status)
 {
     if (client->status != status) {
         client->status = status;
-        if (LDi_statuscallback) {
+        if (LDi_statuscallback_closure.callback) {
             LDi_rwlock_wrunlock(&client->clientLock);
-            LDi_statuscallback(status);
+            LDi_statuscallback_closure.callback(status, LDi_statuscallback_closure.userData);
             LDi_rwlock_wrlock(&client->clientLock);
         }
     }
