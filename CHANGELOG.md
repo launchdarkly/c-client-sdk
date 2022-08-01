@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.0] - 2022-08-01
+### Added:
+- Added `LDSetClientStatusCallbackUserData`, which allows for passing a `void *userData` parameter. 
+- Added documentation on `LDClientIdentify`, clarifying its asynchronous nature.
+
+### Deprecated:
+- Deprecated `LDSetClientStatusCallback` in favor of `LDSetClientStatusCallbackUserData`. Pass NULL as the user data parameter for equivalent usage.
+
 ## [2.4.9] - 2022-07-12
 ### Added:
 - Added extra debug logging for CURL status codes when network requests fail.
