@@ -27,6 +27,9 @@ typedef enum
     LDStatusInitialized,
     LDStatusFailed,
     LDStatusShuttingdown,
+    /**
+     * @deprecated Unused.
+     */
     LDStatusShutdown
 } LDStatus;
 
@@ -79,11 +82,23 @@ LD_EXPORT(char *) LDClientSaveFlags(struct LDClient *const client);
 LD_EXPORT(LDBoolean)
 LDClientRestoreFlags(struct LDClient *const client, const char *const data);
 
-/** @brief Update the client with a new user.
+/** @brief Asynchronously update the client with a new user.
  *
  * The old user is freed. This will re-fetch feature flag settings from
- * LaunchDarkly. For performance reasons, user contexts should not be
- * changed frequently. */
+ * LaunchDarkly in the background. For performance reasons, user contexts should not be
+ * changed frequently.
+ *
+ * Since this is an asynchronous network operation, flag evaluations immediately after LDClientIdentify
+ * will likely be evaluated in the context of the previous user.
+ *
+ * There are multiple ways to ensure flags are evaluated in the context of the new user:
+ * 1) Call LDClientAwaitInitialized, allowing the client to block the calling thread for a specified duration.
+ *      The client is initialized if the return value is true.
+ * 2) Call LDClientIsInitialized, which doesn't block.
+ *      The client is initialized if the return value is true.
+ * 3) Monitor the client status via LDSetClientStatusCallbackUserData.
+ *      The client is initialized if the status parameter is equal to LDStatusInitialized.
+ * */
 LD_EXPORT(void)
 LDClientIdentify(struct LDClient *const client, struct LDUser *const user);
 
@@ -121,8 +136,34 @@ LDClientSetBackground(
  * manage secondary environments directly. */
 LD_EXPORT(void) LDClientClose(struct LDClient *const client);
 
-/** @brief Add handler for when client status changes */
+/**
+ * @deprecated This function does not allow for forwarding a user data parameter.
+ * See LDSetClientStatusCallbackUserData instead.
+ *
+ * @brief Add callback for client status changes, replacing any existing callback (including any
+ * set with LDSetClientStatusCallbackUserData.)
+ *
+ * @param callback Callback function to invoke when client status changes, or NULL to unset any callback.
+ * */
 LD_EXPORT(void) LDSetClientStatusCallback(void(callback)(int status));
+
+
+/** @brief Status callback type.
+ *
+ * The callback's userData parameter is forwarded from the initial call to LDSetClientStatusCallbackUserData.
+ */
+typedef void (*LDstatusfn)(LDStatus status, void *userData);
+
+
+/** @brief Add callback for client status changes, replacing any existing callback (including any
+ * set with LDSetClientStatusCallback.)
+ *
+ * The callback is invoked with the supplied userData parameter.
+ *
+ * @param callback Callback function to invoke when client status changes, or NULL to unset any callback.
+ * @param userData Parameter that will be forwarded to the supplied callback; may be NULL.
+ */
+LD_EXPORT(void) LDSetClientStatusCallbackUserData(LDstatusfn callback, void *userData);
 
 /** @brief Record a alias event */
 LD_EXPORT(void)

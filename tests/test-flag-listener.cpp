@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "commonfixture.h"
 #include <unordered_map>
+#include "callback-spy.hpp"
 
 extern "C" {
 #include <launchdarkly/api.h>
@@ -8,39 +9,6 @@ extern "C" {
 #include "ldinternal.h"
 }
 
-
-// Note: Using global callbacks + variables for the following tests is not ideal.
-// It would be better to pass this type of context as a userData parameter in the listeners, but that isn't
-// currently how the callbacks are designed.
-
-// Holds the data received by callback invocation, of the form (flagKey, status).
-struct call {
-    std::string flag;
-    int status;
-    call(std::string flag, int status): flag(std::move(flag)), status(status) {}
-};
-
-struct callbackSpy {
-    using Data = std::vector<call>;
-    std::unordered_map<const char*, Data> cbs;
-
-    // Record a callback for a unit test name. Meant to be called from within
-    // a registered callback.
-    void record(const char* test, const char* flagKey, int status) {
-        cbs[test].emplace_back(flagKey, status);
-    }
-
-    // Retrieve the callback data associated with a given unit test.
-    const Data& test(const char* test) {
-        return cbs[test];
-    }
-};
-
-// Helper to define a callback function for a particular unit test.
-#define DEFINE_TEST_CALLBACK(name) \
-static void name(const char* const flagKey, const int status) { spy.record(#name, flagKey, status); }
-
-static callbackSpy spy;
 
 // Used for unit testing the ChangeListener implementation detail.
 class ChangeListenerFixture : public CommonFixture {};
@@ -65,7 +33,7 @@ TEST_F(ChangeListenerFixture, TestDeleteNoop) {
     LDi_freeListeners(&listeners);
 }
 
-DEFINE_TEST_CALLBACK(testDispatchAfterInsert);
+DEFINE_FLAG_CALLBACK(testDispatchAfterInsert);
 
 TEST_F(ChangeListenerFixture, TestDispatchAfterInsert) {
     struct ChangeListener *listeners;
@@ -76,14 +44,14 @@ TEST_F(ChangeListenerFixture, TestDispatchAfterInsert) {
 
     LDi_freeListeners(&listeners);
 
-    auto& calls = spy.test("testDispatchAfterInsert");
+    auto& calls = FLAG_CALLS(testDispatchAfterInsert);
 
     ASSERT_EQ(calls.size(), 1);
     EXPECT_EQ(calls.at(0).flag, "flag1");
     ASSERT_EQ(calls.at(0).status, 0);
 }
 
-DEFINE_TEST_CALLBACK(testDispatchAfterDelete);
+DEFINE_FLAG_CALLBACK(testDispatchAfterDelete);
 
 TEST_F(ChangeListenerFixture, TestDispatchNoopAfterDelete) {
     struct ChangeListener *listeners;
@@ -95,11 +63,11 @@ TEST_F(ChangeListenerFixture, TestDispatchNoopAfterDelete) {
     LDi_listenersDispatch(listeners, "flag1", 0);
     LDi_freeListeners(&listeners);
 
-    ASSERT_TRUE(spy.test("testDispatchAfterDelete").empty());
+    ASSERT_TRUE(FLAG_CALLS(testDispatchAfterDelete).empty());
 }
 
-DEFINE_TEST_CALLBACK(testMultiDispatch1);
-DEFINE_TEST_CALLBACK(testMultiDispatch2);
+DEFINE_FLAG_CALLBACK(testMultiDispatch1);
+DEFINE_FLAG_CALLBACK(testMultiDispatch2);
 
 TEST_F(ChangeListenerFixture, TestMultiDispatch) {
     struct ChangeListener *listeners;
@@ -111,8 +79,8 @@ TEST_F(ChangeListenerFixture, TestMultiDispatch) {
     LDi_listenersDispatch(listeners, "flag1", 0);
     LDi_freeListeners(&listeners);
 
-    ASSERT_EQ(spy.test("testMultiDispatch1").size(), 1);
-    ASSERT_EQ(spy.test("testMultiDispatch2").size(), 1);
+    ASSERT_EQ(FLAG_CALLS(testMultiDispatch1).size(), 1);
+    ASSERT_EQ(FLAG_CALLS(testMultiDispatch2).size(), 1);
 }
 
 // Used for testing the higher-level LDRegister/Unregister listener API surface.
@@ -161,7 +129,7 @@ TEST_F(FlagListenerFixture, TestMemoryFreedByClientClose) {
     LDClientRegisterFeatureFlagListener(client, "flag1", NULL);
 }
 
-DEFINE_TEST_CALLBACK(listenerAdded)
+DEFINE_FLAG_CALLBACK(listenerAdded)
 
 TEST_F(FlagListenerFixture, TestListenerAddedReceivesCallbacks) {
     LDClientRegisterFeatureFlagListener(client, "flag1", listenerAdded);
@@ -173,7 +141,7 @@ TEST_F(FlagListenerFixture, TestListenerAddedReceivesCallbacks) {
 
     LDClientUnregisterFeatureFlagListener(client, "flag1", listenerAdded);
 
-    auto& calls = spy.test("listenerAdded");
+    auto& calls = FLAG_CALLS(listenerAdded);
 
     // Upsert and delete flag should result in two callback invocations: one for addition
     // of the flag, and the other for deletion.
@@ -186,7 +154,7 @@ TEST_F(FlagListenerFixture, TestListenerAddedReceivesCallbacks) {
 
 }
 
-DEFINE_TEST_CALLBACK(listenerRemoved);
+DEFINE_FLAG_CALLBACK(listenerRemoved);
 
 TEST_F(FlagListenerFixture, TestListenerRemovedIgnoresCallback) {
     LDClientRegisterFeatureFlagListener(client, "flag1", listenerRemoved);
@@ -198,7 +166,7 @@ TEST_F(FlagListenerFixture, TestListenerRemovedIgnoresCallback) {
 
     ASSERT_TRUE(LDi_storeDelete(&client->store, "flag1", 2));
 
-    auto& calls = spy.test("listenerRemoved");
+    auto& calls = FLAG_CALLS(listenerRemoved);
 
     // Since the listener was removed before the storeDelete, it should only have received
     // one callback.
@@ -208,7 +176,7 @@ TEST_F(FlagListenerFixture, TestListenerRemovedIgnoresCallback) {
 
 }
 
-DEFINE_TEST_CALLBACK(enforceUniqueness);
+DEFINE_FLAG_CALLBACK(enforceUniqueness);
 
 // Tests that a particular callback can only be registered for a particular flag once.
 TEST_F(FlagListenerFixture, TestListenerUniqueness) {
@@ -219,7 +187,5 @@ TEST_F(FlagListenerFixture, TestListenerUniqueness) {
 
     ASSERT_TRUE(LDi_storeUpsert(&client->store, makeFlag("flag1")));
 
-    auto& calls = spy.test("enforceUniqueness");
-
-    ASSERT_EQ(calls.size(), 1);
+    ASSERT_EQ(FLAG_CALLS(enforceUniqueness).size(), 1);
 }
