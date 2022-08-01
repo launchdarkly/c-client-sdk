@@ -97,6 +97,7 @@ var searchData=
   ['ldobjectsetkey',['LDObjectSetKey',['../json_8h.html#aeadc2f5fe34f84b9e42a7339943e422d',1,'json.h']]],
   ['ldrealloc',['LDRealloc',['../memory_8h.html#abed8c21dcda0b47f9d960bb6f5916b63',1,'memory.h']]],
   ['ldsetclientstatuscallback',['LDSetClientStatusCallback',['../client_8h.html#af7c00fdb1289ec63e981a89438ae6d52',1,'client.h']]],
+  ['ldsetclientstatuscallbackuserdata',['LDSetClientStatusCallbackUserData',['../client_8h.html#ab994c79554c30dde54f28ee70f3709b8',1,'client.h']]],
   ['ldsetmemoryroutines',['LDSetMemoryRoutines',['../memory_8h.html#aa81ccaefba3262c1ae9bd4983992353b',1,'memory.h']]],
   ['ldsetnumber',['LDSetNumber',['../json_8h.html#a747675630428e355a0af6e54d857ea4f',1,'json.h']]],
   ['ldstrdup',['LDStrDup',['../memory_8h.html#ae1a315fa0f84643bacea2b055801bc36',1,'memory.h']]],

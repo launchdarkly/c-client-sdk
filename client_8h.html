@@ -140,18 +140,21 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
+<tr class="memitem:a0cce5b91b55a7217e97c8243f9a0dfaf"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#a0cce5b91b55a7217e97c8243f9a0dfaf">LDstatusfn</a>) (<a class="el" href="client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da">LDStatus</a> status, void *userData)</td></tr>
+<tr class="memdesc:a0cce5b91b55a7217e97c8243f9a0dfaf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status callback type.  <a href="#a0cce5b91b55a7217e97c8243f9a0dfaf">More...</a><br /></td></tr>
+<tr class="separator:a0cce5b91b55a7217e97c8243f9a0dfaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8726add2454d1e22d7f8052c0f123de"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#ae8726add2454d1e22d7f8052c0f123de">LDlistenerfn</a>) (const char *const flagKey, const int status)</td></tr>
 <tr class="memdesc:ae8726add2454d1e22d7f8052c0f123de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Feature flag listener callback type. Callbacks are not reentrant safe.  <a href="#ae8726add2454d1e22d7f8052c0f123de">More...</a><br /></td></tr>
 <tr class="separator:ae8726add2454d1e22d7f8052c0f123de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a0bd2df7807f25bb4b92bcd5297fc61da"><td class="memItemLeft" align="right" valign="top"><a id="a0bd2df7807f25bb4b92bcd5297fc61da"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da">LDStatus</a> { <b>LDStatusInitializing</b> = 0, 
+<tr class="memitem:a0bd2df7807f25bb4b92bcd5297fc61da"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da">LDStatus</a> { <b>LDStatusInitializing</b> = 0, 
 <b>LDStatusInitialized</b>, 
 <b>LDStatusFailed</b>, 
 <b>LDStatusShuttingdown</b>, 
-<b>LDStatusShutdown</b>
- }<tr class="memdesc:a0bd2df7807f25bb4b92bcd5297fc61da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current status of the client. <br /></td></tr>
+<a class="el" href="client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61daa5b47811b2e36d2fe0d80c3dc5b4ff2b0">LDStatusShutdown</a>
+ }<tr class="memdesc:a0bd2df7807f25bb4b92bcd5297fc61da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current status of the client.  <a href="client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:a0bd2df7807f25bb4b92bcd5297fc61da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -176,7 +179,7 @@ LDBoolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href=
 <tr class="memdesc:a911feeb1d3e2f4ebd460b8cce07f9223"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set flag store from JSON string. <br /></td></tr>
 <tr class="separator:a911feeb1d3e2f4ebd460b8cce07f9223"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ee43b2353f00798979ba51cfebb1a53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#a7ee43b2353f00798979ba51cfebb1a53">LDClientIdentify</a> (struct LDClient *const client, struct <a class="el" href="structLDUser.html">LDUser</a> *const user)</td></tr>
-<tr class="memdesc:a7ee43b2353f00798979ba51cfebb1a53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update the client with a new user.  <a href="#a7ee43b2353f00798979ba51cfebb1a53">More...</a><br /></td></tr>
+<tr class="memdesc:a7ee43b2353f00798979ba51cfebb1a53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Asynchronously update the client with a new user.  <a href="#a7ee43b2353f00798979ba51cfebb1a53">More...</a><br /></td></tr>
 <tr class="separator:a7ee43b2353f00798979ba51cfebb1a53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a675adeb6d3c92b221bb806ecbdb73bb4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#a675adeb6d3c92b221bb806ecbdb73bb4">LDClientFlush</a> (struct LDClient *const client)</td></tr>
 <tr class="memdesc:a675adeb6d3c92b221bb806ecbdb73bb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send any pending events to the server. They will normally be.  <a href="#a675adeb6d3c92b221bb806ecbdb73bb4">More...</a><br /></td></tr>
@@ -208,10 +211,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clie
 <tr class="memitem:ab7d00dbcd76715c1da55ba2469a0cc4f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#ab7d00dbcd76715c1da55ba2469a0cc4f">LDClientClose</a> (struct LDClient *const client)</td></tr>
 <tr class="memdesc:ab7d00dbcd76715c1da55ba2469a0cc4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the client, free resources, and generally shut down.  <a href="#ab7d00dbcd76715c1da55ba2469a0cc4f">More...</a><br /></td></tr>
 <tr class="separator:ab7d00dbcd76715c1da55ba2469a0cc4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7c00fdb1289ec63e981a89438ae6d52"><td class="memItemLeft" align="right" valign="top"><a id="af7c00fdb1289ec63e981a89438ae6d52"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#af7c00fdb1289ec63e981a89438ae6d52">LDSetClientStatusCallback</a> (void(callback)(int status))</td></tr>
-<tr class="memdesc:af7c00fdb1289ec63e981a89438ae6d52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add handler for when client status changes. <br /></td></tr>
+<tr class="memitem:af7c00fdb1289ec63e981a89438ae6d52"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#af7c00fdb1289ec63e981a89438ae6d52">LDSetClientStatusCallback</a> (void(callback)(int status))</td></tr>
+<tr class="memdesc:af7c00fdb1289ec63e981a89438ae6d52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add callback for client status changes, replacing any existing callback (including any set with LDSetClientStatusCallbackUserData.)  <a href="#af7c00fdb1289ec63e981a89438ae6d52">More...</a><br /></td></tr>
 <tr class="separator:af7c00fdb1289ec63e981a89438ae6d52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab994c79554c30dde54f28ee70f3709b8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#ab994c79554c30dde54f28ee70f3709b8">LDSetClientStatusCallbackUserData</a> (<a class="el" href="client_8h.html#a0cce5b91b55a7217e97c8243f9a0dfaf">LDstatusfn</a> callback, void *userData)</td></tr>
+<tr class="memdesc:ab994c79554c30dde54f28ee70f3709b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add callback for client status changes, replacing any existing callback (including any set with LDSetClientStatusCallback.)  <a href="#ab994c79554c30dde54f28ee70f3709b8">More...</a><br /></td></tr>
+<tr class="separator:ab994c79554c30dde54f28ee70f3709b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc20d0adbd21c63ff82380dc9006b82e"><td class="memItemLeft" align="right" valign="top"><a id="afc20d0adbd21c63ff82380dc9006b82e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="client_8h.html#afc20d0adbd21c63ff82380dc9006b82e">LDClientAlias</a> (struct LDClient *const client, const struct <a class="el" href="structLDUser.html">LDUser</a> *const currentUser, const struct <a class="el" href="structLDUser.html">LDUser</a> *const previousUser)</td></tr>
 <tr class="memdesc:afc20d0adbd21c63ff82380dc9006b82e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record a alias event. <br /></td></tr>
@@ -311,6 +316,44 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clie
 
 </div>
 </div>
+<a id="a0cce5b91b55a7217e97c8243f9a0dfaf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0cce5b91b55a7217e97c8243f9a0dfaf">&#9670;&nbsp;</a></span>LDstatusfn</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* LDstatusfn) (<a class="el" href="client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da">LDStatus</a> status, void *userData)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Status callback type. </p>
+<p>The callback's userData parameter is forwarded from the initial call to LDSetClientStatusCallbackUserData. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="a0bd2df7807f25bb4b92bcd5297fc61da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0bd2df7807f25bb4b92bcd5297fc61da">&#9670;&nbsp;</a></span>LDStatus</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da">LDStatus</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Current status of the client. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a0bd2df7807f25bb4b92bcd5297fc61daa5b47811b2e36d2fe0d80c3dc5b4ff2b0"></a>LDStatusShutdown&#160;</td><td class="fielddoc"><dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>Unused. </dd></dl>
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="ab7d00dbcd76715c1da55ba2469a0cc4f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab7d00dbcd76715c1da55ba2469a0cc4f">&#9670;&nbsp;</a></span>LDClientClose()</h2>
@@ -401,8 +444,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clie
       </table>
 </div><div class="memdoc">
 
-<p>Update the client with a new user. </p>
-<p>The old user is freed. This will re-fetch feature flag settings from LaunchDarkly. For performance reasons, user contexts should not be changed frequently. </p>
+<p>Asynchronously update the client with a new user. </p>
+<p>The old user is freed. This will re-fetch feature flag settings from LaunchDarkly in the background. For performance reasons, user contexts should not be changed frequently.</p>
+<p>Since this is an asynchronous network operation, flag evaluations immediately after LDClientIdentify will likely be evaluated in the context of the previous user.</p>
+<p>There are multiple ways to ensure flags are evaluated in the context of the new user: 1) Call LDClientAwaitInitialized, allowing the client to block the calling thread for a specified duration. The client is initialized if the return value is true. 2) Call LDClientIsInitialized, which doesn't block. The client is initialized if the return value is true. 3) Monitor the client status via LDSetClientStatusCallbackUserData. The client is initialized if the status parameter is equal to LDStatusInitialized. </p>
 
 </div>
 </div>
@@ -521,6 +566,71 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clie
 
 <p>Evaluate Int flag with details. </p>
 <p>If the flag value is actually a float the result is truncated. </p>
+
+</div>
+</div>
+<a id="af7c00fdb1289ec63e981a89438ae6d52"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7c00fdb1289ec63e981a89438ae6d52">&#9670;&nbsp;</a></span>LDSetClientStatusCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDSetClientStatusCallback </td>
+          <td>(</td>
+          <td class="paramtype">void(callback)(int status)&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add callback for client status changes, replacing any existing callback (including any set with LDSetClientStatusCallbackUserData.) </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>This function does not allow for forwarding a user data parameter. See LDSetClientStatusCallbackUserData instead.</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callback</td><td>Callback function to invoke when client status changes, or NULL to unset any callback. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ab994c79554c30dde54f28ee70f3709b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab994c79554c30dde54f28ee70f3709b8">&#9670;&nbsp;</a></span>LDSetClientStatusCallbackUserData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void LDSetClientStatusCallbackUserData </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="client_8h.html#a0cce5b91b55a7217e97c8243f9a0dfaf">LDstatusfn</a>&#160;</td>
+          <td class="paramname"><em>callback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>userData</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add callback for client status changes, replacing any existing callback (including any set with LDSetClientStatusCallback.) </p>
+<p>The callback is invoked with the supplied userData parameter.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">callback</td><td>Callback function to invoke when client status changes, or NULL to unset any callback. </td></tr>
+    <tr><td class="paramname">userData</td><td>Parameter that will be forwarded to the supplied callback; may be NULL. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

@@ -3,6 +3,7 @@ var client_8h =
     [ "LDVariationDetails", "structLDVariationDetails.html", "structLDVariationDetails" ],
     [ "LDPrimaryEnvironmentName", "client_8h.html#a37ed949206ac1f4f09dac550a45da181", null ],
     [ "LDlistenerfn", "client_8h.html#ae8726add2454d1e22d7f8052c0f123de", null ],
+    [ "LDstatusfn", "client_8h.html#a0cce5b91b55a7217e97c8243f9a0dfaf", null ],
     [ "LDStatus", "client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61da", [
       [ "LDStatusInitializing", "client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61daaa05fa1a79cccf0fae76f89522f208050", null ],
       [ "LDStatusInitialized", "client_8h.html#a0bd2df7807f25bb4b92bcd5297fc61daa2afdd925a1f1e9080884291c21fa450d", null ],
@@ -41,6 +42,7 @@ var client_8h =
     [ "LDJSONVariation", "client_8h.html#ae8d4c39f102f4d4debadecea4b30ab8c", null ],
     [ "LDJSONVariationDetail", "client_8h.html#aa54ef7c6442f4bae10910ac7eac98c3a", null ],
     [ "LDSetClientStatusCallback", "client_8h.html#af7c00fdb1289ec63e981a89438ae6d52", null ],
+    [ "LDSetClientStatusCallbackUserData", "client_8h.html#ab994c79554c30dde54f28ee70f3709b8", null ],
     [ "LDStringVariation", "client_8h.html#a767a25a1b0327c791e73c84448a57325", null ],
     [ "LDStringVariationAlloc", "client_8h.html#a01a7c9c0cb7a1146a9f2ea5d12e5660e", null ],
     [ "LDStringVariationAllocDetail", "client_8h.html#a5961d8c0ab143656777ae2a59697f7b2", null ],
