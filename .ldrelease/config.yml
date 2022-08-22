@@ -12,7 +12,7 @@ jobs:
       LD_LIBRARY_FILE_PREFIX: linux-gcc-64bit
   - circleCI:
       mac:
-        xcode: "12.5.0"
+        xcode: "12.5.1"
     env:
       LD_LIBRARY_FILE_PREFIX: osx-clang-64bit
   - circleCI:
