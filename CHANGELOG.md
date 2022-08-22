@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.1] - 2022-08-22
+### Fixed:
+- Fixed an issue where `LDAllFlags` would return `null` if a flag was archived after initializing the SDK in streaming mode.
+
 ## [2.5.0] - 2022-08-01
 ### Added:
 - Added `LDSetClientStatusCallbackUserData`, which allows for passing a `void *userData` parameter. 
