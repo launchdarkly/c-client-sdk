@@ -654,14 +654,19 @@ LDAllFlags(struct LDClient *const client)
     for (i = 0; i < flagCount; i++) {
         struct LDJSON *tmp;
 
-        if (!(tmp = LDJSONDuplicate(flags[i]->flag.value))) {
-            goto error;
-        }
+        if (!flags[i]->flag.deleted)
+        {
+            if (!(tmp = LDJSONDuplicate(flags[i]->flag.value)))
+            {
+                goto error;
+            }
 
-        if (!(LDObjectSetKey(result, flags[i]->flag.key, tmp))) {
-            LDJSONFree(tmp);
+            if (!(LDObjectSetKey(result, flags[i]->flag.key, tmp)))
+            {
+                LDJSONFree(tmp);
 
-            goto error;
+                goto error;
+            }
         }
 
         LDi_rc_decrement(&flags[i]->rc);
