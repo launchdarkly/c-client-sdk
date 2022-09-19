@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.2] - 2022-09-19
+### Fixed:
+- Fixed an issue where `LDClientSaveFlags` would return `null` if a flag was archived after initializing the SDK.
+
 ## [2.5.1] - 2022-08-22
 ### Fixed:
 - Fixed an issue where `LDAllFlags` would return `null` if a flag was archived after initializing the SDK in streaming mode.
