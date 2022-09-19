@@ -5,6 +5,7 @@
 
 extern "C" {
 #include <launchdarkly/api.h>
+#include "logging.h"
 
 #include "client.h"
 }
@@ -90,3 +91,58 @@ TEST_F(ClientFixture, CallbackWithUserData) {
 
 }
 
+
+TEST_F(ClientFixture, SaveFlagsOmitsDeletedFlags) {
+    struct LDUser *user;
+    struct LDConfig *config;
+    struct LDClient *client;
+    struct LDFlag flag, flagDeleted;
+    char *actual;
+    struct LDJSON *expectedJSON, *actualJSON;
+
+
+    flag.key = LDStrDup("test");
+    flag.value = LDNewText("alice");
+    flag.version = 2;
+    flag.flagVersion = 10;
+    flag.variation = 3;
+    flag.trackEvents = LDBooleanFalse;
+    flag.trackReason = LDBooleanFalse;
+    flag.reason = NULL;
+    flag.debugEventsUntilDate = 0;
+    flag.deleted = LDBooleanFalse;
+
+    flagDeleted.key = LDStrDup("test2");
+    flagDeleted.value = NULL; //Note this is different from a JSON value of null.
+    flagDeleted.version = 2;
+    flagDeleted.flagVersion = 0;
+    flagDeleted.variation = 0;
+    flagDeleted.trackEvents = LDBooleanFalse;
+    flagDeleted.trackReason = LDBooleanFalse;
+    flagDeleted.reason = NULL;
+    flagDeleted.debugEventsUntilDate = 0;
+    flagDeleted.deleted = LDBooleanTrue;
+
+
+    ASSERT_TRUE(config = LDConfigNew("b"));
+    LDConfigSetOffline(config, LDBooleanTrue);
+    ASSERT_TRUE(user = LDUserNew("a"));
+
+    ASSERT_TRUE(client = LDClientInit(config, user, 0));
+
+    ASSERT_TRUE(LDi_storeUpsert(&client->store, flag));
+    ASSERT_TRUE(LDi_storeUpsert(&client->store, flagDeleted));
+
+    ASSERT_TRUE(expectedJSON = LDJSONDeserialize("{\"test\":{\"key\":\"test\",\"value\":\"alice\",\"version\":2,\"flagVersion\":10,\"variation\":3}}"));
+
+    ASSERT_TRUE(actual = LDClientSaveFlags(client));
+    ASSERT_TRUE(actualJSON = LDJSONDeserialize(actual));
+
+    ASSERT_TRUE(LDJSONCompare(expectedJSON, actualJSON));
+
+    LDClientClose(client);
+    LDFree(actual);
+
+    LDJSONFree(expectedJSON);
+    LDJSONFree(actualJSON);
+}

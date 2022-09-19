@@ -308,6 +308,11 @@ LDi_storeGetJSON(struct LDStore *const store)
 
     HASH_ITER(hh, store->flags, node, tmp)
     {
+
+        if (node->flag.deleted) {
+            continue;
+        }
+
         if (!(flag = LDi_flag_to_json(&node->flag))) {
             goto error;
         }
