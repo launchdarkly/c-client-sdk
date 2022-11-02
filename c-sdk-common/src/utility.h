@@ -22,12 +22,16 @@
 
 LDBoolean
 LDi_sleepMilliseconds(const unsigned long milliseconds);
+
 LDBoolean
 LDi_getMonotonicMilliseconds(double *const resultMilliseconds);
+
 LDBoolean
 LDi_getUnixMilliseconds(double *const resultMilliseconds);
+
 LDBoolean
 LDi_randomHex(char *const buffer, const size_t bufferSize);
+
 #define LD_UUID_SIZE 36
 LDBoolean
 LDi_UUIDv4(char *const buffer);
@@ -70,10 +74,13 @@ LDi_normalize(
 
 LDBoolean
 LDi_notNull(const struct LDJSON *const json);
+
 LDBoolean
 LDi_isDeleted(const struct LDJSON *const feature);
+
 LDBoolean
 LDi_textInArray(const struct LDJSON *const array, const char *const text);
+
 int
 LDi_strncasecmp(const char *const s1, const char *const s2, const size_t n);
 

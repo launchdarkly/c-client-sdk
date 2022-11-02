@@ -8,6 +8,9 @@ workflows:
   build_and_test_all:
     jobs:
       - build-test-linux
+      - build-test-linux-valgrind:
+          requires:
+            - build-test-linux
       - build-test-osx
       - build-test-windows
 
@@ -18,15 +21,36 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install prerequisites
+          command: apt-get update -y && apt-get install -y git
+      - run:
           name: Build
           command: mkdir -p build && cd build && cmake .. && make
       - run:
           name: Test
-          command: cd build && make test
+          command: cd build && GTEST_OUTPUT="xml:$(pwd)/.../reports/" make test
+
+  build-test-linux-valgrind:
+    docker:
+      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
+    steps:
+      - checkout
+      - run:
+          name: Install prerequisites
+          command: apt-get update -y && apt-get install -y git
+      - run:
+          name: Build
+          command: mkdir -p build && cd build && cmake .. && make
+      - run:
+          name: Test with valgrind
+          command: |
+            cd build && make test
+            valgrind --error-exitcode=100 --leak-check=full ./tests/google_tests
 
   build-test-osx:
     macos:
-      xcode: "9.4.1"
+      xcode: "12.5.1"
+    resource_class: macos.x86.medium.gen2
     environment:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
@@ -39,7 +63,7 @@ jobs:
           command: mkdir -p build && cd build && cmake .. && make
       - run:
           name: Test
-          command: cd build && make test
+          command: cd build && GTEST_OUTPUT="xml:$(pwd)/.../reports/" make test
 
   build-test-windows:
     executor:

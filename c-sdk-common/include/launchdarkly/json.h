@@ -108,7 +108,7 @@ LDSetNumber(struct LDJSON *const node, const double number);
 LD_EXPORT(void) LDJSONFree(struct LDJSON *const json);
 
 /**
- * @brief Duplicates an existing JSON strucutre. This acts as a deep copy.
+ * @brief Duplicates an existing JSON structure. This acts as a deep copy.
  * @param[in] json JSON to be duplicated. May not be `NULL`.
  * @return `NULL` on failure
  */
