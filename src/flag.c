@@ -16,10 +16,14 @@ LDi_flag_parse(
 
     result->key         = NULL;
     result->value       = NULL;
-    result->reason      = NULL;
-    result->deleted     = LDBooleanFalse;
     result->version     = -1;
     result->flagVersion = -1;
+    result->variation = -1;
+    result->trackEvents = LDBooleanFalse;
+    result->trackReason = LDBooleanFalse;
+    result->reason      = NULL;
+    result->debugEventsUntilDate = 0;
+    result->deleted     = LDBooleanFalse;
 
     if (LDJSONGetType(raw) != LDObject) {
         LD_LOG(LD_LOG_ERROR, "LDi_flag_parse not an object");
@@ -54,31 +58,20 @@ LDi_flag_parse(
         }
     }
 
-    /* value */
-    if (!(tmp = LDObjectLookup(raw, "value"))) {
+    /* value; required */
+    if ((tmp = LDObjectLookup(raw, "value"))) {
+        if (!(result->value = LDJSONDuplicate(tmp))) {
+            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse failed to duplicate value");
+
+            goto error;
+        }
+    } else {
         LD_LOG(LD_LOG_ERROR, "LDi_flag_parse expected value");
 
         goto error;
     }
 
-    if (!(result->value = LDJSONDuplicate(tmp))) {
-        LD_LOG(LD_LOG_ERROR, "LDi_flag_parse failed to duplicate value");
-
-        goto error;
-    }
-
-    /* flagVersion */
-    if ((tmp = LDObjectLookup(raw, "flagVersion"))) {
-        if (LDJSONGetType(tmp) != LDNumber) {
-            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse flagVersion is not a number");
-
-            goto error;
-        }
-
-        result->flagVersion = LDGetNumber(tmp);
-    }
-
-    /* version */
+    /* version; required */
     if ((tmp = LDObjectLookup(raw, "version"))) {
         if (LDJSONGetType(tmp) != LDNumber) {
             LD_LOG(LD_LOG_ERROR, "LDi_flag_parse version is not a number");
@@ -86,87 +79,14 @@ LDi_flag_parse(
             goto error;
         }
 
-        result->version = LDGetNumber(tmp);
-    }
-
-    /* variation */
-    if (!(tmp = LDObjectLookup(raw, "variation"))) {
-        LD_LOG(LD_LOG_ERROR, "LDi_flag_parse expected variation");
+        result->version = (int) LDGetNumber(tmp);
+    } else {
+        LD_LOG(LD_LOG_ERROR, "LDi_flag_parse expected version");
 
         goto error;
     }
 
-    if (LDJSONGetType(tmp) == LDNumber) {
-        result->variation = LDGetNumber(tmp);
-    } else if (LDJSONGetType(tmp) == LDNull) {
-        result->variation = -1;
-    } else {
-        LD_LOG(
-            LD_LOG_ERROR, "LDi_flag_parse variation is not a number or null");
-
-        goto error;
-    }
-
-    /* trackEvents */
-    if ((tmp = LDObjectLookup(raw, "trackEvents"))) {
-        if (LDJSONGetType(tmp) != LDBool) {
-            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse trackEvents is not boolean");
-
-            goto error;
-        }
-
-        result->trackEvents = LDGetBool(tmp);
-    } else {
-        result->trackEvents = LDBooleanFalse;
-    }
-
-
-    /* trackReason */
-    if ((tmp = LDObjectLookup(raw, "trackReason"))) {
-        if (LDJSONGetType(tmp) != LDBool) {
-            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse trackReason is not boolean");
-
-            goto error;
-        }
-
-        result->trackReason = LDGetBool(tmp);
-    } else {
-        result->trackReason = LDBooleanFalse;
-    }
-
-    /* debugEventsUntilDate */
-    if ((tmp = LDObjectLookup(raw, "debugEventsUntilDate"))) {
-        if (LDJSONGetType(tmp) != LDNumber) {
-            LD_LOG(
-                LD_LOG_ERROR,
-                "LDi_flag_parse debugEventsUntilDate not a number");
-
-            goto error;
-        }
-
-        result->debugEventsUntilDate = LDGetNumber(tmp);
-    } else {
-        result->debugEventsUntilDate = 0;
-    }
-
-    /* reason */
-    if ((tmp = LDObjectLookup(raw, "reason"))) {
-        if (LDJSONGetType(tmp) != LDObject) {
-            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse reason is not an object");
-
-            goto error;
-        }
-
-        if (!(result->reason = LDJSONDuplicate(tmp))) {
-            LD_LOG(LD_LOG_ERROR, "LDi_flag_parse failed to duplicate reason");
-
-            goto error;
-        }
-    } else {
-        result->reason = NULL;
-    }
-
-    /* deleted */
+    /* deleted; optional (not part of data format - added by client when serializing) */
     if ((tmp = LDObjectLookup(raw, "deleted"))) {
         if (LDJSONGetType(tmp) != LDBool) {
             LD_LOG(LD_LOG_ERROR, "LDi_flag_parse deleted is not a boolean");
@@ -175,6 +95,54 @@ LDi_flag_parse(
         }
 
         result->deleted = LDGetBool(tmp);
+    }
+
+    /* flagVersion; optional */
+    if ((tmp = LDObjectLookup(raw, "flagVersion"))) {
+        if (LDJSONGetType(tmp) == LDNumber) {
+            result->flagVersion = (int) LDGetNumber(tmp);
+        }
+    }
+
+    /* variation; optional */
+    if ((tmp = LDObjectLookup(raw, "variation"))) {
+        if (LDJSONGetType(tmp) == LDNumber) {
+            result->variation = (int) LDGetNumber(tmp);
+        }
+    }
+
+
+    /* trackEvents; optional */
+    if ((tmp = LDObjectLookup(raw, "trackEvents"))) {
+        if (LDJSONGetType(tmp) == LDBool) {
+            result->trackEvents = LDGetBool(tmp);
+        }
+    }
+
+
+    /* trackReason; optional */
+    if ((tmp = LDObjectLookup(raw, "trackReason"))) {
+        if (LDJSONGetType(tmp) == LDBool) {
+            result->trackReason = LDGetBool(tmp);
+        }
+    }
+
+    /* debugEventsUntilDate; optional */
+    if ((tmp = LDObjectLookup(raw, "debugEventsUntilDate"))) {
+        if (LDJSONGetType(tmp) == LDNumber) {
+            result->debugEventsUntilDate = LDGetNumber(tmp);
+        }
+    }
+
+    /* reason; optional */
+    if ((tmp = LDObjectLookup(raw, "reason"))) {
+        if (LDJSONGetType(tmp) == LDObject) {
+            if (!(result->reason = LDJSONDuplicate(tmp))) {
+                LD_LOG(LD_LOG_ERROR, "LDi_flag_parse failed to duplicate reason");
+
+                goto error;
+            }
+        }
     }
 
     return LDBooleanTrue;

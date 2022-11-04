@@ -31,3 +31,13 @@ struct LDConfig
     /* array of strings */
     struct LDJSON *privateAttributeNames;
 };
+
+
+/* Trims a single trailing slash, if present, from the end of the given string.
+ * Returns a newly allocated string. */
+char *
+LDi_trimTrailingSlash(const char *s);
+
+/* Sets target to the trimmed version of s (via LDi_trimTrailingSlash and LDSetString). */
+LDBoolean
+LDi_setTrimmedString(char **target, const char *s);

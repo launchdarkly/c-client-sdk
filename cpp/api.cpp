@@ -167,9 +167,18 @@ LDClientCPP::track(const std::string &name)
 }
 
 void
-LDClientCPP::track(const std::string &name, struct LDJSON *const data)
-{
+LDClientCPP::track(const std::string &name, struct LDJSON *const data) {
     LDClientTrackData(this->client, name.c_str(), data);
+}
+
+void
+LDClientCPP::track(const std::string &name, struct LDJSON *const data, double metric) {
+    LDClientTrackMetric(this->client, name.c_str(), data, metric);
+}
+
+void
+LDClientCPP::alias(const struct LDUser *currentUser, const struct LDUser *previousUser) {
+    LDClientAlias(this->client, currentUser, previousUser);
 }
 
 std::string

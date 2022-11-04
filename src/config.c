@@ -3,6 +3,37 @@
 #include "config.h"
 #include "ldinternal.h"
 
+char *
+LDi_trimTrailingSlash(const char *const s) {
+    unsigned int len;
+
+    LD_ASSERT(s);
+
+    len = strlen(s);
+
+    if (len == 0 || s[len-1] != '/') {
+        return LDStrDup(s);
+    }
+
+    return LDStrNDup(s, len-1);
+}
+
+LDBoolean
+LDi_setTrimmedString(char **const target, const char *const s) {
+    char *withoutTrailingSlash = NULL;
+    LDBoolean setResult = LDBooleanFalse;
+
+    if (!(withoutTrailingSlash = LDi_trimTrailingSlash(s))) {
+
+        return LDBooleanFalse;
+    }
+
+    setResult = LDSetString(target, withoutTrailingSlash);
+
+    LDFree(withoutTrailingSlash);
+    return setResult;
+}
+
 struct LDConfig *
 LDConfigNew(const char *const mobileKey)
 {
@@ -141,7 +172,7 @@ LDConfigSetAppURI(struct LDConfig *const config, const char *const uri)
     }
 #endif
 
-    return LDSetString(&config->appURI, uri);
+    return LDi_setTrimmedString(&config->appURI, uri);
 }
 
 void
@@ -259,7 +290,7 @@ LDConfigSetEventsURI(struct LDConfig *const config, const char *const uri)
     }
 #endif
 
-    return LDSetString(&config->eventsURI, uri);
+    return LDi_setTrimmedString(&config->eventsURI, uri);
 }
 
 LDBoolean
@@ -362,7 +393,7 @@ LDConfigSetStreamURI(struct LDConfig *const config, const char *const uri)
     }
 #endif
 
-    return LDSetString(&config->streamURI, uri);
+    return LDi_setTrimmedString(&config->streamURI, uri);
 }
 
 void
@@ -418,7 +449,7 @@ LDConfigSetProxyURI(struct LDConfig *const config, const char *const uri)
     }
 #endif
 
-    return LDSetString(&config->proxyURI, uri);
+    return LDi_setTrimmedString(&config->proxyURI, uri);
 }
 
 void
