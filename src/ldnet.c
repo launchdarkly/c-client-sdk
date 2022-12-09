@@ -97,6 +97,7 @@ ProgressCallback(void *clientp,
     struct streamdata *context;
     double currentTime;
     double elapsedTime;
+    LDStatus status;
 
     /* These are a required part of the callback interface,
      * but we don't need them. */
@@ -106,6 +107,17 @@ ProgressCallback(void *clientp,
 
     LD_ASSERT(clientp);
     context  = (struct streamdata *)clientp;
+
+    LDi_rwlock_rdlock(&context->client->clientLock);
+    status = context->client->status;
+    LDi_rwlock_rdunlock(&context->client->clientLock);
+
+    /* Upon explicit shutdown of the client, return 1 to cause CURL to
+     * abort the connection. Otherwise, it's possible for the connection to hang
+     * for 10+ seconds before CURL drops the connection by itself. */
+    if (status == LDStatusShuttingdown) {
+        return 1;
+    }
 
     if (context->lastdataamt == dlnow) {
         LDi_getMonotonicMilliseconds(&currentTime);

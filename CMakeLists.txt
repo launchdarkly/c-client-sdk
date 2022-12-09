@@ -16,7 +16,11 @@ project(ldclientapi VERSION ${CMAKE_MATCH_1})
 
 option(BUILD_BENCHMARKS "Also build benchmarks" OFF)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles")
+# Contains various Find files, code coverage, 3rd party library FetchContent scripts,
+# and the project's Package Configuration script.
+set(CMAKE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_FILES}")
 
 include(CTest)
 
@@ -205,4 +209,9 @@ if(BUILD_BENCHMARKS)
                   -D LAUNCHDARKLY_CONCURRENCY_ABORT
       )
   endforeach(benchmarksource)
+endif()
+
+
+if (BUILD_TEST_SERVICE)
+    add_subdirectory(contract-tests)
 endif()

@@ -168,9 +168,9 @@ LD_EXPORT(void) LDSetClientStatusCallbackUserData(LDstatusfn callback, void *use
 /** @brief Record a alias event */
 LD_EXPORT(void)
 LDClientAlias(
-    struct LDClient *const     client,
-    const struct LDUser *const currentUser,
-    const struct LDUser *const previousUser);
+    struct LDClient *    client,
+    const struct LDUser *currentUser,
+    const struct LDUser *previousUser);
 
 /** @brief Record a custom event. */
 LD_EXPORT(void)

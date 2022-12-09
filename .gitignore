@@ -57,7 +57,7 @@ unit-tests/test-private-attr
 settings.json
 build/*
 .idea/
-cmake-build-debug/
+cmake-build-*/
 reports/
 
 build-static/*

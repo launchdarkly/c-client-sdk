@@ -119,11 +119,17 @@ class LD_EXPORT(LDClientCPP) {
          * changed frequently. */
         void identify(LDUser *user);
 
+        /** @brief Record an alias event for a user. */
+        void alias(const struct LDUser *currentUser, const struct LDUser *previousUser);
+
         /** @brief Record a custom event. */
         void track(const std::string &name);
 
         /** @brief Record a custom event and include custom data. */
         void track(const std::string &name, struct LDJSON *data);
+
+        /** @brief Record a custom event and include a metric. */
+        void track(const std::string &name, struct LDJSON *data, double metric);
 
         /** @brief  Send any pending events to the server.
          *

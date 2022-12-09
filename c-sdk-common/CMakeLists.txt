@@ -1,8 +1,26 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 3.10)
 
 project(ldsharedapi)
 
 include(CTest)
+
+if(BUILD_TESTING)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    configure_file(CMakeLists.txt.in
+            ${CMAKE_BINARY_DIR}/googletest-download/CMakeLists.txt)
+    execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+    execute_process(COMMAND ${CMAKE_COMMAND} --build .
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+
+
+    add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
+            ${CMAKE_BINARY_DIR}/googletest-build)
+
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 
 find_package(CURL REQUIRED)
 
@@ -81,27 +99,27 @@ endif(MSVC)
 
 file(GLOB TEST_UTILS_SOURCES "test-utils/src/*")
 
-add_library(testutils ${SOURCES})
+add_library(test-utils ${SOURCES})
 
-target_include_directories(testutils
+target_include_directories(test-utils
     PUBLIC "test-utils/src"
            "test-utils/include/test-utils"
            ${LD_INCLUDE_PATHS}
 )
 
 if(MSVC)
-    target_compile_definitions(testutils
+    target_compile_definitions(test-utils
         PRIVATE -D LAUNCHDARKLY_USE_ASSERT
     )
 else()
-    target_compile_definitions(testutils
+    target_compile_definitions(test-utils
         PRIVATE -D __USE_XOPEN
                 -D _GNU_SOURCE
                 -D LAUNCHDARKLY_USE_ASSERT
     )
 
     # the 3rd party http parser does not pass -pedantic
-    target_compile_options(testutils
+    target_compile_options(test-utils
         PRIVATE -fno-omit-frame-pointer
                 -Wall
                 -Wextra
@@ -112,21 +130,3 @@ else()
                 -std=c89
     )
 endif(MSVC)
-
-# test targets -----------------------------------------------------------------
-
-if(BUILD_TESTING)
-    file(GLOB TESTS "tests/test-*")
-    foreach(testsource ${TESTS})
-        get_filename_component(testsourceleaf ${testsource} NAME)
-        string(REPLACE ".c" "" testexe ${testsourceleaf})
-        add_executable(${testexe} ${testsource})
-        target_link_libraries(${testexe} ldsharedapi)
-        target_include_directories(${testexe} PRIVATE ${LD_INCLUDE_PATHS})
-        add_test(NAME ${testexe} COMMAND ${CMAKE_BINARY_DIR}/${testexe})
-        target_compile_definitions(${testexe}
-            PRIVATE -D LAUNCHDARKLY_USE_ASSERT
-                    -D LAUNCHDARKLY_CONCURRENCY_ABORT
-        )
-    endforeach(testsource)
-endif()
