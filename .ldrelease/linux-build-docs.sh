@@ -8,4 +8,4 @@ PROJECT_DIR=$(pwd)
 
 doxygen
 
-cp -r ${PROJECT_DIR}/docs/build/html/* ${LD_RELEASE_DOCS_DIR}
+cp -r "${PROJECT_DIR}"/docs/build/html/* "${LD_RELEASE_DOCS_DIR}"
