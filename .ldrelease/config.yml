@@ -7,7 +7,7 @@ repo:
 jobs:
   - circleCI:
       linux: 
-        image: ldcircleci/ld-c-sdk-ubuntu:2  # defined in sdks-ci-docker project
+        image: ldcircleci/ld-c-sdk-ubuntu:5  # defined in sdks-ci-docker project
       # Needed to allow AWS authentication to succeed using circleCI job (an empty context will suffice; this one
       # exists specifically for that purpose.)
       context: circleci-oidc-auth
