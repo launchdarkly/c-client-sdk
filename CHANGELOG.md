@@ -2,6 +2,17 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.3] - 2022-12-09
+### Added:
+- Added contract test service.
+- Added missing `track` and `alias` methods to C++ headers.
+
+### Fixed:
+- Fixed hang on Windows when `LDClientClose` was called after internet connection was dropped.
+- Fixed incorrect handling of configured URIs that contained trailing slashes.
+- Fixed incorrect handling of optional properties in flag data. 
+- Fixed conversions of timestamps to JSON such that values are always represented as integers.
+
 ## [2.5.2] - 2022-09-19
 ### Fixed:
 - Fixed an issue where `LDClientSaveFlags` would return `null` if a flag was archived after initializing the SDK.
