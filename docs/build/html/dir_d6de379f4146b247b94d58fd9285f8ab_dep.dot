@@ -1,0 +1,13 @@
+digraph "c-sdk-common/include/launchdarkly" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_431872f0c593d22e60b93671af8c531f {
+    graph [ bgcolor="#ddddee", pencolor="black", label="include" fontname="Helvetica", fontsize="10", URL="dir_431872f0c593d22e60b93671af8c531f.html"]
+  subgraph clusterdir_d6de379f4146b247b94d58fd9285f8ab {
+    graph [ bgcolor="#eeeeff", pencolor="black", label="" URL="dir_d6de379f4146b247b94d58fd9285f8ab.html"];
+    dir_d6de379f4146b247b94d58fd9285f8ab [shape=plaintext label="launchdarkly"];
+    dir_c1c57cc3daddc31e9ce7f7f3741fc7d5 [shape=box label="experimental" color="red" fillcolor="white" style="filled" URL="dir_c1c57cc3daddc31e9ce7f7f3741fc7d5.html"];
+  }
+  }
+}

@@ -1,0 +1,42 @@
+digraph "cpp/include/launchdarkly/api.hpp"
+{
+ // LATEX_PDF_SIZE
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="cpp/include/launchdarkly\l/api.hpp",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black",tooltip="Public C++ bindings for the LaunchDarkly Client Side C/C++ SDK."];
+  Node1 -> Node2 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="launchdarkly/api.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$api_8h.html",tooltip="Public API. Include this for every public operation."];
+  Node2 -> Node3 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 [label="launchdarkly/client.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$client_8h.html",tooltip="Public Client control and variations."];
+  Node3 -> Node4 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node4 [label="stddef.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
+  Node3 -> Node5 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 [label="launchdarkly/boolean.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$boolean_8h.html",tooltip="A custom c89 boolean type."];
+  Node3 -> Node6 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 [label="launchdarkly/config.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$config_8h.html",tooltip="Public API Interface for Configuration."];
+  Node6 -> Node5 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 [label="launchdarkly/export.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$export_8h.html",tooltip="Public. Configuration of exported symbols."];
+  Node6 -> Node8 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node8 [label="launchdarkly/json.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$json_8h.html",tooltip="Public API Interface for JSON usage."];
+  Node8 -> Node5 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node8 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 -> Node8 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 -> Node9 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node9 [label="launchdarkly/user.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$user_8h.html",tooltip="Public API Interface for User construction."];
+  Node9 -> Node5 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node9 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node9 -> Node8 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 -> Node6 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 -> Node8 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 -> Node10 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node10 [label="launchdarkly/logging.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$logging_8h.html",tooltip="Public API Interface for Logging."];
+  Node10 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 -> Node11 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node11 [label="launchdarkly/memory.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$memory_8h.html",tooltip="Public API. Operations for managing memory."];
+  Node11 -> Node4 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node11 -> Node7 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 -> Node9 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+}
