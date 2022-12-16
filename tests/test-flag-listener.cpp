@@ -137,7 +137,7 @@ TEST_F(FlagListenerFixture, TestListenerAddedReceivesCallbacks) {
     LDFlag flag = makeFlag("flag1");
 
     ASSERT_TRUE(LDi_storeUpsert(&client->store, flag));
-    ASSERT_TRUE(LDi_storeDelete(&client->store, flag.key, flag.version));
+    ASSERT_TRUE(LDi_storeDelete(&client->store, flag.key, flag.version+1));
 
     LDClientUnregisterFeatureFlagListener(client, "flag1", listenerAdded);
 
