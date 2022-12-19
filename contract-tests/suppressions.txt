@@ -1,4 +1,5 @@
 events/summary events/reset after each flush
+# events/disabling: expected (sc181104)
 events/disabling/evaluation
 events/disabling/identify event
 events/disabling/custom event
