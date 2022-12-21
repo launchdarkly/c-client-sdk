@@ -8,134 +8,45 @@ workflows:
   build_and_test_all:
     jobs:
       - build-test-linux
-      - build-linux-o3
-      - build-test-osx
-      - build-test-windows
-      - build-test-linux-clang11
       - build-test-linux-valgrind:
           requires:
             - build-test-linux
-      - build-test-linux-drd:
-          requires:
-            - build-test-linux
+      - build-test-osx
+      - build-test-windows
 
 jobs:
-  build-test-linux-valgrind:
-    docker:
-      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
-      - image: redis
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apt-get update -y && apt-get install -y git
-      - run:
-          name: Build
-          command: ./.ldrelease/build.sh
-      - run:
-          name: Unit test with valgrind
-          command: |
-            cd build-static
-            valgrind --error-exitcode=100 --leak-check=full ./tests/google_tests
-  build-test-linux-drd:
-    docker:
-      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
-      - image: redis
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            apt-get update -y && apt-get install -y git
-      - run:
-          name: Build
-          command: ./.ldrelease/build.sh
-      - run:
-          name: Unit test with drd
-          command: |
-            cd build-static
-            valgrind --tool=drd --suppressions=../valgrind-suppressions.txt --error-exitcode=100 --gen-suppressions=all ./tests/google_tests
   build-test-linux:
     docker:
       - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
-    environment:
-      CTEST_OUTPUT_ON_FAILURE: 1
     steps:
       - checkout
       - run:
           name: Install prerequisites
-          command: |
-            apt-get update -y && apt-get install -y git
+          command: apt-get update -y && apt-get install -y git
       - run:
           name: Build
-          command: ./.ldrelease/build.sh
+          command: mkdir -p build && cd build && cmake .. && make
       - run:
-          name: Unit test
-          command: |
-            cd build-static
-            GTEST_OUTPUT="xml:$(pwd)/../reports/" make test
-      - store_test_results:
-          path: reports
+          name: Test
+          command: cd build && GTEST_OUTPUT="xml:$(pwd)/.../reports/" make test
 
-  build-linux-o3:
+  build-test-linux-valgrind:
     docker:
       - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
     steps:
       - checkout
       - run:
           name: Install prerequisites
-          command: |
-            apt-get update -y && apt-get install -y git
+          command: apt-get update -y && apt-get install -y git
       - run:
           name: Build
-          command: ./.ldrelease/build.sh -O3
-  build-test-linux-clang11:
-    docker:
-      - image: ubuntu:20.04
-    environment:
-      CTEST_OUTPUT_ON_FAILURE: 1
-      DEBIAN_FRONTEND: noninteractive
-    steps:
-      - checkout
+          command: mkdir -p build && cd build && cmake .. && make
       - run:
-          name: Install dependencies
+          name: Test with valgrind
           command: |
-            apt-get update -y && apt-get install -y \
-              libcurl4-openssl-dev \
-              libpcre3-dev \
-              cmake \
-              clang-11 \
-              git \
-              curl
-      - run:
-          name: Build
-          command: |
-            export CC=/usr/bin/clang-11
-            export CXX=/usr/bin/clang++-11
-            ./.ldrelease/build.sh
-      - run:
-          name: Unit test
-          command: |
-            cd build-static
-            GTEST_OUTPUT="xml:$(pwd)/../reports/" make test
-      - store_test_results:
-          path: reports
-      - run:
-          name: make contract test output directory
-          command: mkdir /tmp/test-results
-      - run: |
-            export CC=/usr/bin/clang-11
-            export CXX=/usr/bin/clang++-11
-            make build-contract-tests
-      - run:
-          command: make start-contract-test-service
-          background: true
-      - run:
-          name: run contract tests
-          command: TEST_HARNESS_PARAMS="-junit /tmp/test-results/contract-tests-junit.xml -skip-from ./contract-tests/suppressions.txt" make run-contract-tests
-      - store_test_results:
-          path: /tmp/test-results/
+            cd build && make test
+            valgrind --error-exitcode=100 --leak-check=full ./tests/google_tests
+
   build-test-osx:
     macos:
       xcode: "12.5.1"
@@ -146,15 +57,13 @@ jobs:
       - checkout
       - run:
           name: Install prerequisites
-          command: ./.ldrelease/mac-prepare.sh
+          command: HOMEBREW_NO_AUTO_UPDATE=1 brew install cmake
       - run:
           name: Build
-          command: ./.ldrelease/build.sh
+          command: mkdir -p build && cd build && cmake .. && make
       - run:
           name: Test
-          command: ./.ldrelease/test.sh
-      - store_test_results:
-          path: reports
+          command: cd build && GTEST_OUTPUT="xml:$(pwd)/.../reports/" make test
 
   build-test-windows:
     executor:
@@ -165,10 +74,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build
-          command: ./.ldrelease/build.ps1
+          name: build
+          command: ./scripts/build.ps1
       - run:
           name: Test
-          command: ./.ldrelease/test.ps1
-      - store_test_results:
-          path: reports
+          command: ./scripts/test.ps1

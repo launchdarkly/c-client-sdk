@@ -1,5 +1,6 @@
-#ifndef LDSERVERAPI_COMMONFIXTURE_H
-#define LDSERVERAPI_COMMONFIXTURE_H
+#ifndef LDSHAREDAPI_COMMONFIXTURE_H
+#define LDSHAREDAPI_COMMONFIXTURE_H
+#include "gtest/gtest.h"
 
 class CommonFixture : public ::testing::Test {
 protected:
@@ -8,4 +9,4 @@ protected:
     void TearDown() override;
 };
 
-#endif //LDSERVERAPI_COMMONFIXTURE_H
+#endif // LDSHAREDAPI_COMMONFIXTURE_H

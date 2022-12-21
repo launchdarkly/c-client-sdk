@@ -1,6 +1,0 @@
-{
-    "filedata":
-    {
-        "value" : "as expected", "version" : 3
-    }
-}
