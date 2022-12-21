@@ -3,6 +3,8 @@
 #include "assertion.h"
 #include <launchdarkly/json.h>
 
+#define LDTIMESTAMP_EMPTY -1
+
 LDBoolean
 LDTimer_Reset(struct LDTimer *timer) {
     LD_ASSERT(timer);
@@ -22,12 +24,19 @@ LDTimer_Elapsed(const struct LDTimer *timer, double *out_elapsedMs) {
     return LDBooleanTrue;
 }
 
+void
+LDTimestamp_InitEmpty(struct LDTimestamp *timestamp)
+{
+    LD_ASSERT(timestamp);
+    timestamp->ms = LDTIMESTAMP_EMPTY;
+}
+
 LDBoolean
 LDTimestamp_InitNow(struct LDTimestamp *timestamp) {
     LD_ASSERT(timestamp);
 
     if (!LDi_getUnixMilliseconds(&timestamp->ms)) {
-        timestamp->ms = -1;
+        LDTimestamp_InitEmpty(timestamp);
         return LDBooleanFalse;
     }
 
@@ -35,15 +44,17 @@ LDTimestamp_InitNow(struct LDTimestamp *timestamp) {
 }
 
 LDBoolean
-LDTimestamp_IsInvalid(const struct LDTimestamp *timestamp) {
+LDTimestamp_IsEmpty(const struct LDTimestamp *timestamp)
+{
     LD_ASSERT(timestamp);
-    return (LDBoolean) (timestamp->ms == -1);
+    return (LDBoolean) (timestamp->ms == LDTIMESTAMP_EMPTY);
 }
 
-void
-LDTimestamp_InitZero(struct LDTimestamp *timestamp) {
+LDBoolean
+LDTimestamp_IsSet(const struct LDTimestamp *timestamp)
+{
     LD_ASSERT(timestamp);
-    timestamp->ms = 0;
+    return (LDBoolean) (timestamp->ms >= 0);
 }
 
 void
@@ -61,24 +72,29 @@ LDTimestamp_InitUnixMillis(struct LDTimestamp *timestamp, double unixMillisecond
 
 LDBoolean
 LDTimestamp_Before(const struct LDTimestamp *a, const struct LDTimestamp *b) {
-    LD_ASSERT(a);
-    LD_ASSERT(b);
+    LD_ASSERT(LDTimestamp_IsSet(a));
+    LD_ASSERT(LDTimestamp_IsSet(b));
     return (LDBoolean) (a->ms < b->ms);
 }
 
 LDBoolean
+LDTimestamp_After(const struct LDTimestamp *a, const struct LDTimestamp *b)
+{
+    LD_ASSERT(LDTimestamp_IsSet(a));
+    LD_ASSERT(LDTimestamp_IsSet(b));
+    return (LDBoolean) (a->ms > b->ms);
+}
+
+LDBoolean
 LDTimestamp_Equal(const struct LDTimestamp *a, const struct LDTimestamp *b) {
-    LD_ASSERT(a);
-    LD_ASSERT(b);
+    LD_ASSERT(LDTimestamp_IsSet(a));
+    LD_ASSERT(LDTimestamp_IsSet(b));
     return (LDBoolean) (a->ms == b->ms);
 }
 
 double
 LDTimestamp_AsUnixMillis(const struct LDTimestamp *timestamp) {
-    LD_ASSERT(timestamp);
-    if (LDTimestamp_IsInvalid(timestamp)) {
-        return -1;
-    }
+    LD_ASSERT(LDTimestamp_IsSet(timestamp));
     return timestamp->ms;
 }
 
@@ -86,8 +102,8 @@ LDTimestamp_AsUnixMillis(const struct LDTimestamp *timestamp) {
 struct LDJSON *
 LDTimestamp_MarshalUnixMillis(const struct LDTimestamp *timestamp) {
     LD_ASSERT(timestamp);
-    if (LDTimestamp_IsInvalid(timestamp)) {
-        return LDNewNumber(-1);
+    if (LDTimestamp_IsEmpty(timestamp)) {
+        return LDNewNull();
     }
     return LDNewNumber(timestamp->ms);
 }
