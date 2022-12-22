@@ -59,7 +59,7 @@ TEST_F(UserFixture, ConstructAllSettings)
     LDUserFree(user);
 }
 
-TEST_F(UserFixture, SerializeEmpty)
+TEST_F(UserFixture, SerializeEmptyEventUser)
 {
     struct LDJSON *json;
     struct LDUser *user;
@@ -67,7 +67,7 @@ TEST_F(UserFixture, SerializeEmpty)
 
     ASSERT_TRUE(user = LDi_userNew("abc"));
     ASSERT_TRUE(
-        json = LDi_userToJSON(user, LDBooleanFalse, LDBooleanFalse, NULL));
+        json = LDi_createEventUser(user, LDBooleanFalse, NULL));
     ASSERT_TRUE(serialized = LDJSONSerialize(json));
 
     ASSERT_STREQ(serialized, "{\"key\":\"abc\"}");
@@ -77,7 +77,7 @@ TEST_F(UserFixture, SerializeEmpty)
     LDJSONFree(json);
 }
 
-TEST_F(UserFixture, SerializeRedacted)
+TEST_F(UserFixture, SerializeRedactedEventUser)
 {
     struct LDJSON *json;
     struct LDUser *user;
@@ -96,7 +96,7 @@ TEST_F(UserFixture, SerializeRedacted)
     ASSERT_TRUE(LDUserAddPrivateAttribute(user, "secret"));
 
     ASSERT_TRUE(
-        json = LDi_userToJSON(user, LDBooleanTrue, LDBooleanFalse, NULL));
+        json = LDi_createEventUser(user, LDBooleanFalse, NULL));
     ASSERT_TRUE(serialized = LDJSONSerialize(json));
 
     ASSERT_STREQ(
@@ -109,7 +109,7 @@ TEST_F(UserFixture, SerializeRedacted)
     LDJSONFree(json);
 }
 
-TEST_F(UserFixture, SerializeAll)
+TEST_F(UserFixture, SerializeAllEventUserAttributes)
 {
     struct LDJSON *json;
     struct LDUser *user;
@@ -118,7 +118,7 @@ TEST_F(UserFixture, SerializeAll)
     ASSERT_TRUE(user = constructBasic());
 
     ASSERT_TRUE(
-        json = LDi_userToJSON(user, LDBooleanFalse, LDBooleanFalse, NULL));
+        json = LDi_createEventUser(user, LDBooleanFalse, NULL));
     ASSERT_TRUE(serialized = LDJSONSerialize(json));
 
     ASSERT_STREQ(
@@ -132,6 +132,81 @@ TEST_F(UserFixture, SerializeAll)
     LDUserFree(user);
     LDFree(serialized);
     LDJSONFree(json);
+}
+
+TEST_F(UserFixture, SerializeBasicUser) {
+    struct LDUser *user;
+    char *json;
+
+    ASSERT_TRUE(user = constructBasic());
+    ASSERT_TRUE(json = LDi_serializeUser(user));
+
+    ASSERT_STREQ(
+        json,
+        "{\"key\":\"abc\","
+        "\"secondary\":\"unknown202\",\"ip\":\"127.0.0.1\","
+        "\"firstName\":\"Jane\",\"lastName\":\"Doe\","
+        "\"email\":\"janedoe@launchdarkly.com\","
+        "\"name\":\"Jane\",\"avatar\":\"unknown101\","
+        "\"privateAttributeNames\":[\"secret\"]}");
+
+    LDUserFree(user);
+    LDFree(json);
+}
+
+TEST_F(UserFixture, SerializeEmptyUser) {
+    struct LDUser *user;
+    char *json;
+
+    ASSERT_TRUE(user = LDi_userNew("foo"));
+
+    ASSERT_TRUE(json = LDi_serializeUser(user));
+
+    ASSERT_STREQ(json,"{\"key\":\"foo\"}");
+
+    LDUserFree(user);
+    LDFree(json);
+}
+
+TEST_F(UserFixture, SerializeUserWithMultiplePrivateAttributes) {
+    struct LDUser *user;
+    char *json;
+
+    ASSERT_TRUE(user = LDi_userNew("abc"));
+
+    LDUserAddPrivateAttribute(user, "foo");
+    LDUserAddPrivateAttribute(user, "bar");
+    LDUserAddPrivateAttribute(user, "baz");
+
+    ASSERT_TRUE(json = LDi_serializeUser(user));
+
+    ASSERT_STREQ(json,"{\"key\":\"abc\",\"privateAttributeNames\":[\"foo\",\"bar\",\"baz\"]}");
+
+    LDUserFree(user);
+    LDFree(json);
+}
+
+TEST_F(UserFixture, SerializeUserWithMultipleCustomAttributes) {
+    struct LDUser *user;
+    struct LDJSON *custom;
+    char *json;
+
+    ASSERT_TRUE(custom = LDNewObject());
+
+    ASSERT_TRUE(user = LDi_userNew("abc"));
+
+    LDObjectSetKey(custom, "foo", LDNewBool(LDBooleanTrue));
+    LDObjectSetKey(custom, "bar", LDNewBool(LDBooleanTrue));
+    LDObjectSetKey(custom, "baz", LDNewBool(LDBooleanTrue));
+
+    LDUserSetCustom(user, custom);
+
+    ASSERT_TRUE(json = LDi_serializeUser(user));
+
+    ASSERT_STREQ(json,"{\"key\":\"abc\",\"custom\":{\"foo\":true,\"bar\":true,\"baz\":true}}");
+
+    LDUserFree(user);
+    LDFree(json);
 }
 
 TEST_F(UserFixture, DefaultReplaceAndGet)
