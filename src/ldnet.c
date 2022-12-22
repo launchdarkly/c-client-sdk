@@ -642,8 +642,6 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
         return NULL;
     }
 
-    LDFree(userJSONText);
-
     if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK)
         {
@@ -694,6 +692,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
         *response = -1;
     }
 
+    LDFree(userJSONText);
     LDFree(headers.memory);
 
     curl_slist_free_all(headerlist);
@@ -703,6 +702,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
     return data.memory;
 
 error:
+    LDFree(userJSONText);
     LDFree(data.memory);
     LDFree(headers.memory);
 
