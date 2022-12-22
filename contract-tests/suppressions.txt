@@ -1,14 +1,10 @@
 events/summary events/reset after each flush
+events/summary events/basic counter behavior
 # events/disabling: expected (sc181104)
 events/disabling/evaluation
 events/disabling/identify event
 events/disabling/custom event
 events/disabling/alias event
-streaming/requests/user properties/GET
-streaming/requests/user properties/REPORT
-polling/requests/user properties/GET
-polling/requests/user properties/REPORT
-events/summary events/basic counter behavior
 # debug events: expected (sc180749)
 events/debug events/should see debug event/debugEventsUntilDate is after SDK time/SDK does not know LD time/without reasons/type: bool
 events/debug events/should see debug event/debugEventsUntilDate is after SDK time/SDK does not know LD time/without reasons/type: int

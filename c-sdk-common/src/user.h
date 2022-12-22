@@ -22,12 +22,21 @@ struct LDJSON *
 LDi_valueOfAttribute(
     const struct LDUser *const user, const char *const attribute);
 
+/* Creates an "event user", which is a representation of a user suitable
+ * for events. Attributes are redacted according to allAttributesPrivate, and
+ * the list of global private attribute names.
+ * The returned LDJSON must be freed with LDJSONFree. */
 struct LDJSON *
-LDi_userToJSON(
-    const struct LDUser *const user,
-    const LDBoolean            redact,
-    const LDBoolean            allAttributesPrivate,
-    const struct LDJSON *const globalPrivateAttributeNames);
+LDi_createEventUser(
+    const struct LDUser *user,
+    LDBoolean            allAttributesPrivate,
+    const struct LDJSON *globalPrivateAttributeNames);
+
+
+/* Serializes a user to its JSON representation. The returned string must be
+ * freed with LDFree. */
+char *
+LDi_serializeUser(const struct LDUser *user);
 
 /* Server and client have different semantics for handling of a NULL user key.
 because of this LDUserNew is not defined in c-sdk-common. This function

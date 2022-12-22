@@ -140,9 +140,8 @@ LDi_addUserInfoToEvent(
     LD_ASSERT(user);
 
     if (context->config->inlineUsersInEvents) {
-        if (!(tmp = LDi_userToJSON(
+        if (!(tmp = LDi_createEventUser(
                   user,
-                  LDBooleanTrue,
                   context->config->allAttributesPrivate,
                   context->config->privateAttributeNames)))
         {
@@ -214,9 +213,8 @@ LDi_newIdentifyEvent(
         return LDBooleanFalse;
     }
 
-    if (!(tmp = LDi_userToJSON(
+    if (!(tmp = LDi_createEventUser(
               user,
-              LDBooleanTrue,
               context->config->allAttributesPrivate,
               context->config->privateAttributeNames)))
     {

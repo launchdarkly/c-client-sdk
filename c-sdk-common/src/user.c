@@ -349,11 +349,10 @@ addHidden(struct LDJSON **const ref, const char *const value)
 }
 
 struct LDJSON *
-LDi_userToJSON(
-    const struct LDUser *const user,
-    const LDBoolean            redact,
-    const LDBoolean            allAttributesPrivate,
-    const struct LDJSON *const globalPrivateAttributeNames)
+LDi_createEventUser(
+    const struct LDUser *user,
+    LDBoolean            allAttributesPrivate,
+    const struct LDJSON *globalPrivateAttributeNames)
 {
     struct LDJSON *hidden, *json, *temp;
 
@@ -397,7 +396,7 @@ LDi_userToJSON(
 
 #define addstring(field)                                                       \
     if (user->field) {                                                         \
-        if (redact && isPrivateAttr(                                           \
+        if (isPrivateAttr(                                                     \
                           user,                                                \
                           #field,                                              \
                           allAttributesPrivate,                                \
@@ -441,7 +440,7 @@ LDi_userToJSON(
             return NULL;
         }
 
-        if (redact && LDJSONGetType(custom) == LDObject) {
+        if (LDJSONGetType(custom) == LDObject) {
             struct LDJSON *item = LDGetIter(custom);
 
             while (item) {
@@ -483,6 +482,53 @@ LDi_userToJSON(
             return NULL;
         }
     }
+
+    return json;
+
+#undef addstring
+}
+
+
+char *
+LDi_serializeUser(const struct LDUser *user)
+{
+    struct LDJSON *attrs;
+    char *json;
+
+    LD_ASSERT(user);
+
+    attrs = LDNewObject();
+
+    LDObjectSetKey(attrs, "key", LDNewText(user->key));
+
+    if (user->anonymous) {
+        LDObjectSetKey(attrs, "anonymous", LDNewBool(LDBooleanTrue));
+    }
+
+#define addstring(field) \
+    if (user->field) {   \
+        LDObjectSetKey(attrs, #field, LDNewText(user->field));  \
+    }
+
+    addstring(secondary);
+    addstring(ip);
+    addstring(firstName);
+    addstring(lastName);
+    addstring(email);
+    addstring(name);
+    addstring(avatar);
+    addstring(country);
+
+    if (user->custom && LDCollectionGetSize(user->custom) > 0) {
+        LDObjectSetKey(attrs, "custom", LDJSONDuplicate(user->custom));
+    }
+
+    if (user->privateAttributeNames && LDCollectionGetSize(user->privateAttributeNames) > 0) {
+        LDObjectSetKey(attrs, "privateAttributeNames",LDJSONDuplicate(user->privateAttributeNames));
+    }
+
+    json = LDJSONSerialize(attrs);
+    LDJSONFree(attrs);
 
     return json;
 
