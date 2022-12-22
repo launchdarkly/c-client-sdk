@@ -4,9 +4,6 @@ events/disabling/evaluation
 events/disabling/identify event
 events/disabling/custom event
 events/disabling/alias event
-streaming/requests/user properties/GET
-streaming/requests/user properties/REPORT
-polling/requests/user properties/GET
 polling/requests/user properties/REPORT
 events/summary events/basic counter behavior
 # debug events: expected (sc180749)
