@@ -46,7 +46,7 @@ public:
 
     JsonOrError evaluateAll(const EvaluateAllFlagParams &params);
 
-    bool identify(const IdentifyEventParams &params);
+    JsonOrError identify(const IdentifyEventParams &params);
 
     bool customEvent(const CustomEventParams &params);
 
