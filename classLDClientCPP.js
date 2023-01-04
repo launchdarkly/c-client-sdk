@@ -1,5 +1,6 @@
 var classLDClientCPP =
 [
+    [ "alias", "classLDClientCPP.html#ad202178e53301c5116f960b569fd0e99", null ],
     [ "awaitInitialized", "classLDClientCPP.html#a9c85ffe5cc7728672eb4f6dcffb6abc5", null ],
     [ "boolVariation", "classLDClientCPP.html#a8bd4788e0c8080d8995ee2a8f770d9ac", null ],
     [ "boolVariationDetail", "classLDClientCPP.html#af7a6dc2b83ced5d2c044d537f27cd2f3", null ],
@@ -23,9 +24,10 @@ var classLDClientCPP =
     [ "setOnline", "classLDClientCPP.html#a44d6b9cd36547a812ca64b0324d749ea", null ],
     [ "stringVariation", "classLDClientCPP.html#aee388f1e670ac78a8d9efb5d4ec168ed", null ],
     [ "stringVariation", "classLDClientCPP.html#a310f729bae26ae7f140f65b51ba28fdc", null ],
-    [ "stringVariationDetail", "classLDClientCPP.html#a0d11e2e6dee85a1b642541bc7d5861f0", null ],
     [ "stringVariationDetail", "classLDClientCPP.html#a94424bdaa482cad2eaf608dd6a4189f6", null ],
+    [ "stringVariationDetail", "classLDClientCPP.html#a0d11e2e6dee85a1b642541bc7d5861f0", null ],
     [ "track", "classLDClientCPP.html#a84e6c9926e2465d09cde1714c90eeb8e", null ],
     [ "track", "classLDClientCPP.html#aa7ea41341d8ceb9655b0989bb9a2ded0", null ],
+    [ "track", "classLDClientCPP.html#a804dfda4d8cd9aa3345a1b1ccede3de9", null ],
     [ "unregisterFeatureFlagListener", "classLDClientCPP.html#a928ea225e85963d1ccb2c53a42ae6973", null ]
 ];

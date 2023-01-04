@@ -1,0 +1,13 @@
+digraph "c-sdk-common/include" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_2baa2abe2a8541e88a77fd54574fc547 {
+    graph [ bgcolor="#ddddee", pencolor="black", label="c-sdk-common" fontname="Helvetica", fontsize="10", URL="dir_2baa2abe2a8541e88a77fd54574fc547.html"]
+  subgraph clusterdir_431872f0c593d22e60b93671af8c531f {
+    graph [ bgcolor="#eeeeff", pencolor="black", label="" URL="dir_431872f0c593d22e60b93671af8c531f.html"];
+    dir_431872f0c593d22e60b93671af8c531f [shape=plaintext label="include"];
+    dir_d6de379f4146b247b94d58fd9285f8ab [shape=box label="launchdarkly" color="red" fillcolor="white" style="filled" URL="dir_d6de379f4146b247b94d58fd9285f8ab.html"];
+  }
+  }
+}

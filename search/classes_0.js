@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['ldclientcpp',['LDClientCPP',['../classLDClientCPP.html',1,'']]],
-  ['lduser',['LDUser',['../structLDUser.html',1,'']]],
-  ['ldvariationdetails',['LDVariationDetails',['../structLDVariationDetails.html',1,'']]]
+  ['array_245',['Array',['../classlaunchdarkly_1_1Array.html',1,'launchdarkly']]]
 ];

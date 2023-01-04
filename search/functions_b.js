@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['track',['track',['../classLDClientCPP.html#a84e6c9926e2465d09cde1714c90eeb8e',1,'LDClientCPP::track(const std::string &amp;name)'],['../classLDClientCPP.html#aa7ea41341d8ceb9655b0989bb9a2ded0',1,'LDClientCPP::track(const std::string &amp;name, struct LDJSON *data)']]]
+  ['registerfeatureflaglistener_443',['registerFeatureFlagListener',['../classLDClientCPP.html#a5c6699df123a3b980da1e84d5ca5f1ad',1,'LDClientCPP']]],
+  ['release_444',['release',['../classlaunchdarkly_1_1Value.html#a9b95828f6b3cd3f46e9179be15de5bc8',1,'launchdarkly::Value']]],
+  ['restoreflags_445',['restoreFlags',['../classLDClientCPP.html#a81921c778f3ab2bd229a4cd0e3232a2a',1,'LDClientCPP']]]
 ];
