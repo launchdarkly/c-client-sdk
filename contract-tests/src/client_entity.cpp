@@ -209,8 +209,8 @@ JsonOrError ClientEntity::identify(const IdentifyEventParams &params) {
     m_client->identify(user.release());
     /* The SDK test harness relies on the assumption that the identify command is synchronous: after calling it,
      * flag evaluations will take place according to the new user. Since identify() in the C Client is asynchronous,
-     * we need to wait for re-initialization. The 1-second timeout is arbitrary. */
-    if (!m_client->awaitInitialized(1000)) {
+     * we need to wait for re-initialization. The 5-second timeout is arbitrary. */
+    if (!m_client->awaitInitialized(5000)) {
         return make_client_error("ClientEntity::identify: SDK timed out re-initializing after invoking identify()");
     }
     return nlohmann::json{};
