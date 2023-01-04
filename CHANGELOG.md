@@ -2,6 +2,12 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.4] - 2023-01-04
+### Fixed:
+- Fixed handling of out-of-order or stale flag updates. These updates are now discarded.
+- Fixed serialization of private user attributes array in initial streaming/polling request payload.
+- Fixed use-after-free when polling mode was used w/ `REPORT` method (`LDConfigSetUseReport`).
+
 ## [2.5.3] - 2022-12-09
 ### Added:
 - Added contract test service.
