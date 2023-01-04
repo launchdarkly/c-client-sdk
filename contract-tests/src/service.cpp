@@ -79,7 +79,7 @@ void TestService::do_command(const httplib::Request &req, httplib::Response &res
 
     if (auto iter = m_clients.find(clientID); iter != m_clients.end()) {
 
-        JsonOrError out = iter->second->do_command(params);
+        JsonOrError out = iter->second->handleCommand(params);
         if (std::holds_alternative<nlohmann::json>(out)) {
             auto json = std::get<nlohmann::json>(out);
             if (!json.is_null()) {

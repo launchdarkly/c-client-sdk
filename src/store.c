@@ -98,16 +98,41 @@ LDi_fireListenersFor(
     LDi_listenersDispatch(store->listeners, key, deleted);
 }
 
+enum versionStatus {
+    /* This version represents a new flag that didn't exist before. */
+    VERSION_NEW,
+    /* Received an update to an existing flag. */
+    VERSION_INCREASED,
+    /* Received a stale update to an existing flag. */
+    VERSION_STALE
+};
+
+/* Computes the meaning of an incoming flag version, when compared
+ * to the existing store node for that flag. */
+static enum versionStatus
+versionStatus(struct LDStoreNode *existingFlag, int incomingVersion)
+{
+    if (!existingFlag) {
+        return VERSION_NEW;
+    }
+    if (incomingVersion > existingFlag->flag.version) {
+        return VERSION_INCREASED;
+    }
+    return VERSION_STALE;
+}
+
+
 LDBoolean
 LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
 {
     struct LDStoreNode *existing, *replacement;
+    enum versionStatus status;
 
     LD_ASSERT(store);
     LD_ASSERT(flag.key);
 
-    /* Allocate before lock even though it may be throw away to reduce lock
-    contention as old flags should be rare */
+    /* Theoretically reduce lock contention by eagerly allocating the replacement store node.
+     * Downside: the allocation is unnecessary if the update is stale, but this is unlikely. */
     if (!(replacement = LDi_allocateStoreNode(flag))) {
         LDi_flag_destroy(&flag);
 
@@ -118,18 +143,27 @@ LDi_storeUpsert(struct LDStore *const store, struct LDFlag flag)
 
     HASH_FIND_STR(store->flags, flag.key, existing);
 
-    if ((existing && (flag.version >= existing->flag.version)) || !existing) {
-        if (existing) {
+    status = versionStatus(existing, flag.version);
+
+    switch (status) {
+        case VERSION_NEW: {
+            HASH_ADD_KEYPTR(hh, store->flags, flag.key, strlen(flag.key), replacement);
+            break;
+        }
+        case VERSION_INCREASED: {
             HASH_DEL(store->flags, existing);
             LDi_rc_decrement(&existing->rc);
+            HASH_ADD_KEYPTR(hh, store->flags, flag.key, strlen(flag.key), replacement);
+            break;
         }
+        case VERSION_STALE: {
+            LDi_destroyStoreNode(replacement);
+            break;
+        }
+    }
 
-        HASH_ADD_KEYPTR(
-            hh, store->flags, flag.key, strlen(flag.key), replacement);
-
+    if (status != VERSION_STALE) {
         LDi_fireListenersFor(store, flag.key, flag.deleted);
-    } else {
-        LDi_rc_destroy(&replacement->rc);
     }
 
     LDi_rwlock_wrunlock(&store->lock);

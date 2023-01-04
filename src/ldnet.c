@@ -328,7 +328,6 @@ LDi_readstream(
     struct cbhandlecontext handledata;
     CURL *                 curl;
     struct curl_slist *    headerlist, *headertmp;
-    struct LDJSON *        userJSON;
     char *                 userJSONText;
     char                   url[4096];
 
@@ -356,20 +355,10 @@ LDi_readstream(
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdlock(&client->clientLock);
 
-    userJSON = LDi_userToJSON(
-        client->shared->sharedUser, LDBooleanFalse, LDBooleanFalse, NULL);
+    userJSONText = LDi_serializeUser(client->shared->sharedUser);
 
     LDi_rwlock_rdunlock(&client->clientLock);
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-
-    if (userJSON == NULL) {
-        LD_LOG(LD_LOG_CRITICAL, "failed to convert user to user");
-
-        return;
-    }
-
-    userJSONText = LDJSONSerialize(userJSON);
-    LDJSONFree(userJSON);
 
     if (userJSONText == NULL) {
         LD_LOG(LD_LOG_CRITICAL, "failed to serialize user");
@@ -557,7 +546,6 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
     struct MemoryStruct headers, data;
     CURL *              curl       = NULL;
     struct curl_slist * headerlist = NULL, *headertmp = NULL;
-    struct LDJSON *     userJSON;
     char *              userJSONText;
     char                url[4096];
 
@@ -567,20 +555,10 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
     LDi_rwlock_rdlock(&client->shared->sharedUserLock);
     LDi_rwlock_rdlock(&client->clientLock);
 
-    userJSON = LDi_userToJSON(
-        client->shared->sharedUser, LDBooleanFalse, LDBooleanFalse, NULL);
+    userJSONText = LDi_serializeUser(client->shared->sharedUser);
 
     LDi_rwlock_rdunlock(&client->clientLock);
     LDi_rwlock_rdunlock(&client->shared->sharedUserLock);
-
-    if (userJSON == NULL) {
-        LD_LOG(LD_LOG_CRITICAL, "failed to convert user to user");
-
-        return NULL;
-    }
-
-    userJSONText = LDJSONSerialize(userJSON);
-    LDJSONFree(userJSON);
 
     if (userJSONText == NULL) {
         LD_LOG(LD_LOG_CRITICAL, "failed to serialize user");
@@ -664,8 +642,6 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
         return NULL;
     }
 
-    LDFree(userJSONText);
-
     if (client->shared->sharedConfig->useReport) {
         if (curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "REPORT") != CURLE_OK)
         {
@@ -716,6 +692,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
         *response = -1;
     }
 
+    LDFree(userJSONText);
     LDFree(headers.memory);
 
     curl_slist_free_all(headerlist);
@@ -725,6 +702,7 @@ LDi_fetchfeaturemap(struct LDClient *const client, long *response)
     return data.memory;
 
 error:
+    LDFree(userJSONText);
     LDFree(data.memory);
     LDFree(headers.memory);
 

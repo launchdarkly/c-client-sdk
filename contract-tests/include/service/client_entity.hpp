@@ -38,9 +38,11 @@ public:
 
     ~ClientEntity();
 
-    JsonOrError do_command(const CommandParams &params);
+    JsonOrError handleCommand(const CommandParams &params);
 
     JsonOrError evaluate(const EvaluateFlagParams &params);
+
+    JsonOrError evaluateDetail(const EvaluateFlagParams &params);
 
     JsonOrError evaluateAll(const EvaluateAllFlagParams &params);
 

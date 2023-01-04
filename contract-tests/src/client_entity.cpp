@@ -6,7 +6,7 @@ ClientEntity::ClientEntity(struct LDClientCPP *client) : m_client{client} {}
 
 ClientEntity::~ClientEntity() { m_client->close(); }
 
-JsonOrError ClientEntity::do_command(const CommandParams &params) {
+JsonOrError ClientEntity::handleCommand(const CommandParams &params) {
     switch (params.command) {
         case Command::EvaluateFlag:
             if (!params.evaluate) {
@@ -60,6 +60,58 @@ JsonOrError ClientEntity::do_command(const CommandParams &params) {
 
 JsonOrError ClientEntity::evaluate(const EvaluateFlagParams &params) {
 
+    if (params.detail) {
+        return this->evaluateDetail(params);
+    }
+
+    const char* key = params.flagKey.c_str();
+
+    auto defaultVal = params.defaultValue;
+
+    EvaluateFlagResponse result;
+
+    switch (params.valueType) {
+        case ValueType::Bool:
+            result.value = m_client->boolVariation(key,defaultVal.get<LDBoolean>()) != 0;
+            break;
+        case ValueType::Int:
+            result.value = m_client->intVariation(key,defaultVal.get<int>());
+            break;
+        case ValueType::Double:
+            result.value = m_client->doubleVariation(key, defaultVal.get<double>());
+            break;
+        case ValueType::String: {
+            result.value = m_client->stringVariation(key, defaultVal.get<std::string>());
+            break;
+        }
+        case ValueType::Any:
+        case ValueType::Unspecified: {
+            struct LDJSON* fallback = LDJSONDeserialize(defaultVal.dump().c_str());
+            if (!fallback) {
+                return make_server_error("JSON appears to be invalid");
+            }
+            struct LDJSON* evaluation = m_client->JSONVariation(key, fallback);
+            LDJSONFree(fallback);
+
+            char *evaluationString = LDJSONSerialize(evaluation);
+            LDJSONFree(evaluation);
+
+            if (!evaluationString) {
+                return make_server_error("Failed to serialize JSON");
+            }
+            result.value = nlohmann::json::parse(evaluationString);
+            LDFree(evaluationString);
+            break;
+        }
+        default:
+            return make_client_error("Unrecognized variation type");
+
+    }
+
+    return result;
+}
+
+JsonOrError ClientEntity::evaluateDetail(const EvaluateFlagParams &params) {
     LDVariationDetails details{};
 
     const char* key = params.flagKey.c_str();
@@ -127,14 +179,13 @@ JsonOrError ClientEntity::evaluate(const EvaluateFlagParams &params) {
 
     }
 
-    if (params.detail) {
-        result.variationIndex = details.variationIndex >= 0 ? std::optional(details.variationIndex) : std::nullopt;
-        result.reason = extract_reason(&details);
-        LDFreeDetailContents(details);
-    }
+    result.variationIndex = details.variationIndex >= 0 ? std::optional(details.variationIndex) : std::nullopt;
+    result.reason = extract_reason(&details);
+    LDFreeDetailContents(details);
 
     return result;
 }
+
 
 JsonOrError ClientEntity::evaluateAll(const EvaluateAllFlagParams &params) {
 
