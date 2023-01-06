@@ -618,10 +618,7 @@ LDClientRestoreFlags(struct LDClient *const client, const char *const data)
     LD_ASSERT_API(client);
     LD_ASSERT_API(data);
 
-    /* todo have streamput propagate errors or factor out */
-    LDi_onstreameventput(client, data);
-
-    return LDBooleanTrue;
+    return LDi_onstreameventput(client, data);
 }
 
 struct LDJSON *

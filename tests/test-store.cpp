@@ -72,3 +72,32 @@ TEST_F(StoreFixture, RestoreAndSaveBasic) {
     LDFree(bundle1);
     LDFree(bundle2);
 }
+
+TEST_F(StoreFixture, EmptyDataSetShouldNotCauseAbort) {
+    struct LDFlag *flags;
+    struct LDJSON *json;
+    char *jsonStr;
+    struct LDStoreNode **storeNodes;
+    unsigned int nodeCount;
+
+    // The zero-length allocation simulates the arguments that the SDK would use if
+    // it encountered data: {}.
+    flags = (struct LDFlag *) LDAlloc(0);
+    ASSERT_TRUE(LDi_storePut(&client->store, flags, 0));
+
+    // Get should fail without causing any abort.
+    ASSERT_FALSE(LDi_storeGet(&client->store, "key"));
+
+    // The JSON representation should be an empty object.
+    ASSERT_TRUE(json = LDi_storeGetJSON(&client->store));
+    ASSERT_TRUE(jsonStr = LDJSONSerialize(json));
+    ASSERT_STREQ(jsonStr, "{}");
+
+    // GetAll should return a NULL pointer and 0 node count.
+    ASSERT_TRUE(LDi_storeGetAll(&client->store, &storeNodes, &nodeCount));
+    ASSERT_EQ(nodeCount, 0);
+    ASSERT_FALSE(*storeNodes);
+
+    LDJSONFree(json);
+    LDFree(jsonStr);
+}

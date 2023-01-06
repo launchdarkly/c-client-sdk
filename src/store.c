@@ -245,6 +245,8 @@ LDi_storePut(
             struct LDStoreNode *node;
 
             if (!(node = LDi_allocateStoreNode(flags[i]))) {
+                LD_LOG(LD_LOG_ERROR, "failed to allocate storage node for flag");
+
                 failed = LDBooleanTrue;
 
                 continue;
