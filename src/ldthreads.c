@@ -268,8 +268,8 @@ LDi_onstreameventput(struct LDClient *const client, const char *const data)
             size_t j;
 
             LD_LOG(LD_LOG_ERROR, "stream PUT: error parsing flag");
-            for (j = 0; j < i; i++) {
-                LDi_flag_destroy(&flags[i]);
+            for (j = 0; j < i; j++) {
+                LDi_flag_destroy(&flags[j]);
             }
 
             LDJSONFree(payload);

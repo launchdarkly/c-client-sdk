@@ -48,3 +48,10 @@ TEST_F(SSEFixture, InitialPut_MalformedData_InvalidObject_ShouldRemainInitializi
     ASSERT_FALSE(LDi_onstreameventput(client, "{\"things\":{}}"));
     ASSERT_EQ(client->status, LDStatusInitializing);
 }
+
+// When receiving a put event, the SDK will allocate an array of LDFlags and fill them in one-by-one
+// from JSON payload. If decoding fails, we must ensure that all memory of the previously parsed flag(s)
+// is freed. This test requires valgrind.
+TEST_F(SSEFixture, InitialPut_MalformedData_AllMemoryIsFreedIfInvalidFlagEncountered) {
+    ASSERT_FALSE(LDi_onstreameventput(client, "{\"valid_flag_json\":{\"key\":\"valid_flag\",\"value\":true,\"version\":2,\"variation\":3},\"invalid_flag_json\":{}}"));
+}
