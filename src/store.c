@@ -300,6 +300,13 @@ LDi_storeGetAll(
 
     count = HASH_COUNT(store->flags);
 
+    if (count == 0) {
+        LDi_rwlock_rdunlock(&store->lock);
+        *flags = NULL;
+        *flagCount = 0;
+        return LDBooleanTrue;
+    }
+
     if (!(dupe = LDAlloc(sizeof(struct LDStoreNode *) * count))) {
         LDi_rwlock_rdunlock(&store->lock);
 

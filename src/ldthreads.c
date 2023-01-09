@@ -272,14 +272,14 @@ LDi_onstreameventput(struct LDClient *const client, const char *const data)
                 LDi_flag_destroy(&flags[i]);
             }
 
-            LDFree(payload);
+            LDJSONFree(payload);
             LDFree(flags);
             return LDBooleanFalse;
         }
         payloadIter = LDIterNext(payloadIter);
     }
 
-    LDFree(payload);
+    LDJSONFree(payload);
 
     storeResult = LDi_storePut(&client->store, flags, flagCount);
 

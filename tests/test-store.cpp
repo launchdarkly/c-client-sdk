@@ -93,10 +93,9 @@ TEST_F(StoreFixture, EmptyDataSetShouldNotCauseAbort) {
     ASSERT_TRUE(jsonStr = LDJSONSerialize(json));
     ASSERT_STREQ(jsonStr, "{}");
 
-    // GetAll should return a NULL pointer and 0 node count.
     ASSERT_TRUE(LDi_storeGetAll(&client->store, &storeNodes, &nodeCount));
     ASSERT_EQ(nodeCount, 0);
-    ASSERT_FALSE(*storeNodes);
+    ASSERT_FALSE(storeNodes);
 
     LDJSONFree(json);
     LDFree(jsonStr);
