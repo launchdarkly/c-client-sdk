@@ -60,7 +60,7 @@ LDi_reinitializeconnection(struct LDClient *const client);
 void
 LDi_startstopstreaming(
     struct LDClient *const client, const LDBoolean stopstreaming);
-void
+LDBoolean
 LDi_onstreameventput(struct LDClient *const client, const char *const data);
 void
 LDi_onstreameventpatch(struct LDClient *const client, const char *const data);
