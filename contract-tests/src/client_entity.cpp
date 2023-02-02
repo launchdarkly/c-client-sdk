@@ -24,11 +24,7 @@ JsonOrError ClientEntity::handleCommand(const CommandParams &params) {
             if (!params.identifyEvent) {
                 return make_client_error("IdentifyEvent params should be set");
             }
-            if (!this->identify(*params.identifyEvent)) {
-                return make_server_error("Failed to generate identify event");
-            }
-            return nlohmann::json{};
-
+            return this->identify(*params.identifyEvent);
         case Command::CustomEvent:
             if (!params.customEvent) {
                 return std::string{"CustomEvent params should be set"};
@@ -205,14 +201,19 @@ JsonOrError ClientEntity::evaluateAll(const EvaluateAllFlagParams &params) {
     return rsp;
 }
 
-
-bool ClientEntity::identify(const IdentifyEventParams &params) {
+JsonOrError ClientEntity::identify(const IdentifyEventParams &params) {
     auto user = make_user(params.user);
     if (!user) {
-        return false;
+        return make_client_error("ClientEntity::identify: couldn't construct user");
     }
     m_client->identify(user.release());
-    return true;
+    /* The SDK test harness relies on the assumption that the identify command is synchronous: after calling it,
+     * flag evaluations will take place according to the new user. Since identify() in the C Client is asynchronous,
+     * we need to wait for re-initialization. The 1-second timeout is arbitrary. */
+    if (!m_client->awaitInitialized(1000)) {
+        return make_client_error("ClientEntity::identify: SDK timed out re-initializing after invoking identify()");
+    }
+    return nlohmann::json{};
 }
 
 bool ClientEntity::customEvent(const CustomEventParams &params) {

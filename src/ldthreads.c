@@ -230,55 +230,64 @@ LDi_bgfeaturepoller(void *const v)
     }
 }
 
-void
+LDBoolean
 LDi_onstreameventput(struct LDClient *const client, const char *const data)
 {
     struct LDJSON *payload, *payloadIter;
-    struct LDFlag *flags, *flagsIter;
-    unsigned int   flagCount;
+    struct LDFlag *flags;
+    size_t flagCount;
+    size_t i;
+    LDBoolean storeResult;
 
     payload = NULL;
 
     if (!(payload = LDJSONDeserialize(data))) {
-        goto cleanup;
+        LD_LOG(LD_LOG_ERROR, "stream PUT: failed to deserialize event data");
+        return LDBooleanFalse;
     }
 
     if (LDJSONGetType(payload) != LDObject) {
-        goto cleanup;
+        LD_LOG(LD_LOG_ERROR, "stream PUT: data must be a JSON object");
+        LDJSONFree(payload);
+        return LDBooleanFalse;
     }
 
     flagCount = LDCollectionGetSize(payload);
 
-    if (flagCount == 0) {
-        LDi_storePut(&client->store, NULL, 0);
-
-        goto cleanup;
-    }
-
     if (!(flags = LDAlloc(sizeof(struct LDFlag) * flagCount))) {
-        goto cleanup;
+        LD_LOG(LD_LOG_ERROR, "stream PUT: failed to allocate space for flags");
+        LDJSONFree(payload);
+        return LDBooleanFalse;
     }
 
-    flagsIter = flags;
+    payloadIter = LDGetIter(payload);
 
-    for (payloadIter = LDGetIter(payload); payloadIter != NULL;
-         payloadIter = LDIterNext(payloadIter))
-    {
-        if (!LDi_flag_parse(flagsIter, LDIterKey(payloadIter), payloadIter)) {
-            goto cleanup;
+    for (i = 0; i < flagCount; i++)  {
+        LD_ASSERT(payloadIter);
+        if (!LDi_flag_parse(&flags[i], LDIterKey(payloadIter), payloadIter)) {
+            size_t j;
+
+            LD_LOG(LD_LOG_ERROR, "stream PUT: error parsing flag");
+            for (j = 0; j < i; j++) {
+                LDi_flag_destroy(&flags[j]);
+            }
+
+            LDJSONFree(payload);
+            LDFree(flags);
+            return LDBooleanFalse;
         }
-
-        flagsIter++;
+        payloadIter = LDIterNext(payloadIter);
     }
 
-    LDi_storePut(&client->store, flags, flagCount);
+    LDJSONFree(payload);
+
+    storeResult = LDi_storePut(&client->store, flags, flagCount);
 
     LDi_rwlock_wrlock(&client->clientLock);
-    LDi_updatestatus(client, LDStatusInitialized);
+    LDi_updatestatus(client, storeResult ? LDStatusInitialized : LDStatusFailed);
     LDi_rwlock_wrunlock(&client->clientLock);
 
-cleanup:
-    LDJSONFree(payload);
+    return storeResult;
 }
 
 void

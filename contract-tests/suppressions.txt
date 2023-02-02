@@ -1,5 +1,3 @@
-events/summary events/reset after each flush
-events/summary events/basic counter behavior
 # events/disabling: expected (sc181104)
 events/disabling/evaluation
 events/disabling/identify event

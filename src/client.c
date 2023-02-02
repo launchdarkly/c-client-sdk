@@ -618,10 +618,7 @@ LDClientRestoreFlags(struct LDClient *const client, const char *const data)
     LD_ASSERT_API(client);
     LD_ASSERT_API(data);
 
-    /* todo have streamput propagate errors or factor out */
-    LDi_onstreameventput(client, data);
-
-    return LDBooleanTrue;
+    return LDi_onstreameventput(client, data);
 }
 
 struct LDJSON *
@@ -740,13 +737,22 @@ fillDetails(
     }
 }
 
+/**
+ * Invokes the appropriate JSON getter function on source, depending on the 'type' parameter.
+ *
+ * @param destination Pointer to (pointer to) memory location where value should be store. Cannot be `NULL`. Must be large enough
+ * to hold the type specified by kind.
+ * @param source Source JSON value.
+ * @param type Determines which getter method is called to obtain the concrete value. Must be called only with
+ * LDBool, LDText, and LDNumber.
+ */
 static void
-LDi_castJSONToValue(void **const destination, struct LDJSON *const source)
+LDi_castJSONToValue(void **const destination, struct LDJSON *const source, LDJSONType type)
 {
     LD_ASSERT(destination);
     LD_ASSERT(source);
 
-    switch (LDJSONGetType(source)) {
+    switch (type) {
     case LDNull:
         LD_ASSERT(LDBooleanFalse);
         break;
@@ -819,7 +825,7 @@ LDi_evalInternal(
         if (variationKind == LDNull) {
             *((struct LDJSON * *const) resultValue) = node->flag.value;
         } else {
-            LDi_castJSONToValue(resultValue, node->flag.value);
+            LDi_castJSONToValue(resultValue, node->flag.value, variationKind);
         }
     } else {
         *resultValue = fallbackValue;

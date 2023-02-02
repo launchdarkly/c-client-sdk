@@ -245,6 +245,8 @@ LDi_storePut(
             struct LDStoreNode *node;
 
             if (!(node = LDi_allocateStoreNode(flags[i]))) {
+                LD_LOG(LD_LOG_ERROR, "failed to allocate storage node for flag");
+
                 failed = LDBooleanTrue;
 
                 continue;
@@ -297,6 +299,13 @@ LDi_storeGetAll(
     LDi_rwlock_rdlock(&store->lock);
 
     count = HASH_COUNT(store->flags);
+
+    if (count == 0) {
+        LDi_rwlock_rdunlock(&store->lock);
+        *flags = NULL;
+        *flagCount = 0;
+        return LDBooleanTrue;
+    }
 
     if (!(dupe = LDAlloc(sizeof(struct LDStoreNode *) * count))) {
         LDi_rwlock_rdunlock(&store->lock);
