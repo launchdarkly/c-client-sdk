@@ -2,6 +2,11 @@
 
 All notable changes to the LaunchDarkly C SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.5] - 2023-02-01
+### Fixed:
+- Fixed GCC 11 compiler diagnostic which prevented compilation using the default CMake configuration on Ubuntu 20.04 (thanks for the report,  @yzabalotski!)
+- Fixed handling of empty initial PUTs, which might occur if an environment has no flag or segment data.
+
 ## [2.5.4] - 2023-01-04
 ### Fixed:
 - Fixed handling of out-of-order or stale flag updates. These updates are now discarded.
