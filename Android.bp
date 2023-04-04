@@ -2,15 +2,25 @@ cc_library {
     name: "libldclientapi",
     vendor_available: true,
 
+    cflags: [
+        "-Wno-unused-parameter",
+        "-DLAUNCHDARKLY_USE_ASSERT",
+    ],
+
+    shared_libs: [
+        "libcurl",
+    ],
+
     local_include_dirs: [
         "src",
         "c-sdk-common/src",
+        "third-party/include",
     ],
 
     srcs: [
-        "src/*.cpp",
-        "c-sdk-common/src/*.cpp",
-        "third-party/src/*.cpp",
+        "src/*.c",
+        "c-sdk-common/src/*.c",
+        "third-party/src/*.c",
     ],
 
     export_include_dirs: [
