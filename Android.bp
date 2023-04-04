@@ -28,3 +28,20 @@ cc_library {
         "c-sdk-common/include",
     ],
 }
+
+cc_library {
+    name: "libldclientapicpp",
+    vendor_available: true,
+
+    static_libs: [
+        "libldclientapi",
+    ],
+
+    srcs: [
+        "cpp/*.cpp",
+    ],
+
+    export_include_dirs: [
+        "cpp/include",
+    ],
+}
