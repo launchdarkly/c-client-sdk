@@ -1,0 +1,20 @@
+cc_library {
+    name: "libldclientapi",
+    vendor_available: true,
+
+    local_include_dirs: [
+        "src",
+        "c-sdk-common/src",
+    ],
+
+    srcs: [
+        "src/*.cpp",
+        "c-sdk-common/src/*.cpp",
+        "third-party/src/*.cpp",
+    ],
+
+    export_include_dirs: [
+        "include",
+        "c-sdk-common/include",
+    ],
+}
