@@ -21,12 +21,12 @@ This version of the LaunchDarkly SDK is compatible with POSIX environments (Linu
 Getting started
 ---------------
 
-Download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client-sdk/releases) for use in your project. Refer to the [SDK documentation](https://docs.launchdarkly.com/docs/c-sdk-reference#section-getting-started) for complete instructions on installing and using the SDK.
+Download a release archive from the [GitHub Releases](https://github.com/launchdarkly/c-client-sdk/releases) for use in your project. Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/client-side/c-c--#configuring-the-sdk) for complete instructions on installing and using the SDK.
 
 Learn more
 -----------
 
-Check out our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/docs/c-sdk-reference).
+Check out our [documentation](https://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/client-side/c-c--).
 
 Testing
 -------
