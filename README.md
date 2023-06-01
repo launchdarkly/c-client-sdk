@@ -1,6 +1,11 @@
 LaunchDarkly Client-Side SDK for C/C++
 ===================================
 
+# Important note
+
+This repository has been superseded by [C++ Client SDK with C bindings](https://github.com/launchdarkly/cpp-sdks/tree/main/libs/client-sdk).
+All future releases will be made from the [new repository](https://github.com/launchdarkly/cpp-sdks/tree/main/libs/client-sdk). Please consider upgrading and filing potential requests in that repository's [issue tracker](https://github.com/launchdarkly/cpp-sdks/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fclient%22+sort%3Aupdated-desc).
+
 [![CircleCI](https://circleci.com/gh/launchdarkly/c-client-sdk.svg?style=svg)](https://circleci.com/gh/launchdarkly/c-client-sdk)
 
 The LaunchDarkly Client-Side SDK for C/C++ is designed primarily for use in desktop and embedded systems applications. It follows the client-side LaunchDarkly model for single-user contexts (much like our mobile or JavaScript SDKs). It is not intended for use in multi-user systems such as web servers and applications.
